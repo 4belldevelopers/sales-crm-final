@@ -32,55 +32,827 @@
 
         #kt_post * { font-family: 'Poppins', sans-serif; }
 
-        /* ---- stat cards ---- */
-        .placed-stat-card {
-            border: 1px solid #eef0f4;
-            border-radius: .75rem;
-            padding: .85rem 1rem;
+        /* ============================================================
+           Talent Placed — Client Tracker & Card + Sub-Card Design System (Rule 20)
+           15.6" Screen Fit (1366x768 & 1920x1080), Poppins, Max 13px/14px body
+        ============================================================ */
+        .kt_content_bench,
+        #kt_content.kt_content_bench {
+            margin-top: 0 !important;
+            padding-top: 10px !important;
+        }
+
+        /* ── Tier 1: Toolbar Header Card (Client Tracker Standard) ── */
+        .cl-header, .cl-header-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            padding: 14px 20px !important;
+            margin-top: 0 !important;
+            margin-bottom: 14px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 16px !important;
+            flex-wrap: wrap !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+            font-family: 'Poppins', sans-serif !important;
+        }
+        .cl-header-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            min-width: 0 !important;
+        }
+        .cl-header-icon-box {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 10px !important;
+            background: #eff6ff !important;
+            border: 1px solid #bfdbfe !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #2563eb !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08) !important;
+        }
+        .cl-header-title-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+        .cl-header-title {
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            letter-spacing: -0.015em !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
+        }
+        .cl-verified-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #16a34a !important;
+        }
+        .cl-verified-badge svg {
+            color: #16a34a !important;
+            stroke: #16a34a !important;
+        }
+        .cl-count-pill {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            padding: 2.5px 8.5px !important;
+            border-radius: 6px !important;
+            line-height: 1.2 !important;
+            letter-spacing: 0.01em !important;
+        }
+        .cl-header-subtitle {
+            font-size: 13px !important;
+            font-weight: 400 !important;
+            color: #64748b !important;
+            margin-top: 3px !important;
+            line-height: 1.35 !important;
+        }
+        .cl-header-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex-shrink: 0 !important;
+        }
+        .cl-date-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 8px 14px !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            color: #334155 !important;
+            white-space: nowrap !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+        }
+        .cl-export-wrapper {
+            position: relative !important;
+            display: inline-block !important;
+        }
+        .cl-export-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 8px 16px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+            transition: all 0.15s ease !important;
+            white-space: nowrap !important;
+        }
+        .cl-export-btn:hover, .cl-export-btn.show {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        .cl-export-chevron {
+            transition: transform 0.15s ease !important;
+            margin-left: 2px !important;
+        }
+        .cl-export-btn.show .cl-export-chevron {
+            transform: rotate(180deg) !important;
+        }
+        .cl-export-dropdown-menu {
+            min-width: 270px !important;
+            padding: 6px !important;
+            border-radius: 10px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06) !important;
+            background: #ffffff !important;
+            margin-top: 6px !important;
+            z-index: 1050 !important;
+        }
+        .cl-export-option {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 8px 12px !important;
+            border-radius: 8px !important;
+            transition: all 0.12s ease !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+        }
+        .cl-export-option:hover {
+            background: #f1f5f9 !important;
+        }
+        .cl-export-opt-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+        }
+        .cl-export-opt-icon.csv {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+        }
+        .cl-export-opt-icon.pdf {
+            background: #fef2f2 !important;
+            color: #dc2626 !important;
+        }
+        .cl-export-opt-text {
+            display: flex !important;
+            flex-direction: column !important;
+            line-height: 1.25 !important;
+        }
+        .cl-export-opt-title {
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: #1e293b !important;
+        }
+        .cl-export-opt-sub {
+            font-size: 11px !important;
+            font-weight: 400 !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+        }
+
+        /* ── Tier 2: 6 Interactive Stat Cards Grid (Client Tracker Layout) ── */
+        .cl-stat-grid {
+            display: grid !important;
+            grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin-bottom: 14px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        @media (max-width: 1200px) {
+            .cl-stat-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
+        }
+        @media (max-width: 768px) {
+            .cl-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+        }
+        .cl-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 11px;
+            padding: 10px 11px;
             display: flex;
-            gap: .75rem;
-            align-items: flex-start;
-            height: 100%;
-            background: #fff;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+            min-width: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
         }
-        .placed-stat-icon {
-            width: 40px; height: 40px; min-width: 40px;
-            border-radius: .6rem;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem;
+        .cl-card:hover {
+            transform: translateY(-1px);
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            text-decoration: none;
         }
-        .placed-stat-label { font-size: 10.8px; font-weight: 500; color: #7e8299; }
-        .placed-stat-value { font-size: 18px; font-weight: 700; color: #181c32; line-height: 1.2; }
-        .placed-stat-caption { font-size: 10px; color: #a1a5b7; }
-        .placed-stat-delta { font-size: 10px; font-weight: 600; }
-        .placed-stat-delta.up { color: #17c653; }
-        .placed-stat-delta.down { color: #f1416c; }
+        .cl-card.active {
+            text-decoration: none;
+        }
+        .cl-card-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            min-width: 0;
+        }
+        .cl-card-icon {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+            transition: all 0.15s ease;
+        }
+        .cl-card-icon.green  { background: #ecfdf5; color: #16a34a; }
+        .cl-card-icon.blue   { background: #eff6ff; color: #2563eb; }
+        .cl-card-icon.purple { background: #faf5ff; color: #9333ea; }
+        .cl-card-icon.orange { background: #fff7ed; color: #ea580c; }
+        .cl-card-icon.cyan   { background: #f0fdfa; color: #0d9488; }
+        .cl-card-icon.rose   { background: #fdf2f8; color: #db2777; }
 
-        /* ---- filter bar ---- */
-        .placed-filter-bar {
-            display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
-            padding: .6rem .25rem;
+        .cl-card-meta {
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
         }
-        .placed-filter-btn {
-            border: 1px solid #e4e6ef; background: #f9f9f9; color: #3f4254;
-            border-radius: .5rem; font-size: 11.5px; font-weight: 500;
-            padding: .45rem .75rem; white-space: nowrap;
-            display: inline-flex; align-items: center; gap: .35rem;
+        .cl-card-num {
+            font-size: 19px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.1;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
         }
-        .placed-filter-btn:hover { background: #f1f1f4; }
+        .cl-card-lbl {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+        .cl-card-sub {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        .cl-card-sub.green  { color: #16a34a; }
+        .cl-card-sub.blue   { color: #2563eb; }
+        .cl-card-sub.purple { color: #9333ea; }
+        .cl-card-sub.orange { color: #ea580c; }
+        .cl-card-sub.cyan   { color: #0d9488; }
+        .cl-card-sub.rose   { color: #db2777; }
 
-        /* ---- table ---- */
-        #placedTableWrap { overflow-x: auto; }
-        #myTable thead th {
-            position: sticky; top: 0; z-index: 2;
-            background: #fff; font-size: 11px; font-weight: 500; color: #7e8299;
-            border-bottom: 1px solid #eef0f4; white-space: nowrap; padding: .75rem .6rem;
+        /* KPI Active Selected States */
+        .cl-card.active[data-tab="working"] {
+            background: #ecfdf5 !important;
+            border-color: #34d399 !important;
+            box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
         }
-        #myTable tbody td { padding: .6rem; vertical-align: middle; font-size: 11.5px; }
-        #myTable tbody tr { border-bottom: 1px solid #f4f4f8; }
+        .cl-card.active[data-tab="completed"] {
+            background: #eff6ff !important;
+            border-color: #60a5fa !important;
+            box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
+        }
+        .cl-card.active[data-tab="replacement"] {
+            background: #faf5ff !important;
+            border-color: #c084fc !important;
+            box-shadow: 0 0 0 1.5px #9333ea, 0 4px 14px rgba(147, 51, 234, 0.12) !important;
+        }
+        .cl-card.active[data-tab="joining"] {
+            background: #fff7ed !important;
+            border-color: #fb923c !important;
+            box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.12) !important;
+        }
+        .cl-card.active[data-tab="available"] {
+            background: #f0fdfa !important;
+            border-color: #2dd4bf !important;
+            box-shadow: 0 0 0 1.5px #0d9488, 0 4px 14px rgba(13, 148, 136, 0.12) !important;
+        }
+        .cl-card.active[data-tab="companies"] {
+            background: #fdf2f8 !important;
+            border-color: #f472b6 !important;
+            box-shadow: 0 0 0 1.5px #db2777, 0 4px 14px rgba(219, 39, 119, 0.12) !important;
+        }
 
+        /* ── Tier 2.5: Search & Filter Bar (Client Tracker Parity) ── */
+        .cl-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .cl-search-box {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+        }
+        .cl-search-box svg.cl-search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 15px;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+        .cl-search-inp {
+            width: 100%;
+            height: 42px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0 100px 0 38px;
+            font-size: 12.5px;
+            font-family: inherit;
+            color: #0f172a;
+            background: #ffffff;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .cl-search-inp:focus {
+            border-color: #009ef7;
+            box-shadow: 0 0 0 2.5px rgba(0, 158, 247, 0.15);
+        }
+        .cl-search-inp::placeholder {
+            color: #94a3b8;
+        }
+        .cl-search-right-affix {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cl-search-count-pill {
+            font-size: 10.5px;
+            font-weight: 600;
+            background: #eff6ff;
+            color: #009ef7;
+            border: 1px solid #dbeafe;
+            padding: 2px 7px;
+            border-radius: 6px;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+        .cl-search-clear-btn {
+            border: none;
+            background: #e2e8f0;
+            color: #64748b;
+            width: 19px;
+            height: 19px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            transition: all 0.15s ease;
+        }
+        .cl-search-clear-btn:hover {
+            background: #cbd5e1;
+            color: #0f172a;
+        }
+        .cl-search-kbd-hint {
+            font-size: 9.5px;
+            font-weight: 600;
+            font-family: inherit;
+            color: #94a3b8;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 2px 5px;
+            line-height: 1;
+            user-select: none;
+        }
+        @media (max-width: 1400px) {
+            .cl-search-kbd-hint { display: none !important; }
+            .cl-search-inp { padding: 0 75px 0 36px; }
+        }
+
+        /* ── Metronic Sort & Status Combobox Popovers ── */
+        .cl-sort-dropdown-wrapper, .cl-status-dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .cl-sort-combobox-btn, .cl-status-combobox-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 42px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0 12px;
+            min-width: 155px;
+            max-width: 240px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+            position: relative;
+            font-family: inherit;
+            outline: none;
+        }
+        .cl-sort-combobox-btn:hover, .cl-sort-combobox-btn.active,
+        .cl-status-combobox-btn:hover, .cl-status-combobox-btn.active {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+        .cl-pill-icon {
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .cl-pill-texts {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.15;
+            flex: 1;
+            min-width: 0;
+        }
+        .cl-pill-lbl {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+            text-transform: capitalize;
+        }
+        .cl-pill-val {
+            font-size: 12px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cl-pill-chevron {
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            margin-left: 2px;
+        }
+        .cl-sort-dropdown-panel, .cl-status-dropdown-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            width: 275px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+            z-index: 1055;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 6px 0;
+            animation: clSortFadeIn 0.15s ease-out;
+        }
+        @keyframes clSortFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .cl-sort-dropdown-panel.show, .cl-status-dropdown-panel.show {
+            display: flex;
+        }
+        .cl-sort-section-hdr {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            padding: 6px 14px 4px 14px;
+            user-select: none;
+        }
+        .cl-sort-section-hdr:not(:first-child) {
+            border-top: 1px solid #f1f5f9;
+            margin-top: 4px;
+            padding-top: 8px;
+        }
+        .cl-sort-item, .cl-status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            user-select: none;
+        }
+        .cl-sort-item:hover, .cl-status-item:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .cl-sort-item.selected, .cl-status-item.selected {
+            background: #eff6ff;
+            color: #009ef7;
+            font-weight: 600;
+        }
+        .cl-sort-item-left, .cl-status-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+        }
+        .cl-sort-item-icon {
+            color: #64748b;
+            flex-shrink: 0;
+        }
+        .cl-sort-item:hover .cl-sort-item-icon,
+        .cl-sort-item.selected .cl-sort-item-icon {
+            color: #009ef7;
+        }
+        .cl-sort-direction-badge {
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 1.5px 5.5px;
+            border-radius: 4px;
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .cl-sort-item.selected .cl-sort-direction-badge {
+            background: #dbeafe;
+            color: #0284c7;
+        }
+        .cl-sort-check {
+            font-size: 11px;
+            font-weight: 700;
+            color: #009ef7;
+            display: inline-flex;
+            align-items: center;
+            width: 14px;
+            justify-content: center;
+        }
+        .cl-reset-filters-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 42px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .cl-reset-filters-btn:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #dc2626;
+        }
+
+        /* ── Tier 3: Primary Placed Cards Container (Rule 20 Standard) ── */
+        .tbl {
+            padding: 0;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .tbl-w {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            overflow: visible;
+        }
+        .tbl-scroll-container {
+            width: 100%;
+            overflow: visible;
+        }
+        .cl-cards-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        /* ── Individual Placed Card ── */
+        .cl-primary-card.tbl-r {
+            display: flex !important;
+            flex-direction: column !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 10px 14px 8px 14px !important;
+            margin-bottom: 2px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            position: relative !important;
+        }
+        .cl-primary-card.tbl-r:hover {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            transform: translateY(-1px) !important;
+        }
+        .cl-primary-card.tbl-r.status-working { border-left: 3.5px solid #10b981 !important; }
+        .cl-primary-card.tbl-r.status-completed { border-left: 3.5px solid #009ef7 !important; }
+        .cl-primary-card.tbl-r.status-left { border-left: 3.5px solid #f43f5e !important; }
+
+        /* Discrete Upper Sub-Cards Grid */
+        .cl-subcards-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 1.2fr) minmax(0, 1.4fr) !important;
+            gap: 8px !important;
+            width: 100% !important;
+            align-items: stretch !important;
+        }
+        @media (max-width: 1100px) {
+            .cl-subcards-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+        }
+        @media (max-width: 767px) {
+            .cl-subcards-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* Individual Sub-Card Frame */
+        .cl-subcard {
+            background: #f8fafc !important;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 8px !important;
+            padding: 8px 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            position: relative !important;
+        }
+        .cl-subcard-head {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding-bottom: 6px !important;
+            margin-bottom: 6px !important;
+            border-bottom: 1px solid #eef2f6 !important;
+            background: transparent !important;
+            min-width: 0 !important;
+            gap: 6px !important;
+        }
+        .cl-subcard-title-wrap {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            min-width: 0 !important;
+        }
+        .cl-subcard-title {
+            font-size: 10.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em !important;
+            color: #64748b !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        .cl-subcard-badges {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Rule 25 Canonical Scope Pills */
+        .cl-scope-pill {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            padding: 1.5px 6px !important;
+            border-radius: 4px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            white-space: nowrap !important;
+        }
+        .pill-direct, .type-direct {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+        }
+        .pill-internal, .type-internal {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+        }
+        .pill-my-org, .type-my-org {
+            background: #fef3c7 !important;
+            color: #92400e !important;
+            border: 1px solid #fcd34d !important;
+        }
+
+        /* Bottom Activity Strip */
+        .cl-card-bottom-strip {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding-top: 8px !important;
+            margin-top: 8px !important;
+            border-top: 1px solid #f1f5f9 !important;
+            font-size: 11.5px !important;
+            color: #64748b !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+        }
+        .cl-bottom-meta {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+        }
+        .cl-meta-item {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            font-size: 11.5px !important;
+        }
+        .cl-meta-item strong {
+            color: #1e293b !important;
+        }
+        .cl-meta-dot {
+            color: #cbd5e1 !important;
+            font-size: 10px !important;
+        }
+        .cl-bottom-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+        }
+        .cl-btn-act {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 6px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            color: #64748b !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: all 0.12s ease !important;
+            padding: 0 !important;
+            font-size: 12px !important;
+        }
+        .cl-btn-act:hover {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+
+        /* Timeline and badges */
         .placed-avatar {
-            width: 40px; height: 40px; border-radius: .55rem;
+            width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center; font-weight: 700;
         }
         .placed-skill-badge {
@@ -90,45 +862,72 @@
         .fs-8 { font-size: 10.5px !important; }
         .fs-9 { font-size: 9.5px !important; }
 
-        .placed-timeline { min-width: 190px; }
+        .placed-timeline { width: 100%; min-width: 170px; }
         .placed-timeline-track { display: flex; align-items: flex-start; }
         .placed-timeline-node-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-        .placed-timeline-node { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .placed-timeline-node { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
         .placed-timeline-node.is-static { background: #fff; border: 2px solid #e4e6ef; }
         .placed-timeline-node.is-done { background: #17c653; border: 2px solid #17c653; }
-        .placed-timeline-node-label { font-size: 8.5px; font-weight: 600; color: #7e8299; margin-top: 4px; white-space: nowrap; }
-        .placed-timeline-line { flex: 1; height: 2px; background: #e4e6ef; min-width: 14px; margin: 4px 1px 0; }
+        .placed-timeline-node-label { font-size: 8px; font-weight: 600; color: #7e8299; margin-top: 3px; white-space: nowrap; }
+        .placed-timeline-line { flex: 1; height: 2px; background: #e4e6ef; min-width: 10px; margin: 3.5px 1px 0; }
         .placed-timeline-line.is-done { background: #17c653; }
         .placed-timeline-labels { display: flex; justify-content: space-between; margin-top: 1px; }
         .placed-timeline-labels span { font-size: 8px; color: #a1a5b7; }
 
-        .placed-detail-line { display: flex; align-items: center; gap: .35rem; margin-bottom: 1px; }
-        .placed-detail-line i { font-size: 9px; width: 12px; text-align: center; }
-
         .placed-status-pill {
             display: inline-flex; align-items: center; width: fit-content;
-            font-size: 10.5px; font-weight: 600; padding: .25rem .55rem; border-radius: .45rem;
+            font-size: 10px; font-weight: 600; padding: .2rem .5rem; border-radius: .4rem;
         }
-        .placed-status-pill.is-success { background: #e8fff3; color: #17c653; }
-        .placed-status-pill.is-info { background: #eef3ff; color: #009ef7; }
-        .placed-status-pill.is-danger { background: #fff5f8; color: #f1416c; }
-        .placed-action-btn { width: 30px; height: 30px; }
+        .placed-status-pill.is-success { background: #e8fff3; color: #17c653; border: 1px solid #bbf7d0; }
+        .placed-status-pill.is-info { background: #eef3ff; color: #009ef7; border: 1px solid #bfdbfe; }
+        .placed-status-pill.is-danger { background: #fff5f8; color: #f1416c; border: 1px solid #fecdd3; }
 
-        .placed-commercial-line { display: flex; align-items: center; gap: .35rem; margin-top: 3px; }
-        .placed-commercial-line i { font-size: 9px; width: 12px; text-align: center; }
         .placed-change-link {
             display: inline-flex; align-items: center; gap: .3rem;
-            font-size: 10px; font-weight: 600; color: #009ef7; margin-top: 4px; width: fit-content;
+            font-size: 10px; font-weight: 600; color: #009ef7; margin-top: 2px; width: fit-content;
         }
         .placed-change-link i { font-size: 8.5px; }
         .placed-change-link:hover { color: #0077b5; }
 
-        .placed-row.row-reverb-updated {
+        .placed-row.row-reverb-updated, .placed-card.row-reverb-updated {
             transition: background-color 0.6s ease;
             background-color: rgba(59, 91, 219, 0.08) !important;
         }
 
-        .rows-per-page-select { cursor: pointer; }
+        /* ── Dedicated Executive Print-to-PDF Engine ── */
+        @media print {
+            body * { visibility: hidden !important; }
+            #cl-print-report-canvas, #cl-print-report-canvas * { visibility: visible !important; }
+            #cl-print-report-canvas {
+                position: absolute !important;
+                left: 0 !important; top: 0 !important;
+                width: 100% !important; display: block !important;
+                background: #ffffff !important; color: #0f172a !important;
+                font-family: 'Poppins', sans-serif !important;
+                padding: 10px 15px !important;
+            }
+            @page {
+                size: A4 landscape;
+                margin: 8mm 10mm 8mm 10mm;
+            }
+            .print-report-header {
+                border-bottom: 2px solid #009ef7;
+                padding-bottom: 8px; margin-bottom: 10px;
+                display: flex; justify-content: space-between; align-items: flex-end;
+            }
+            .print-report-title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; }
+            .print-report-sub { font-size: 10px; color: #64748b; margin-top: 2px; }
+            .print-report-meta { text-align: right; font-size: 9px; color: #475569; line-height: 1.4; }
+            .print-kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px; }
+            .print-kpi-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; background: #f8fafc; }
+            .print-kpi-num { font-size: 15px; font-weight: 700; color: #0f172a; }
+            .print-kpi-lbl { font-size: 8.5px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+            .print-table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+            .print-table th { background-color: #f1f5f9; color: #1e293b; font-weight: 700; padding: 5px 7px; border-bottom: 2px solid #cbd5e1; text-align: left; }
+            .print-table td { padding: 5px 7px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+            .print-table tr { page-break-inside: avoid !important; }
+            .print-footer { margin-top: 12px; padding-top: 6px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 8.5px; color: #94a3b8; }
+        }
 
         /* ── Pagination bar (Standard Metronic/JERO styling) ───────────────────── */
         .pagi-bar {
@@ -399,167 +1198,454 @@
 @endpush
 
 @section('content')
-    <div class="toolbar" id="kt_toolbar">
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <div class="d-flex flex-column">
-                    <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
-                        <a href="javascript:void(0);" class="text-primary">Talent Placed</a>
-                    </h5>
-                    <span class="text-gray-600 fs-8">Track bench candidates who got placed and their project / placement journey.
-                        <span class="fw-bolder text-dark" id="totalPlace"></span> Placed</span>
-                </div>
-            </div>
-            <div class="d-flex align-items-center py-1 gap-2">
-                {{-- Date range display — placeholder only, no backend date-range filter exists yet --}}
-                <div class="placed-filter-btn">
-                    <i class="fa-solid fa-calendar-days"></i>
-                    <span id="placedDateRangeLabel">This Month</span>
-                </div>
-                {{-- Export — placeholder only, no export endpoint exists yet for this page --}}
-                <button type="button" class="btn btn-sm btn-light-primary placed-filter-btn" disabled title="Coming soon">
-                    <i class="fa-solid fa-download"></i> Export
-                </button>
-            </div>
-        </div>
-    </div>
     @if (in_array('view_bench', $userPermissions))
-        <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+        <div class="content d-flex flex-column flex-column-fluid kt_content_bench pt-2" id="kt_content">
             <div class="post d-flex flex-column-fluid" id="kt_post">
                 <div id="kt_content_container" class="container-fluid px-3">
 
-                    {{-- =====================================================
-                         Overview stat cards — populated dynamically from
-                         placedListingStats_v2 (Elasticsearch aggregations).
-                    ====================================================== --}}
-                    <div class="row g-3 mb-4">
-                        <div class="col-6 col-md-4 col-xl-2">
-                            <div class="placed-stat-card">
-                                <div class="placed-stat-icon bg-light-primary text-primary"><i class="fa-solid fa-user-check"></i></div>
-                                <div>
-                                    <div class="placed-stat-label">Currently Working</div>
-                                    <div class="placed-stat-value" id="placedStatWorking">--</div>
-                                    <div class="placed-stat-caption">Active Assignments</div>
-                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> Active</div>
+                    <!-- ── TIER 1: TOOLBAR HEADER CARD (Client Tracker Design Standard) ── -->
+                    <div class="cl-header cl-header-card">
+                        <div class="cl-header-left">
+                            <div class="cl-header-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <polyline points="16 11 18 13 22 9"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="cl-header-title-row">
+                                    <h1 class="cl-header-title">Talent Placed</h1>
+                                    <span class="cl-verified-badge" title="Verified ATS Placement Engine">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                            <polyline points="22 4 12 14.01 9 11.01"/>
+                                        </svg>
+                                    </span>
+                                    <span class="cl-count-pill" id="totalPlaceBadge">
+                                        <span id="totalPlace">0</span> Placed
+                                    </span>
                                 </div>
+                                <div class="cl-header-subtitle">Track bench candidates who got placed and their project / placement journey.</div>
                             </div>
                         </div>
-                        <div class="col-6 col-md-4 col-xl-2">
-                            <div class="placed-stat-card">
-                                <div class="placed-stat-icon bg-light-success text-success"><i class="fa-solid fa-circle-check"></i></div>
-                                <div>
-                                    <div class="placed-stat-label">Projects Completed</div>
-                                    <div class="placed-stat-value" id="placedStatCompleted">--</div>
-                                    <div class="placed-stat-caption">Completed</div>
-                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> Total</div>
-                                </div>
+
+                        <div class="cl-header-actions">
+                            {{-- Date range display pill --}}
+                            <div class="cl-date-pill" id="placedDateRangePill" title="Placement Filter Period">
+                                <i class="fa-solid fa-calendar-days text-primary"></i>
+                                <span id="placedDateRangeLabel">This Month</span>
                             </div>
-                        </div>
-                        <div class="col-6 col-md-4 col-xl-2">
-                            <div class="placed-stat-card">
-                                <div class="placed-stat-icon bg-light-purple text-purple" style="background:#f8f5ff;color:#7239ea;"><i class="fa-solid fa-shield-halved"></i></div>
-                                <div>
-                                    <div class="placed-stat-label">Replacement Active</div>
-                                    <div class="placed-stat-value" id="placedStatReplacement">--</div>
-                                    <div class="placed-stat-caption">Permanent Hiring</div>
-                                    <div class="placed-stat-delta down mt-1"><i class="fa-solid fa-arrow-down"></i> Under Review</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-4 col-xl-2">
-                            <div class="placed-stat-card">
-                                <div class="placed-stat-icon bg-light-warning text-warning"><i class="fa-solid fa-calendar-week"></i></div>
-                                <div>
-                                    <div class="placed-stat-label">Joining This Week</div>
-                                    <div class="placed-stat-value" id="placedStatJoining">--</div>
-                                    <div class="placed-stat-caption">Confirmed</div>
-                                    <div class="placed-stat-delta up mt-1">Next 7 Days</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-4 col-xl-2">
-                            <div class="placed-stat-card">
-                                <div class="placed-stat-icon bg-light-info text-info"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                                <div>
-                                    <div class="placed-stat-label">Available Soon</div>
-                                    <div class="placed-stat-value" id="placedStatAvailable">--</div>
-                                    <div class="placed-stat-caption">Project Ending &lt; 30 Days</div>
-                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> Rolling Off</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-4 col-xl-2">
-                            <div class="placed-stat-card">
-                                <div class="placed-stat-icon bg-light-danger text-danger"><i class="fa-solid fa-building"></i></div>
-                                <div>
-                                    <div class="placed-stat-label">Companies Served</div>
-                                    <div class="placed-stat-value" id="placedStatCompanies">--</div>
-                                    <div class="placed-stat-caption">Active Clients</div>
-                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> Client Network</div>
+
+                            {{-- Export Dropdown (Client Tracker Standard with CSV + Executive PDF Print) --}}
+                            <div class="cl-export-wrapper" id="clExportWrapper">
+                                <button type="button" class="cl-export-btn" id="clExportBtn" onclick="toggleExportDropdown(event)" aria-haspopup="true" aria-expanded="false" title="Export placement records">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    <span>Export</span>
+                                    <svg class="cl-export-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                </button>
+                                <div class="cl-export-dropdown-menu" id="clExportDropdownMenu" style="display:none;">
+                                    <a href="javascript:void(0);" class="cl-export-option" onclick="exportPlacedCandidatesCSV()">
+                                        <div class="cl-export-opt-icon csv">
+                                            <i class="fa-solid fa-file-csv fs-5"></i>
+                                        </div>
+                                        <div class="cl-export-opt-text">
+                                            <span class="cl-export-opt-title">Export Records (CSV)</span>
+                                            <span class="cl-export-opt-sub">Spreadsheet download of active placements</span>
+                                        </div>
+                                    </a>
+                                    <a href="javascript:void(0);" class="cl-export-option" onclick="printPlacedPlacementReport()">
+                                        <div class="cl-export-opt-icon pdf">
+                                            <i class="fa-solid fa-file-pdf fs-5"></i>
+                                        </div>
+                                        <div class="cl-export-opt-text">
+                                            <span class="cl-export-opt-title">Print Executive Report (PDF)</span>
+                                            <span class="cl-export-opt-sub">A4 Landscape Placement Portfolio Summary</span>
+                                        </div>
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- =====================================================
-                         Filter bar — Search and Sort only; both are real and
-                         wired to the existing AJAX endpoint.
-                    ====================================================== --}}
-                    <div class="card mb-3">
-                        <div class="card-body py-3 px-4">
-                            <div class="placed-filter-bar">
-                                <div class="flex-grow-1">
-                                    <input type="text" class="form-control form-control-solid" name="inputJobSearch"
-                                        value="" placeholder="Search by name, job, client, skills..." id="kt_tagify_2" onchange="filtersdataget()" />
+                    <!-- ── TIER 2: 6 INTERACTIVE STAT CARDS GRID (Client Tracker KPI Standard) ── -->
+                    <div class="cl-stat-grid" id="placedStatGrid">
+                        {{-- Card 1: Currently Working --}}
+                        <div class="cl-card cl-stat-filter" data-tab="working" onclick="setPlacedTab('working', this)" title="Filter by Currently Working">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon green">
+                                    <i class="fa-solid fa-user-check"></i>
                                 </div>
-                                <select class="form-select form-select-solid w-auto" data-hide-search="true"
-                                    id="sortingfilter" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" onchange="filtersdataget()">
-                                    <option value="Show All" selected="">Sort</option>
-                                    <option value="10">Newest to Oldest (Offer Date)</option>
-                                    <option value="11">Oldest to Newest (Offer Date)</option>
-                                    <option value="12">Newest to Oldest (Join Date)</option>
-                                    <option value="13">Oldest to Newest (Join Date)</option>
-                                    <option value="14">Low to High (Offer Amount)</option>
-                                    <option value="15">High to Low (Offer Amount)</option>
-                                </select>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="placedStatWorking">--</div>
+                                    <div class="cl-card-lbl">Currently Working</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub green">
+                                <i class="fa-solid fa-arrow-up"></i>
+                                <span>Active Assignments</span>
+                            </div>
+                        </div>
 
-                                {{-- kept for functional parity with the old country/location filter (hidden, unused today) --}}
-                                <select class="d-none" id="country">
-                                    <option value="110" selected="selected">Location</option>
-                                </select>
+                        {{-- Card 2: Projects Completed --}}
+                        <div class="cl-card cl-stat-filter" data-tab="completed" onclick="setPlacedTab('completed', this)" title="Filter by Projects Completed">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon blue">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="placedStatCompleted">--</div>
+                                    <div class="cl-card-lbl">Projects Completed</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub blue">
+                                <i class="fa-solid fa-arrow-up"></i>
+                                <span>Total Completed</span>
+                            </div>
+                        </div>
+
+                        {{-- Card 3: Replacement Active --}}
+                        <div class="cl-card cl-stat-filter" data-tab="replacement" onclick="setPlacedTab('replacement', this)" title="Filter by Replacement Active">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon purple">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="placedStatReplacement">--</div>
+                                    <div class="cl-card-lbl">Replacement Active</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub purple">
+                                <i class="fa-solid fa-arrow-down"></i>
+                                <span>Under Review</span>
+                            </div>
+                        </div>
+
+                        {{-- Card 4: Joining This Week --}}
+                        <div class="cl-card cl-stat-filter" data-tab="joining" onclick="setPlacedTab('joining', this)" title="Filter by Joining This Week">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon orange">
+                                    <i class="fa-solid fa-calendar-week"></i>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="placedStatJoining">--</div>
+                                    <div class="cl-card-lbl">Joining This Week</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub orange">
+                                <i class="fa-regular fa-clock"></i>
+                                <span>Next 7 Days</span>
+                            </div>
+                        </div>
+
+                        {{-- Card 5: Available Soon --}}
+                        <div class="cl-card cl-stat-filter" data-tab="available" onclick="setPlacedTab('available', this)" title="Filter by Available Soon (< 30 Days)">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon cyan">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="placedStatAvailable">--</div>
+                                    <div class="cl-card-lbl">Available Soon</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub cyan">
+                                <i class="fa-solid fa-arrow-up"></i>
+                                <span>Rolling Off (&lt; 30d)</span>
+                            </div>
+                        </div>
+
+                        {{-- Card 6: Companies Served --}}
+                        <div class="cl-card cl-stat-filter" data-tab="companies" onclick="setPlacedTab('companies', this)" title="View Companies Served">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon rose">
+                                    <i class="fa-solid fa-building"></i>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="placedStatCompanies">--</div>
+                                    <div class="cl-card-lbl">Companies Served</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub rose">
+                                <i class="fa-solid fa-arrow-up"></i>
+                                <span>Client Network</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-body pt-3 px-0">
-                            <div class="loadingMessage loadingMessagebenchCandidatePlaceAjax" style="display: none; position: absolute;">Processing...</div>
-                            <div id="placedTableWrap">
-                                <table class="table align-middle table-row-dashed fs-6 gy-4 mb-0" id="myTable">
-                                    <thead>
-                                        <tr class="fw-bolder text-muted" role="row">
-                                            <th class="w-10px pe-0">
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                    <input class="form-check-input" type="checkbox" value="1"></div>
-                                            </th>
-                                            <th>Candidate</th>
-                                            <th>Placement Timeline</th>
-                                            <th>Client &amp; Job Details</th>
-                                            <th>Recruiter</th>
-                                            <th>Commercials</th>
-                                            <th>Work Status</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="benchCandidatePlaceAjax"> </tbody>
-                                </table>
+                    <!-- ── TIER 2.5: SEARCH & FILTER BAR (Client Tracker UX Standard) ── -->
+                    <div class="cl-filter-bar">
+                        {{-- Enterprise Micro-Search Bar --}}
+                        <div class="cl-search-box" id="clSearchBoxWrapper">
+                            <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <input 
+                                type="text" 
+                                class="cl-search-inp" 
+                                name="inputJobSearch" 
+                                value="" 
+                                placeholder="Search placed talents by candidate name, job title, client, recruiter, skills..." 
+                                id="kt_tagify_2" 
+                                autocomplete="off" 
+                                spellcheck="false" 
+                                aria-label="Search talent placements" 
+                                role="searchbox"
+                            />
+                            <div class="cl-search-right-affix">
+                                <span class="cl-search-count-pill" id="clSearchMatchCount" style="display:none;" title="Matching placement records">0 matches</span>
+                                <button type="button" class="cl-search-clear-btn" id="clSearchClearBtn" title="Clear search (Esc)" aria-label="Clear search" style="display:none;" onclick="clearPlacedSearchInput(event)">
+                                    ✕
+                                </button>
+                                <kbd class="cl-search-kbd-hint" id="clSearchKbdHint" title="Press Ctrl+K to search">Ctrl+K</kbd>
                             </div>
-                            <div id="paginationbenchCandidatePlace"></div>
+                        </div>
+
+                        {{-- Sort Combobox Popover (Enterprise Metronic Standard) --}}
+                        <div class="cl-sort-dropdown-wrapper" id="clSortDropdownWrapper">
+                            <button type="button" class="cl-sort-combobox-btn" id="clSortBtn" onclick="toggleSortDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="clSortDropdownPanel" title="Sort Placement Listing">
+                                <div class="cl-pill-icon">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="7" y1="4" x2="7" y2="20"/>
+                                        <polyline points="3 8 7 4 11 8"/>
+                                        <line x1="17" y1="4" x2="17" y2="20"/>
+                                        <polyline points="13 16 17 20 21 16"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-pill-texts">
+                                    <span class="cl-pill-lbl">Sort</span>
+                                    <span class="cl-pill-val" id="sortDisplay">Newest Offer Date</span>
+                                </div>
+                                <div class="cl-pill-chevron">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                </div>
+                            </button>
+
+                            <div class="cl-sort-dropdown-panel" id="clSortDropdownPanel" role="listbox" aria-labelledby="clSortBtn" tabindex="-1">
+                                <div class="cl-sort-section-hdr">Offer Date</div>
+                                <div class="cl-sort-item selected" id="sort-opt-10" data-sort-val="10" onclick="selectSortOption('10', 'Newest Offer Date', event)" role="option" aria-selected="true" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <i class="fa-regular fa-calendar-check cl-sort-item-icon"></i>
+                                        <span class="cl-sort-item-title">Newest to Oldest</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="cl-sort-direction-badge">Offer ↓</span>
+                                        <span class="cl-sort-check">✓</span>
+                                    </div>
+                                </div>
+                                <div class="cl-sort-item" id="sort-opt-11" data-sort-val="11" onclick="selectSortOption('11', 'Oldest Offer Date', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <i class="fa-regular fa-calendar cl-sort-item-icon"></i>
+                                        <span class="cl-sort-item-title">Oldest to Newest</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="cl-sort-direction-badge">Offer ↑</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
+
+                                <div class="cl-sort-section-hdr">Join Date</div>
+                                <div class="cl-sort-item" id="sort-opt-12" data-sort-val="12" onclick="selectSortOption('12', 'Newest Join Date', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <i class="fa-solid fa-user-check cl-sort-item-icon"></i>
+                                        <span class="cl-sort-item-title">Newest to Oldest</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="cl-sort-direction-badge">Join ↓</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
+                                <div class="cl-sort-item" id="sort-opt-13" data-sort-val="13" onclick="selectSortOption('13', 'Oldest Join Date', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <i class="fa-solid fa-clock-rotate-left cl-sort-item-icon"></i>
+                                        <span class="cl-sort-item-title">Oldest to Newest</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="cl-sort-direction-badge">Join ↑</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
+
+                                <div class="cl-sort-section-hdr">Commercials</div>
+                                <div class="cl-sort-item" id="sort-opt-15" data-sort-val="15" onclick="selectSortOption('15', 'Offer Amount: High to Low', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <i class="fa-solid fa-arrow-down-wide-short cl-sort-item-icon"></i>
+                                        <span class="cl-sort-item-title">High to Low</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="cl-sort-direction-badge">₹ High ↓</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
+                                <div class="cl-sort-item" id="sort-opt-14" data-sort-val="14" onclick="selectSortOption('14', 'Offer Amount: Low to High', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <i class="fa-solid fa-arrow-up-wide-short cl-sort-item-icon"></i>
+                                        <span class="cl-sort-item-title">Low to High</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="cl-sort-direction-badge">₹ Low ↑</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="sortingfilter" name="sortingfilter" value="10" />
+                        </div>
+
+                        {{-- Status Filter Combobox Popover --}}
+                        <div class="cl-status-dropdown-wrapper" id="clStatusDropdownWrapper">
+                            <button type="button" class="cl-status-combobox-btn" id="clStatusBtn" onclick="toggleStatusDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="clStatusDropdownPanel" title="Filter by Work Status">
+                                <div class="cl-pill-icon">
+                                    <i class="fa-solid fa-circle-dot text-primary fs-8"></i>
+                                </div>
+                                <div class="cl-pill-texts">
+                                    <span class="cl-pill-lbl">Work Status</span>
+                                    <span class="cl-pill-val" id="statusDisplay">All Statuses</span>
+                                </div>
+                                <div class="cl-pill-chevron">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                </div>
+                            </button>
+
+                            <div class="cl-status-dropdown-panel" id="clStatusDropdownPanel" role="listbox" aria-labelledby="clStatusBtn" tabindex="-1">
+                                <div class="cl-sort-section-hdr">Assignment Status</div>
+                                <div class="cl-status-item selected" id="status-opt-all" data-status-val="all" onclick="selectStatusOption('all', 'All Statuses', event)" role="option" aria-selected="true" tabindex="0">
+                                    <div class="cl-status-item-left">
+                                        <i class="fa-solid fa-layer-group cl-sort-item-icon"></i>
+                                        <span>All Statuses</span>
+                                    </div>
+                                    <span class="cl-sort-check">✓</span>
+                                </div>
+                                <div class="cl-status-item" id="status-opt-working" data-status-val="working" onclick="selectStatusOption('working', 'Currently Working', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-status-item-left">
+                                        <i class="fa-solid fa-circle-check text-success cl-sort-item-icon"></i>
+                                        <span>Currently Working</span>
+                                    </div>
+                                    <span class="cl-sort-check" style="display:none;">✓</span>
+                                </div>
+                                <div class="cl-status-item" id="status-opt-completed" data-status-val="completed" onclick="selectStatusOption('completed', 'Project Completed', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-status-item-left">
+                                        <i class="fa-solid fa-check-double text-info cl-sort-item-icon"></i>
+                                        <span>Project Completed</span>
+                                    </div>
+                                    <span class="cl-sort-check" style="display:none;">✓</span>
+                                </div>
+                                <div class="cl-status-item" id="status-opt-left" data-status-val="left" onclick="selectStatusOption('left', 'Candidate Left', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-status-item-left">
+                                        <i class="fa-solid fa-circle-xmark text-danger cl-sort-item-icon"></i>
+                                        <span>Candidate Left</span>
+                                    </div>
+                                    <span class="cl-sort-check" style="display:none;">✓</span>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="statusFilter" name="statusFilter" value="all" />
+                        </div>
+
+                        {{-- Reset Filters Button --}}
+                        <button type="button" class="cl-reset-filters-btn" id="clResetFiltersBtn" onclick="resetPlacedFilters()" style="display:none;" title="Reset all search & status filters">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Reset Filters</span>
+                        </button>
+
+                        {{-- Hidden inputs to preserve backward compatibility --}}
+                        <input type="hidden" id="country" name="country" value="110" />
+                    </div>
+
+                    <!-- ── TIER 3: PLACED TALENTS CARDS STREAM (Rule 20 Modern Card + Sub-Card Standard) ── -->
+                    <div class="tbl" id="placedListWrapper">
+                        <div class="tbl-w">
+                            <div class="tbl-scroll-container">
+                                {{-- Stream Toolbar strip for master selection & live count summary --}}
+                                <div class="d-flex align-items-center justify-content-between px-3 py-2 mb-2" id="clStreamToolbar" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                            <input class="form-check-input" type="checkbox" id="checkAllPlacedCandidates" title="Select All Placed Candidates">
+                                        </div>
+                                        <span class="fs-9 fw-bold text-gray-600 text-uppercase" style="letter-spacing:0.04em;">Select All Placed Talents</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge badge-light-primary fw-bold fs-9" id="clSelectedCountBadge" style="display:none;">0 selected</span>
+                                        <span class="text-muted fs-9" id="clListSummary">Showing live placement records</span>
+                                    </div>
+                                </div>
+
+                                <div class="loadingMessage loadingMessagebenchCandidatePlaceAjax" style="display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; background: rgba(255,255,255,0.95); padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-weight: 600; color: #009ef7;">
+                                    <i class="fa-solid fa-spinner fa-spin me-2"></i>Processing...
+                                </div>
+
+                                <div id="benchCandidatePlaceAjax" class="cl-cards-stream">
+                                    {{-- Placed Candidate Cards rendered dynamically via User RAM / JS --}}
+                                </div>
+
+                                <div id="paginationbenchCandidatePlace"></div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- ── DEDICATED 100% CLIENT-SIDE EXECUTIVE PRINT-TO-PDF CANVAS ── -->
+                    <div id="cl-print-report-canvas" class="d-none" aria-hidden="true">
+                        <div class="print-report-header">
+                            <div>
+                                <h1 class="print-report-title">Talent Placed & Placement Portfolio Report</h1>
+                                <div class="print-report-sub">{{ auth()->user()->company->company_name ?? 'JERO Enterprise ATS' }} • Confidential Placement Review</div>
+                            </div>
+                            <div class="print-report-meta">
+                                <div id="printReportTimestamp">Date: </div>
+                                <div id="printReportScope">Scope: Active Placed Candidates</div>
+                                <div id="printReportTotal">Total: </div>
+                            </div>
+                        </div>
+
+                        <div class="print-kpi-grid">
+                            <div class="print-kpi-card">
+                                <div class="print-kpi-num" id="printKpiWorking">0</div>
+                                <div class="print-kpi-lbl">Currently Working</div>
+                            </div>
+                            <div class="print-kpi-card">
+                                <div class="print-kpi-num" id="printKpiCompleted">0</div>
+                                <div class="print-kpi-lbl">Completed</div>
+                            </div>
+                            <div class="print-kpi-card">
+                                <div class="print-kpi-num" id="printKpiReplacement">0</div>
+                                <div class="print-kpi-lbl">Replacement Active</div>
+                            </div>
+                            <div class="print-kpi-card">
+                                <div class="print-kpi-num" id="printKpiCompanies">0</div>
+                                <div class="print-kpi-lbl">Companies Served</div>
+                            </div>
+                            <div class="print-kpi-card">
+                                <div class="print-kpi-num" id="printKpiTotalPlaced">0</div>
+                                <div class="print-kpi-lbl">Total Placed</div>
+                            </div>
+                        </div>
+
+                        <table class="print-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:22%;">Candidate</th>
+                                    <th style="width:20%;">Client & Job</th>
+                                    <th style="width:18%;">Placement Timeline</th>
+                                    <th style="width:15%;">Commercials</th>
+                                    <th style="width:13%;">Work Status</th>
+                                    <th style="width:12%;">Recruiter</th>
+                                </tr>
+                            </thead>
+                            <tbody id="printReportTableBody">
+                            </tbody>
+                        </table>
+
+                        <div class="print-footer">
+                            <span>Generated by JERO Talent Engine • Confidential Placement Audit</span>
+                            <span>Page 1 of 1</span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -1230,12 +2316,377 @@
         $(document).ready(function() {
             var searchDebounceTimer = null;
             $('#kt_tagify_2').on('input keyup', function() {
+                var query = ($(this).val() || '').trim();
+                if (query.length > 0) {
+                    $('#clSearchClearBtn').show();
+                } else {
+                    $('#clSearchClearBtn').hide();
+                }
+                checkFilterResetVisibility();
+
                 clearTimeout(searchDebounceTimer);
                 searchDebounceTimer = setTimeout(function() {
                     fetchBenchBenchCandidatesCandidateList(1);
                 }, 300);
             });
+
+            // Global Keyboard Shortcuts (Ctrl+K to search, Esc to close/clear)
+            $(document).on('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    $('#kt_tagify_2').focus().select();
+                } else if (e.key === 'Escape') {
+                    closeAllPopovers();
+                    if ($('#kt_tagify_2').is(':focus') && $('#kt_tagify_2').val()) {
+                        clearPlacedSearch();
+                    }
+                }
+            });
+
+            // Close popovers on click outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#clSortDropdownWrapper, #clStatusDropdownWrapper, #clExportDropdownWrapper').length) {
+                    closeAllPopovers();
+                }
+            });
+
+            // Master checkbox toggle for placed cards stream
+            $(document).on('change', '#checkAllPlacedCandidates', function() {
+                var isChecked = $(this).is(':checked');
+                $('.chk_list_item').prop('checked', isChecked);
+                updateSelectionCounter();
+            });
+
+            // Individual candidate checkbox toggle
+            $(document).on('change', '.chk_list_item', function() {
+                updateSelectionCounter();
+            });
         });
+
+        function clearPlacedSearch() {
+            $('#kt_tagify_2').val('').focus();
+            $('#clSearchClearBtn').hide();
+            checkFilterResetVisibility();
+            fetchBenchBenchCandidatesCandidateList(1);
+        }
+
+        function closeAllPopovers() {
+            $('#clSortDropdownWrapper').removeClass('is-open');
+            $('#clSortBtn').attr('aria-expanded', 'false');
+            $('#clStatusDropdownWrapper').removeClass('is-open');
+            $('#clStatusBtn').attr('aria-expanded', 'false');
+            $('#clExportDropdownWrapper').removeClass('is-open');
+            $('#clExportBtn').attr('aria-expanded', 'false');
+        }
+
+        function checkFilterResetVisibility() {
+            var hasSearch = ($('#kt_tagify_2').val() || '').trim().length > 0;
+            var hasStatus = $('#statusFilter').val() && $('#statusFilter').val() !== 'all';
+            var hasSort = $('#sortingfilter').val() && $('#sortingfilter').val() !== '';
+            var hasActiveTab = $('.cl-card.cl-stat-filter.is-active').length > 0;
+
+            if (hasSearch || hasStatus || hasSort || hasActiveTab) {
+                $('#clResetFiltersBtn').show();
+            } else {
+                $('#clResetFiltersBtn').hide();
+            }
+        }
+
+        function toggleSortDropdown(e) {
+            if (e) e.stopPropagation();
+            var $wrap = $('#clSortDropdownWrapper');
+            var isOpen = $wrap.hasClass('is-open');
+            closeAllPopovers();
+            if (!isOpen) {
+                $wrap.addClass('is-open');
+                $('#clSortBtn').attr('aria-expanded', 'true');
+            }
+        }
+
+        function selectSortOption(val, text, e) {
+            if (e) e.stopPropagation();
+            $('#sortDisplay').text(text);
+            $('#sortingfilter').val(val);
+            $('.cl-sort-item').removeClass('selected').attr('aria-selected', 'false');
+            $('.cl-sort-item .cl-sort-check').hide();
+            var targetOptId = '#sort-opt-' + (val || 'default');
+            $(targetOptId).addClass('selected').attr('aria-selected', 'true');
+            $(targetOptId + ' .cl-sort-check').show();
+            $('#clSortDropdownWrapper').removeClass('is-open');
+            $('#clSortBtn').attr('aria-expanded', 'false');
+            checkFilterResetVisibility();
+            fetchBenchBenchCandidatesCandidateList(1);
+        }
+
+        function toggleStatusDropdown(e) {
+            if (e) e.stopPropagation();
+            var $wrap = $('#clStatusDropdownWrapper');
+            var isOpen = $wrap.hasClass('is-open');
+            closeAllPopovers();
+            if (!isOpen) {
+                $wrap.addClass('is-open');
+                $('#clStatusBtn').attr('aria-expanded', 'true');
+            }
+        }
+
+        function selectStatusOption(val, text, e) {
+            if (e) e.stopPropagation();
+            $('#statusDisplay').text(text);
+            $('#statusFilter').val(val);
+            $('.cl-status-item').removeClass('selected').attr('aria-selected', 'false');
+            $('.cl-status-item .cl-sort-check').hide();
+            var targetOptId = '#status-opt-' + val;
+            $(targetOptId).addClass('selected').attr('aria-selected', 'true');
+            $(targetOptId + ' .cl-sort-check').show();
+            $('#clStatusDropdownWrapper').removeClass('is-open');
+            $('#clStatusBtn').attr('aria-expanded', 'false');
+
+            // Sync active KPI card if matching
+            $('.cl-card.cl-stat-filter').removeClass('is-active');
+            if (val === 'working') {
+                $('.cl-card.cl-stat-filter[data-tab="working"]').addClass('is-active');
+            } else if (val === 'completed') {
+                $('.cl-card.cl-stat-filter[data-tab="completed"]').addClass('is-active');
+            } else if (val === 'left') {
+                $('.cl-card.cl-stat-filter[data-tab="replacement"]').addClass('is-active');
+            }
+
+            checkFilterResetVisibility();
+            applyClientSideFilters();
+        }
+
+        function setPlacedTab(tab, el) {
+            var $card = $(el).closest('.cl-card.cl-stat-filter');
+            var wasActive = $card.hasClass('is-active');
+
+            $('.cl-card.cl-stat-filter').removeClass('is-active');
+
+            if (wasActive || tab === 'all') {
+                // Toggle off to all
+                $('#statusFilter').val('all');
+                $('#statusDisplay').text('All Statuses');
+                $('.cl-status-item').removeClass('selected').attr('aria-selected', 'false');
+                $('.cl-status-item .cl-sort-check').hide();
+                $('#status-opt-all').addClass('selected').attr('aria-selected', 'true');
+                $('#status-opt-all .cl-sort-check').show();
+            } else {
+                $card.addClass('is-active');
+                if (tab === 'working') {
+                    $('#statusFilter').val('working');
+                    $('#statusDisplay').text('Currently Working');
+                    $('.cl-status-item').removeClass('selected').attr('aria-selected', 'false');
+                    $('.cl-status-item .cl-sort-check').hide();
+                    $('#status-opt-working').addClass('selected').attr('aria-selected', 'true');
+                    $('#status-opt-working .cl-sort-check').show();
+                } else if (tab === 'completed') {
+                    $('#statusFilter').val('completed');
+                    $('#statusDisplay').text('Project Completed');
+                    $('.cl-status-item').removeClass('selected').attr('aria-selected', 'false');
+                    $('.cl-status-item .cl-sort-check').hide();
+                    $('#status-opt-completed').addClass('selected').attr('aria-selected', 'true');
+                    $('#status-opt-completed .cl-sort-check').show();
+                } else if (tab === 'replacement') {
+                    $('#statusFilter').val('left');
+                    $('#statusDisplay').text('Candidate Left');
+                    $('.cl-status-item').removeClass('selected').attr('aria-selected', 'false');
+                    $('.cl-status-item .cl-sort-check').hide();
+                    $('#status-opt-left').addClass('selected').attr('aria-selected', 'true');
+                    $('#status-opt-left .cl-sort-check').show();
+                } else {
+                    $('#statusFilter').val(tab);
+                }
+            }
+
+            checkFilterResetVisibility();
+            applyClientSideFilters();
+        }
+
+        function applyClientSideFilters() {
+            var statusVal = $('#statusFilter').val() || 'all';
+            var allCandidates = window.PlacedListingStore.candidates || [];
+
+            if (!allCandidates || allCandidates.length === 0) {
+                renderCandidatesCardsOnly([]);
+                return;
+            }
+
+            var filtered = allCandidates;
+            if (statusVal && statusVal !== 'all') {
+                filtered = allCandidates.filter(function(cand) {
+                    var assignStatus = (cand.assignment_status || 'working').toLowerCase();
+                    if (statusVal === 'working') return assignStatus === 'working';
+                    if (statusVal === 'completed') return assignStatus === 'completed';
+                    if (statusVal === 'left') return assignStatus === 'left';
+                    if (statusVal === 'replacement') return assignStatus === 'left' || parseInt(cand.assignment_replacement_required, 10) === 1;
+                    if (statusVal === 'joining') {
+                        return (cand.of_joined_date && String(cand.of_joined_date).indexOf('0000-00-00') !== 0);
+                    }
+                    if (statusVal === 'available') {
+                        if (!cand.assignment_expected_end_date) return false;
+                        var endD = new Date(cand.assignment_expected_end_date);
+                        var diffDays = Math.ceil((endD - new Date()) / (1000 * 60 * 60 * 24));
+                        return diffDays >= 0 && diffDays <= 30;
+                    }
+                    return true;
+                });
+            }
+
+            if (statusVal !== 'all') {
+                $('#clSearchMatchCount').show().text(filtered.length + ' matching');
+            } else {
+                $('#clSearchMatchCount').hide();
+            }
+
+            renderCandidatesCardsOnly(filtered);
+        }
+
+        function resetPlacedFilters() {
+            $('#kt_tagify_2').val('');
+            $('#clSearchClearBtn').hide();
+            $('#clSearchMatchCount').hide();
+
+            $('#sortDisplay').text('Default Sorting');
+            $('#sortingfilter').val('');
+            $('.cl-sort-item').removeClass('selected').attr('aria-selected', 'false');
+            $('.cl-sort-item .cl-sort-check').hide();
+            $('#sort-opt-default').addClass('selected').attr('aria-selected', 'true');
+            $('#sort-opt-default .cl-sort-check').show();
+
+            $('#statusDisplay').text('All Statuses');
+            $('#statusFilter').val('all');
+            $('.cl-status-item').removeClass('selected').attr('aria-selected', 'false');
+            $('.cl-status-item .cl-sort-check').hide();
+            $('#status-opt-all').addClass('selected').attr('aria-selected', 'true');
+            $('#status-opt-all .cl-sort-check').show();
+
+            $('.cl-card.cl-stat-filter').removeClass('is-active');
+            $('#clResetFiltersBtn').hide();
+            closeAllPopovers();
+
+            fetchBenchBenchCandidatesCandidateList(1);
+        }
+
+        function toggleExportDropdown(e) {
+            if (e) e.stopPropagation();
+            var $wrap = $('#clExportDropdownWrapper');
+            var isOpen = $wrap.hasClass('is-open');
+            closeAllPopovers();
+            if (!isOpen) {
+                $wrap.addClass('is-open');
+                $('#clExportBtn').attr('aria-expanded', 'true');
+            }
+        }
+
+        function exportPlacedCandidatesCSV() {
+            closeAllPopovers();
+            var candidates = window.PlacedListingStore.candidates || [];
+            if (!candidates.length) {
+                Swal.fire({ icon: 'info', text: 'No placement records available to export.', timer: 2000, showConfirmButton: false });
+                return;
+            }
+
+            var selectedIds = [];
+            $('.chk_list_item:checked').each(function() {
+                selectedIds.push(String($(this).val()));
+            });
+
+            var exportList = candidates;
+            if (selectedIds.length > 0) {
+                exportList = candidates.filter(function(c) {
+                    return selectedIds.indexOf(String(c.candidate_id)) !== -1;
+                });
+            }
+
+            var csvRows = [
+                ['Candidate Name', 'Designation', 'Total Exp (Yrs)', 'Location', 'Skills', 'Client Name', 'Job Title', 'Job ID', 'Client Type', 'Offer CTC', 'Commercial Model', 'Placement Fee', 'Work Status', 'Expected End Date', 'Joined Date', 'Recruiter', 'Recruiter Agency']
+            ];
+
+            exportList.forEach(function(row) {
+                var fullName = (row.full_name || '').trim();
+                var designation = row.current_designation || '';
+                var exp = row.total_exp || '';
+                var city = row.city || row.city_name || '';
+                var skills = row.skills || '';
+                var clientName = row.client_name || '';
+                var jobTitle = row.title || '';
+                var jobId = row.jobId || '';
+
+                var recId = parseInt(row.recommendation_id, 10) || 0;
+                var fromCompId = parseInt(row.from_company_id, 10) || 0;
+                var isDirectClient = (recId > 0 && fromCompId > 0 && fromCompId !== window.PlacedListingStore.companyId);
+                var clientType = isDirectClient ? 'Direct Client' : (row.client_self_company == 1 ? 'My Organization' : 'Internal Client');
+
+                var offerAmt = row.of_offer_amount || '0';
+                var empType = row.of_employment_type || '';
+                var fee = row.commercial_fee_fixed || (row.commercial_fee_pct ? row.commercial_fee_pct + '%' : '');
+                var workStatus = row.assignment_status === 'left' ? 'Candidate Left' : (row.assignment_status === 'completed' ? 'Project Completed' : 'Currently Working');
+                var endDate = row.assignment_expected_end_date || '';
+                var joinedDate = row.of_joined_date || '';
+                var recruiterName = row.posted_by || row.submitted_by_name || '';
+                var agency = row.submitted_by_company_name || row.post_company_name || '';
+
+                csvRows.push([
+                    fullName, designation, exp, city, skills, clientName, jobTitle, jobId, clientType, offerAmt, empType, fee, workStatus, endDate, joinedDate, recruiterName, agency
+                ].map(function(val) {
+                    return '"' + String(val || '').replace(/"/g, '""') + '"';
+                }));
+            });
+
+            var csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + csvRows.map(function(e) { return e.join(','); }).join('\n');
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            var now = new Date();
+            var dateStamp = now.toISOString().slice(0, 10);
+            link.setAttribute('download', 'talent-placed-report-' + dateStamp + '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function printPlacedPlacementReport() {
+            closeAllPopovers();
+            var store = window.PlacedListingStore;
+            var candidates = store.candidates || [];
+            var stats = store.stats || {};
+
+            $('#printReportTimestamp').text('Date: ' + new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
+            $('#printReportTotal').text('Total: ' + (store.total || candidates.length) + ' Placed');
+
+            $('#printKpiWorking').text(stats.currently_working || $('#placedStatWorking').text() || '0');
+            $('#printKpiCompleted').text(stats.projects_completed || $('#placedStatCompleted').text() || '0');
+            $('#printKpiReplacement').text(stats.replacement_active || $('#placedStatReplacement').text() || '0');
+            $('#printKpiCompanies').text(stats.companies_served || $('#placedStatCompanies').text() || '0');
+            $('#printKpiTotalPlaced').text(store.total || candidates.length || '0');
+
+            var bodyHtml = '';
+            candidates.forEach(function(row) {
+                var fullName = escapeHtml((row.full_name || '').trim());
+                var designation = escapeHtml(row.current_designation || '-');
+                var clientName = escapeHtml(row.client_name || '-');
+                var jobTitle = escapeHtml(row.title || '-');
+                var offerDisplay = row.confidential == 1 ? 'Confidential' : ('₹' + Math.round(parseFloat(row.of_offer_amount) || 0).toLocaleString('en-IN') + '/A');
+                var workStatus = row.assignment_status === 'left' ? 'Candidate Left' : (row.assignment_status === 'completed' ? 'Project Completed' : 'Currently Working');
+                var joinedDate = formatDisplayDate(row.of_joined_date);
+                var recruiter = escapeHtml(row.posted_by || row.submitted_by_name || 'Recruiter');
+
+                bodyHtml += '<tr>' +
+                    '<td><strong>' + fullName + '</strong><br><small style="color:#64748b;">' + designation + '</small></td>' +
+                    '<td><strong>' + clientName + '</strong><br><small style="color:#64748b;">' + jobTitle + '</small></td>' +
+                    '<td>Joined: ' + joinedDate + '</td>' +
+                    '<td>' + offerDisplay + '</td>' +
+                    '<td>' + workStatus + '</td>' +
+                    '<td>' + recruiter + '</td>' +
+                '</tr>';
+            });
+
+            if (!bodyHtml) {
+                bodyHtml = '<tr><td colspan="6" class="text-center py-4" style="color:#64748b;">No placement records to print</td></tr>';
+            }
+
+            $('#printReportTableBody').html(bodyHtml);
+            window.print();
+        }
 
         function filtersdataget() {
             fetchBenchBenchCandidatesCandidateList(1);
@@ -1940,8 +3391,8 @@
                                 replacementReason: replacementReason
                             });
                         }
-                        // Update work status cell in the matching row
-                        var $row = $('tr.placed-row[data-candidate-id="' + candidateId + '"]');
+                        // Update work status cell in the matching row/card
+                        var $row = $('.placed-card[data-candidate-id="' + candidateId + '"], tr.placed-row[data-candidate-id="' + candidateId + '"]');
                         if ($row.length) {
                             var statusMap = {
                                 working:   { label: 'Currently Working', icon: 'fa-circle-check', cls: 'is-success' },
@@ -2222,7 +3673,7 @@
 
                 if (msg.type === 'COMMERCIAL_UPDATED') {
                     var candidateId = msg.candidateId;
-                    var $row = $('tr.placed-row[data-candidate-id="' + candidateId + '"]');
+                    var $row = $('.placed-card[data-candidate-id="' + candidateId + '"], tr.placed-row[data-candidate-id="' + candidateId + '"]');
                     if ($row.length) {
                         var feeLabel = '';
                         if (msg.serviceType === 'free') {
@@ -2255,7 +3706,7 @@
                     }
                 } else if (msg.type === 'ASSIGNMENT_UPDATED') {
                     var candidateId = msg.candidateId;
-                    var $row = $('tr.placed-row[data-candidate-id="' + candidateId + '"]');
+                    var $row = $('.placed-card[data-candidate-id="' + candidateId + '"], tr.placed-row[data-candidate-id="' + candidateId + '"]');
                     if ($row.length) {
                         var statusMap = {
                             working:   { label: 'Currently Working', icon: 'fa-circle-check', cls: 'is-success' },
@@ -2459,7 +3910,11 @@
             '</div>';
         }
 
-        function renderCandidateRow(row) {
+        // =========================================================================
+        // TIER 3: MODERN CARD + SUB-CARD RENDERER (Rule 20 & Client Tracker Standard)
+        // 4 Discrete Sub-Cards + Bottom Activity Strip (0% Layout Thrashing, Pure Client-First)
+        // =========================================================================
+        function renderCandidateCard(row) {
             var store = window.PlacedListingStore;
             var companyId = store.companyId;
 
@@ -2469,19 +3924,15 @@
             var bgClass = getAvatarClass(fullName);
             var flag = (row.is_duplicate || row.duplicate == 1) ? 1 : 0;
             var isBench = (row.condidate_type === 'bench_condidate');
-            var tredmark = isBench ? '<span style="display:inline-block;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:#e8f0fe;color:#3b5bdb;margin-left:4px;vertical-align:middle;letter-spacing:.3px;">Bench</span>' : '';
+            var tredmark = isBench ? '<span class="cl-bench-pill">Bench</span>' : '';
             var profileSidebarCss = 'show-application-detail';
             var nameImg = '';
 
             if (row.photo) {
-                nameImg = '<img src="' + escapeHtml(row.photo) + '" alt="image" style="width: 40px; height: 40px; object-fit: cover;">' +
+                nameImg = '<img src="' + escapeHtml(row.photo) + '" alt="' + escapeHtml(fullName) + '" class="cl-avatar-img">' +
                           '<div class="position-absolute translate-middle bottom-0 start-100 mb-1 bg-success rounded-circle border border-2 border-white h-10px w-10px"></div>';
             } else {
-                if (flag === 1) {
-                    nameImg = '<span class="fs-6 fw-bolder">' + escapeHtml(strVal) + '</span>';
-                } else {
-                    nameImg = '<div class="symbol-label placed-avatar ' + bgClass + '">' + escapeHtml(strVal) + '</div>';
-                }
+                nameImg = '<div class="cl-avatar-text placed-avatar ' + bgClass + '">' + escapeHtml(strVal) + '</div>';
             }
 
             var skilltag = '';
@@ -2505,13 +3956,12 @@
             var expLocLine = expLocBits.join(' &middot; ');
 
             var nameLinkClass = flag === 1 ? 'text-danger' : 'text-dark';
-            var subLinkClass = flag === 1 ? 'text-danger' : 'text-muted';
             var designation = row.current_designation || '-';
 
             // 2. Timeline
             var timelineHtml = isBench ? renderBenchTimeline(row) : renderDirectTimeline(row);
 
-            // 3. Client & Job
+            // 3. Client & Job Mandate (Rule 25 Canonical Tags)
             var clientName = row.client_name || '-';
             var jobTitle = row.title || '-';
             var jobLocation = row.location || [row.city_name, row.state_name].filter(Boolean).join(', ');
@@ -2519,15 +3969,23 @@
             var recId = parseInt(row.recommendation_id, 10) || 0;
             var fromCompId = parseInt(row.from_company_id, 10) || 0;
             var isDirectClient = (recId > 0 && fromCompId > 0 && fromCompId !== companyId);
-            var recText = isDirectClient ? 'Direct Client' : (row.client_self_company == 1 ? 'Internal' : 'Internal Client');
-            var recIcon = isDirectClient ? 'fa-handshake text-warning' : 'fa-building-shield text-primary';
+            var isSelfCompany = (row.client_self_company == 1);
+
+            var recBadgeHtml = '';
+            if (isDirectClient) {
+                recBadgeHtml = '<span class="cl-tag-direct"><i class="fa-solid fa-shield-alt me-1"></i>Direct Client</span>';
+            } else if (isSelfCompany) {
+                recBadgeHtml = '<span class="cl-tag-myorg"><i class="fa-solid fa-id-badge me-1"></i>My Organization</span>';
+            } else {
+                recBadgeHtml = '<span class="cl-tag-internal"><i class="fa-solid fa-building me-1"></i>Internal Client</span>';
+            }
 
             // 4. Recruiter
             var agencyCompName = row.submitted_by_company_name || row.post_company_name || row.from_company_name || row.uc_company_name || '';
             var agencyCompId = parseInt(row.thirdparty_company_id || row.other_company || 0, 10);
             var isAgency = (agencyCompId > 0 && agencyCompId !== companyId) || !!agencyCompName;
             var recruiterName = isAgency ? (row.agency_root_name || row.posted_by || row.submitted_by_name || 'Recruiter') : (row.posted_by || row.submitted_by_name || row.spokperson_name || 'Recruiter');
-            var recruiterSub = isAgency ? (agencyCompName || row.company_name || 'Recruiter') : 'Recruiter';
+            var recruiterSub = isAgency ? (agencyCompName || row.company_name || 'Recruiter') : 'Inhouse Recruiter';
 
             // 5. Commercials
             var empType = (row.of_employment_type || '-----').toString();
@@ -2568,138 +4026,252 @@
             var adStatus = adStatusMap[savedAssignStatus] || adStatusMap.working;
             var adEndDateDisp = formatDisplayDate(row.assignment_expected_end_date);
             var joinedIsoForAssign = (row.of_joined_date && String(row.of_joined_date).indexOf('0000-00-00') !== 0) ? String(row.of_joined_date).slice(0, 10) : '';
+            var joinedDisplay = formatDisplayDate(row.of_joined_date);
+            var offerDateDisplay = formatDisplayDate(row.offer_released_at || row.of_created_date || row.of_offer_release);
 
-            // Assemble row HTML
-            return '<tr class="placed-row" data-candidate-id="' + escapeHtml(row.id) + '">' +
-                '<td>' +
-                    '<div class="form-check form-check-sm form-check-custom form-check-solid">' +
-                        '<input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" data-jobId="' + escapeHtml(row.jobId || '') + '" value="' + escapeHtml(row.candidate_id || '') + '" />' +
-                    '</div>' +
-                '</td>' +
-                '<td>' +
-                    '<div class="d-flex align-items-start">' +
-                        '<div class="symbol symbol-circle symbol-40px overflow-hidden me-3 position-relative flex-shrink-0">' +
-                            '<a href="javascript:void(0);" data-row-id="' + escapeHtml(row.wiseId || '') + '" class="' + profileSidebarCss + '">' + nameImg + '</a>' +
+            var benchRaw = row.created_at || '';
+            var durationDays = calcDurationDays(benchRaw, row.of_joined_date);
+            var turnaroundPill = durationDays !== null ? ('<span class="cl-strip-badge"><i class="fa-solid fa-bolt text-warning me-1"></i>' + durationDays + 'd Turnaround</span>') : '';
+
+            return '<div class="cl-primary-card tbl-r placed-card" data-candidate-id="' + escapeHtml(row.id) + '">' +
+                // Upper 4 Discrete Sub-Cards Grid
+                '<div class="cl-subcards-grid">' +
+                    // Sub-Card 1: Candidate Profile
+                    '<div class="cl-subcard cl-subcard-candidate">' +
+                        '<div class="cl-subcard-hdr">' +
+                            '<span class="cl-subcard-title"><i class="fa-solid fa-user me-1 text-primary"></i>Candidate Profile</span>' +
+                            tredmark +
                         '</div>' +
-                        '<div class="d-flex flex-column">' +
-                            '<a href="javascript:void(0);" data-row-id="' + escapeHtml(row.wiseId || '') + '" class="' + nameLinkClass + ' fw-bolder text-hover-primary fs-6 ' + profileSidebarCss + '" data-toggle="tooltip" title="' + escapeHtml(fullName) + '">' + escapeHtml(fullName.substring(0, 22)) + tredmark + '</a>' +
-                            '<a href="javascript:void(0);" data-row-id="' + escapeHtml(row.wiseId || '') + '" class="' + subLinkClass + ' fw-bold d-block fs-8 text-hover-primary ' + profileSidebarCss + '" data-toggle="tooltip" title="' + escapeHtml(designation) + '">' + escapeHtml(designation.substring(0, 24)) + '</a>' +
-                            '<span class="text-muted fw-semibold fs-9 d-block">' + expLocLine + '</span>' +
-                            '<div class="mt-1">' + skilltag + '</div>' +
+                        '<div class="d-flex align-items-start gap-3 mt-1">' +
+                            '<div class="symbol symbol-circle symbol-40px overflow-hidden position-relative flex-shrink-0">' +
+                                '<a href="javascript:void(0);" data-row-id="' + escapeHtml(row.wiseId || '') + '" class="' + profileSidebarCss + '">' + nameImg + '</a>' +
+                            '</div>' +
+                            '<div class="d-flex flex-column min-w-0 flex-grow-1">' +
+                                '<a href="javascript:void(0);" data-row-id="' + escapeHtml(row.wiseId || '') + '" class="' + nameLinkClass + ' fw-bolder text-hover-primary fs-6 ' + profileSidebarCss + ' text-truncate" data-toggle="tooltip" title="' + escapeHtml(fullName) + '">' + escapeHtml(fullName) + '</a>' +
+                                '<span class="text-muted fw-bold fs-8 text-truncate" data-toggle="tooltip" title="' + escapeHtml(designation) + '">' + escapeHtml(designation) + '</span>' +
+                                '<span class="text-muted fw-semibold fs-9 mt-1"><i class="fa-solid fa-location-dot me-1 text-muted"></i>' + (expLocLine || 'Experience not specified') + '</span>' +
+                                '<div class="cl-candidate-skills-wrap mt-2">' + skilltag + '</div>' +
+                            '</div>' +
                         '</div>' +
                     '</div>' +
-                '</td>' +
-                '<td>' + timelineHtml + '</td>' +
-                '<td>' +
-                    '<div class="d-flex flex-column">' +
-                        '<span class="placed-detail-line"><i class="fa-solid fa-building text-muted"></i>' +
-                            '<span class="text-muted fw-bold fs-8" data-toggle="tooltip" title="' + escapeHtml(clientName) + '">' + escapeHtml(clientName.substring(0, 18)) + '</span>' +
-                        '</span>' +
-                        '<span class="placed-detail-line"><i class="fa-solid fa-briefcase text-muted"></i>' +
-                            '<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' + escapeHtml(jobTitle) + '">' + escapeHtml(jobTitle.substring(0, 18)) + '</a>' +
-                        '</span>' +
-                        (jobLocation ? '<span class="placed-detail-line"><i class="fa-solid fa-location-dot text-muted"></i><span class="text-muted fw-semibold fs-9">' + escapeHtml(jobLocation) + '</span></span>' : '') +
-                        '<span class="placed-detail-line mt-1"><i class="fa-solid ' + recIcon + '"></i>' +
-                            '<span class="fw-bold fs-9 text-muted">' + recText + ' &middot; ' + escapeHtml(row.jobId || '') + '</span>' +
-                        '</span>' +
+
+                    // Sub-Card 2: Client & Job Mandate
+                    '<div class="cl-subcard cl-subcard-client">' +
+                        '<div class="cl-subcard-hdr">' +
+                            '<span class="cl-subcard-title"><i class="fa-solid fa-briefcase me-1 text-primary"></i>Client & Mandate</span>' +
+                            recBadgeHtml +
+                        '</div>' +
+                        '<div class="d-flex flex-column gap-1 mt-1">' +
+                            '<div class="d-flex align-items-center gap-2">' +
+                                '<i class="fa-solid fa-building text-muted fs-8"></i>' +
+                                '<span class="text-dark fw-bolder fs-7 text-truncate" data-toggle="tooltip" title="' + escapeHtml(clientName) + '">' + escapeHtml(clientName) + '</span>' +
+                            '</div>' +
+                            '<div class="d-flex align-items-center gap-2">' +
+                                '<i class="fa-solid fa-id-badge text-muted fs-8"></i>' +
+                                '<span class="text-dark fw-bold fs-8 text-truncate" data-toggle="tooltip" title="' + escapeHtml(jobTitle) + '">' + escapeHtml(jobTitle) + '</span>' +
+                            '</div>' +
+                            (jobLocation ? '<div class="d-flex align-items-center gap-2 text-muted fs-9"><i class="fa-solid fa-location-dot text-muted fs-8"></i><span class="text-truncate">' + escapeHtml(jobLocation) + '</span></div>' : '') +
+                            '<div class="d-flex align-items-center gap-2 mt-1">' +
+                                '<span class="badge badge-light fw-bold fs-9 text-muted">Req: #' + escapeHtml(row.jobId || 'N/A') + '</span>' +
+                            '</div>' +
+                        '</div>' +
                     '</div>' +
-                '</td>' +
-                '<td>' +
-                    '<div class="d-flex flex-column">' +
-                        '<span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' + escapeHtml(recruiterName) + '">' + escapeHtml(recruiterName.substring(0, 20)) + '</span>' +
-                        '<span class="text-muted fw-semibold d-block fs-9" data-toggle="tooltip" title="' + escapeHtml(recruiterSub) + '">' + escapeHtml(recruiterSub.substring(0, 20)) + '</span>' +
+
+                    // Sub-Card 3: Commercials & Recruiter
+                    '<div class="cl-subcard cl-subcard-commercials">' +
+                        '<div class="cl-subcard-hdr">' +
+                            '<span class="cl-subcard-title"><i class="fa-solid fa-sack-dollar me-1 text-primary"></i>Commercials</span>' +
+                            '<a href="javascript:void(0);" class="cl-subcard-action-link commercial-change-btn"' +
+                                ' data-candidate-id="' + escapeHtml(row.id) + '"' +
+                                ' data-is-bench="' + (isBench ? 1 : 0) + '"' +
+                                ' data-amount="' + escapeHtml(row.of_offer_amount || 0) + '"' +
+                                ' data-employment-type="' + escapeHtml(empType) + '"' +
+                                ' data-service-type="' + escapeHtml(row.commercial_service_type || '') + '"' +
+                                ' data-commercial-model="' + escapeHtml(row.commercial_model || '') + '"' +
+                                ' data-fee-method="' + escapeHtml(row.commercial_fee_method || '') + '"' +
+                                ' data-fee-base="' + escapeHtml(row.commercial_fee_base || '') + '"' +
+                                ' data-fee-pct="' + escapeHtml(row.commercial_fee_pct || 0) + '"' +
+                                ' data-fee-fixed="' + escapeHtml(row.commercial_fee_fixed || 0) + '"' +
+                                ' data-billing-amount="' + escapeHtml(row.commercial_billing_amount || 0) + '"' +
+                                ' data-billing-cycle="' + escapeHtml(row.commercial_billing_cycle || '') + '"' +
+                                ' data-margin-pct="' + escapeHtml(row.commercial_margin_pct || 0) + '"' +
+                                ' data-replacement-period="' + escapeHtml(row.commercial_replacement_period || '') + '"' +
+                                ' data-internal-note="' + escapeHtml(row.commercial_internal_note || '') + '"' +
+                                ' title="Configure Commercials"><i class="fa-solid fa-pen-to-square me-1"></i>Configure</a>' +
+                        '</div>' +
+                        '<div class="d-flex flex-column gap-1 mt-1">' +
+                            '<div class="d-flex align-items-baseline justify-content-between">' +
+                                '<span class="text-dark fw-bolder fs-6" style="font-variant-numeric:tabular-nums;">' + offerDisplay + '</span>' +
+                                '<span class="badge badge-light-primary fw-bold fs-9" data-cc-model>' + escapeHtml(ccModelLabel) + '</span>' +
+                            '</div>' +
+                            '<div class="d-flex align-items-center gap-1 fs-9 mt-1">' +
+                                '<i class="fa-solid fa-circle-check text-success"></i>' +
+                                '<span class="text-dark fw-bold" data-cc-fee>' + escapeHtml(ccFeeLabel) + '</span>' +
+                                '<span class="text-muted">' + marginLabel + '</span>' +
+                            '</div>' +
+                            '<div class="d-flex align-items-center gap-2 mt-2 pt-1 border-top border-gray-200">' +
+                                '<div class="symbol symbol-24px symbol-circle bg-light-primary text-primary fs-9 fw-bold d-flex align-items-center justify-content-center">' +
+                                    '<i class="fa-solid fa-user-tie fs-9"></i>' +
+                                '</div>' +
+                                '<div class="d-flex flex-column min-w-0">' +
+                                    '<span class="text-dark fw-bold fs-9 text-truncate" data-toggle="tooltip" title="' + escapeHtml(recruiterName) + '">' + escapeHtml(recruiterName) + '</span>' +
+                                    '<span class="text-muted fs-9 text-truncate" data-toggle="tooltip" title="' + escapeHtml(recruiterSub) + '">' + escapeHtml(recruiterSub) + '</span>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
                     '</div>' +
-                '</td>' +
-                '<td>' +
-                    '<div class="d-flex flex-column">' +
-                        '<span class="text-dark fw-bolder fs-6">' + offerDisplay + '</span>' +
-                        '<span class="placed-commercial-line">' +
-                            '<i class="fa-solid fa-circle-check text-success"></i>' +
-                            '<span class="text-dark fw-semibold fs-9" data-cc-fee>' + escapeHtml(ccFeeLabel) + ' <span class="text-muted fw-normal">' + marginLabel + '</span></span>' +
-                        '</span>' +
-                        '<span class="placed-commercial-line">' +
-                            '<i class="fa-solid fa-user-tie text-muted"></i>' +
-                            '<span class="text-muted fw-semibold fs-9" data-cc-model>' + escapeHtml(ccModelLabel) + '</span>' +
-                        '</span>' +
-                        '<a href="javascript:void(0);" class="placed-change-link commercial-change-btn"' +
-                            ' data-candidate-id="' + escapeHtml(row.id) + '"' +
-                            ' data-is-bench="' + (isBench ? 1 : 0) + '"' +
-                            ' data-amount="' + escapeHtml(row.of_offer_amount || 0) + '"' +
-                            ' data-employment-type="' + escapeHtml(empType) + '"' +
-                            ' data-service-type="' + escapeHtml(row.commercial_service_type || '') + '"' +
-                            ' data-commercial-model="' + escapeHtml(row.commercial_model || '') + '"' +
-                            ' data-fee-method="' + escapeHtml(row.commercial_fee_method || '') + '"' +
-                            ' data-fee-base="' + escapeHtml(row.commercial_fee_base || '') + '"' +
-                            ' data-fee-pct="' + escapeHtml(row.commercial_fee_pct || 0) + '"' +
-                            ' data-fee-fixed="' + escapeHtml(row.commercial_fee_fixed || 0) + '"' +
-                            ' data-billing-amount="' + escapeHtml(row.commercial_billing_amount || 0) + '"' +
-                            ' data-billing-cycle="' + escapeHtml(row.commercial_billing_cycle || '') + '"' +
-                            ' data-margin-pct="' + escapeHtml(row.commercial_margin_pct || 0) + '"' +
-                            ' data-replacement-period="' + escapeHtml(row.commercial_replacement_period || '') + '"' +
-                            ' data-internal-note="' + escapeHtml(row.commercial_internal_note || '') + '"' +
-                        '><i class="fa-solid fa-pen"></i>Change</a>' +
+
+                    // Sub-Card 4: Placement Journey & Status
+                    '<div class="cl-subcard cl-subcard-status">' +
+                        '<div class="cl-subcard-hdr">' +
+                            '<span class="cl-subcard-title"><i class="fa-solid fa-route me-1 text-primary"></i>Journey & Status</span>' +
+                            '<a href="javascript:void(0);" class="cl-subcard-action-link assignment-change-btn"' +
+                                ' data-candidate-id="' + escapeHtml(row.id) + '"' +
+                                ' data-is-bench="' + (isBench ? 1 : 0) + '"' +
+                                ' data-name="' + escapeHtml(fullName) + '"' +
+                                ' data-designation="' + escapeHtml(designation) + '"' +
+                                ' data-exp-loc="' + escapeHtml(expLocLine) + '"' +
+                                ' data-client="' + escapeHtml(clientName) + '"' +
+                                ' data-employment-type="' + escapeHtml(empType) + '"' +
+                                ' data-joined-date="' + escapeHtml(joinedIsoForAssign) + '"' +
+                                ' data-avatar-class="' + bgClass + '"' +
+                                ' data-avatar-letter="' + escapeHtml(strVal) + '"' +
+                                ' data-assignment-status="' + escapeHtml(row.assignment_status || '') + '"' +
+                                ' data-expected-end-date="' + escapeHtml(row.assignment_expected_end_date || '') + '"' +
+                                ' data-client-location="' + escapeHtml(row.assignment_client_location || '') + '"' +
+                                ' data-exit-reason="' + escapeHtml(row.assignment_exit_reason || '') + '"' +
+                                ' data-project-outcome="' + escapeHtml(row.assignment_project_outcome || '') + '"' +
+                                ' data-remarks="' + escapeHtml(row.assignment_remarks || '') + '"' +
+                                ' data-internal-notes="' + escapeHtml(row.assignment_internal_notes || '') + '"' +
+                                ' data-replacement-required="' + escapeHtml(row.assignment_replacement_required || 0) + '"' +
+                                ' data-replacement-status="' + escapeHtml(row.assignment_replacement_status || '') + '"' +
+                                ' data-replacement-requested-on="' + escapeHtml(row.assignment_replacement_requested_on || '') + '"' +
+                                ' data-replacement-reason="' + escapeHtml(row.assignment_replacement_reason || '') + '"' +
+                                ' title="Change Assignment Status"><i class="fa-solid fa-pen-to-square me-1"></i>Update</a>' +
+                        '</div>' +
+                        '<div class="d-flex flex-column gap-2 mt-1">' +
+                            '<div class="d-flex align-items-center justify-content-between">' +
+                                '<span class="placed-status-pill ' + adStatus.cls + '" data-ad-status>' +
+                                    '<i class="fa-solid ' + adStatus.icon + ' me-1" data-ad-status-icon></i><span data-ad-status-label>' + adStatus.label + '</span>' +
+                                '</span>' +
+                                '<div class="d-flex align-items-center gap-1 fs-9 text-muted">' +
+                                    '<i class="fa-regular fa-calendar-days"></i>' +
+                                    '<span>End: </span><strong class="text-dark" data-ad-end-date>' + escapeHtml(adEndDateDisp) + '</strong>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="placed-card-timeline-box">' +
+                                timelineHtml +
+                            '</div>' +
+                        '</div>' +
                     '</div>' +
-                '</td>' +
-                '<td>' +
-                    '<div class="d-flex flex-column">' +
-                        '<span class="placed-status-pill ' + adStatus.cls + '" data-ad-status>' +
-                            '<i class="fa-solid ' + adStatus.icon + ' me-1" data-ad-status-icon></i><span data-ad-status-label>' + adStatus.label + '</span>' +
-                        '</span>' +
-                        '<span class="text-muted fw-semibold fs-9 mt-2">Expected End</span>' +
-                        '<span class="placed-commercial-line">' +
-                            '<i class="fa-solid fa-calendar-days text-muted"></i>' +
-                            '<span class="text-dark fw-semibold fs-9" data-ad-end-date>' + escapeHtml(adEndDateDisp) + '</span>' +
-                        '</span>' +
-                        '<a href="javascript:void(0);" class="placed-change-link assignment-change-btn"' +
-                            ' data-candidate-id="' + escapeHtml(row.id) + '"' +
-                            ' data-is-bench="' + (isBench ? 1 : 0) + '"' +
-                            ' data-name="' + escapeHtml(fullName) + '"' +
-                            ' data-designation="' + escapeHtml(designation) + '"' +
-                            ' data-exp-loc="' + escapeHtml(expLocLine) + '"' +
-                            ' data-client="' + escapeHtml(clientName) + '"' +
-                            ' data-employment-type="' + escapeHtml(empType) + '"' +
-                            ' data-joined-date="' + escapeHtml(joinedIsoForAssign) + '"' +
-                            ' data-avatar-class="' + bgClass + '"' +
-                            ' data-avatar-letter="' + escapeHtml(strVal) + '"' +
-                            ' data-assignment-status="' + escapeHtml(row.assignment_status || '') + '"' +
-                            ' data-expected-end-date="' + escapeHtml(row.assignment_expected_end_date || '') + '"' +
-                            ' data-client-location="' + escapeHtml(row.assignment_client_location || '') + '"' +
-                            ' data-exit-reason="' + escapeHtml(row.assignment_exit_reason || '') + '"' +
-                            ' data-project-outcome="' + escapeHtml(row.assignment_project_outcome || '') + '"' +
-                            ' data-remarks="' + escapeHtml(row.assignment_remarks || '') + '"' +
-                            ' data-internal-notes="' + escapeHtml(row.assignment_internal_notes || '') + '"' +
-                            ' data-replacement-required="' + escapeHtml(row.assignment_replacement_required || 0) + '"' +
-                            ' data-replacement-status="' + escapeHtml(row.assignment_replacement_status || '') + '"' +
-                            ' data-replacement-requested-on="' + escapeHtml(row.assignment_replacement_requested_on || '') + '"' +
-                            ' data-replacement-reason="' + escapeHtml(row.assignment_replacement_reason || '') + '"' +
-                        '><i class="fa-solid fa-pen"></i>Change</a>' +
+                '</div>' +
+
+                // Discrete Bottom Activity & Action Strip (Rule 20)
+                '<div class="cl-card-bottom-strip">' +
+                    '<div class="cl-strip-left">' +
+                        '<div class="form-check form-check-sm form-check-custom form-check-solid me-1">' +
+                            '<input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" data-jobId="' + escapeHtml(row.jobId || '') + '" value="' + escapeHtml(row.candidate_id || '') + '" title="Select Candidate" />' +
+                        '</div>' +
+                        '<span class="cl-strip-badge"><i class="fa-regular fa-calendar-check text-success me-1"></i>Joined: ' + (joinedDisplay !== '--' ? joinedDisplay : 'Pending') + '</span>' +
+                        (offerDateDisplay !== '--' ? '<span class="cl-strip-badge"><i class="fa-solid fa-file-signature text-primary me-1"></i>Offer: ' + offerDateDisplay + '</span>' : '') +
+                        turnaroundPill +
                     '</div>' +
-                '</td>' +
-                '<td>' +
-                    '<div class="dropdown">' +
-                        '<button class="btn btn-sm btn-icon btn-light placed-action-btn" type="button" data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false">' +
-                            '<i class="fa-solid fa-ellipsis-vertical fs-6"></i>' +
+                    '<div class="cl-strip-right">' +
+                        '<button type="button" class="btn btn-sm btn-light-primary px-3 py-1 fs-9 fw-bold stage_sub_stage" data-row-id="' + escapeHtml(row.wiseId || '') + '" title="View complete placement stage audit">' +
+                            '<i class="fa-solid fa-diagram-project me-1"></i>Journey Status' +
                         '</button>' +
-                        '<ul class="dropdown-menu dropdown-menu-end">' +
-                            '<li><a href="javascript:void(0);" class="dropdown-item stage_sub_stage" data-row-id="' + escapeHtml(row.wiseId || '') + '">View Placement Status</a></li>' +
-                            '<li><a href="javascript:void(0);" class="dropdown-item text-danger placed-row-delete-btn" data-candidate-name="' + escapeHtml(fullName) + '"><i class="fa-solid fa-trash-can me-2"></i>Delete</a></li>' +
-                        '</ul>' +
+                        '<div class="dropdown">' +
+                            '<button class="btn btn-sm btn-icon btn-light placed-action-btn" type="button" data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false" title="More Actions">' +
+                                '<i class="fa-solid fa-ellipsis-vertical fs-6"></i>' +
+                            '</button>' +
+                            '<ul class="dropdown-menu dropdown-menu-end shadow-sm fs-8">' +
+                                '<li><a href="javascript:void(0);" class="dropdown-item stage_sub_stage" data-row-id="' + escapeHtml(row.wiseId || '') + '"><i class="fa-solid fa-diagram-project me-2 text-primary"></i>View Placement Status</a></li>' +
+                                '<li><a href="javascript:void(0);" class="dropdown-item show-application-detail" data-row-id="' + escapeHtml(row.wiseId || '') + '"><i class="fa-solid fa-id-card me-2 text-info"></i>Candidate Full Profile</a></li>' +
+                                '<li><hr class="dropdown-divider"></li>' +
+                                '<li><a href="javascript:void(0);" class="dropdown-item text-danger placed-row-delete-btn" data-candidate-name="' + escapeHtml(fullName) + '"><i class="fa-solid fa-trash-can me-2"></i>Delete Record</a></li>' +
+                            '</ul>' +
+                        '</div>' +
                     '</div>' +
-                '</td>' +
-            '</tr>';
+                '</div>' +
+            '</div>';
+        }
+
+        // Backward-compatible alias
+        function renderCandidateRow(row) {
+            return renderCandidateCard(row);
         }
 
         function renderCandidatesTable(candidates) {
             if (!candidates || candidates.length === 0) {
-                $('#benchCandidatePlaceAjax').html('<tr style="height: 102px;"><td colspan="8" class="text-center text-muted">No data available in table</td></tr>');
+                var emptyHtml = '<div class="cl-empty-state">' +
+                    '<div class="cl-empty-icon"><i class="fa-solid fa-user-slash"></i></div>' +
+                    '<div class="cl-empty-title">No Placed Talents Found</div>' +
+                    '<div class="cl-empty-text">No candidate placement records match your search or filter criteria.</div>' +
+                    '<button type="button" class="btn btn-sm btn-light-primary mt-3" onclick="resetPlacedFilters()">' +
+                        '<i class="fa-solid fa-rotate-left me-1"></i>Reset Filters' +
+                    '</button>' +
+                '</div>';
+                $('#benchCandidatePlaceAjax').html(emptyHtml);
+                $('#clListSummary').text('Showing 0 placement records');
                 return;
             }
-            var rowsHtml = '';
+
+            var cardsHtml = '';
             for (var i = 0; i < candidates.length; i++) {
-                rowsHtml += renderCandidateRow(candidates[i]);
+                cardsHtml += renderCandidateCard(candidates[i]);
             }
-            $('#benchCandidatePlaceAjax').html(rowsHtml);
-            $('[data-toggle="tooltip"]').tooltip();
+            $('#benchCandidatePlaceAjax').html(cardsHtml);
+
+            var store = window.PlacedListingStore;
+            var from = (store.page - 1) * store.perPage + 1;
+            var to = Math.min(store.page * store.perPage, store.total);
+            $('#clListSummary').text('Showing ' + from + ' to ' + to + ' of ' + store.total + ' records');
+
+            updateSelectionCounter();
+
+            if (typeof $.fn.tooltip !== 'undefined') {
+                $('[data-toggle="tooltip"]').tooltip();
+            }
+        }
+
+        function renderCandidatesCardsOnly(candidates) {
+            if (!candidates || candidates.length === 0) {
+                var emptyHtml = '<div class="cl-empty-state">' +
+                    '<div class="cl-empty-icon"><i class="fa-solid fa-user-slash"></i></div>' +
+                    '<div class="cl-empty-title">No Placed Talents Found</div>' +
+                    '<div class="cl-empty-text">No candidate placement records match your active status filter.</div>' +
+                    '<button type="button" class="btn btn-sm btn-light-primary mt-3" onclick="resetPlacedFilters()">' +
+                        '<i class="fa-solid fa-rotate-left me-1"></i>Reset Filters' +
+                    '</button>' +
+                '</div>';
+                $('#benchCandidatePlaceAjax').html(emptyHtml);
+                return;
+            }
+
+            var cardsHtml = '';
+            for (var i = 0; i < candidates.length; i++) {
+                cardsHtml += renderCandidateCard(candidates[i]);
+            }
+            $('#benchCandidatePlaceAjax').html(cardsHtml);
+
+            updateSelectionCounter();
+
+            if (typeof $.fn.tooltip !== 'undefined') {
+                $('[data-toggle="tooltip"]').tooltip();
+            }
+        }
+
+        function updateSelectionCounter() {
+            var totalSelected = $('.chk_list_item:checked').length;
+            var totalVisible = $('.chk_list_item').length;
+
+            if (totalSelected > 0) {
+                $('#clSelectedCountBadge').show().text(totalSelected + ' selected');
+            } else {
+                $('#clSelectedCountBadge').hide();
+            }
+
+            $('#checkAllPlacedCandidates').prop('checked', totalVisible > 0 && totalSelected === totalVisible);
         }
 
         function renderPaginationHtml(total, curPage, lastPage, perPage) {
@@ -2946,8 +4518,8 @@
             // 2. Refresh live overview stats
             fetchPlacedListingStats();
 
-            // 3. Find target candidate row in DOM
-            var $row = $('tr.placed-row').filter(function() {
+            // 3. Find target candidate row/card in DOM
+            var $row = $('.placed-card, tr.placed-row').filter(function() {
                 var rowId = String($(this).data('candidate-id'));
                 return (candidateId && rowId === String(candidateId)) || (wiseId && rowId === String(wiseId));
             });
