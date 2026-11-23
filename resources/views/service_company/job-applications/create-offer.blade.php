@@ -5271,10 +5271,10 @@
                                         <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
                                             <div class="d-flex align-items-center gap-2 text-gray-600 fs-8">
                                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                                                <span>The official offer letter email will be dispatched automatically upon clicking <strong>Save &amp; Next</strong> in the header topbar.</span>
+                                                <span>The official offer letter email will be dispatched automatically upon clicking <strong>Send Offer</strong> in the header topbar.</span>
                                             </div>
-                                            {{-- Hidden submit trigger for header Save & Next action --}}
-                                            <button type="button" class="btn co-send-submit" id="co_send_submit" style="display: none !important;"><span class="co-send-submit-label">Send Offer Letter</span><span class="co-send-submit-wait" style="display:none;">Sending…</span></button>
+                                            {{-- Hidden submit trigger for header Send Offer action --}}
+                                            <button type="button" class="btn co-send-submit" id="co_send_submit" style="display: none !important;"><span class="co-send-submit-label">Send Offer</span><span class="co-send-submit-wait" style="display:none;">Sending…</span></button>
                                         </div>
                                     </div>
                                 </div>
@@ -5412,6 +5412,20 @@
                     var tag = btn.tagName.toUpperCase();
                     if (tag !== 'BUTTON' && tag !== 'INPUT') return;
                     btn.disabled = false;
+                    if (btn.id === 'co_header_save_btn') {
+                        var active = typeof coActiveStep === 'function' ? coActiveStep() : 1;
+                        if (active === 5) {
+                            btn.innerHTML = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
+                            btn.title = 'Send Offer to Candidate';
+                            btn._origHtml = btn.innerHTML;
+                            return;
+                        } else {
+                            btn.innerHTML = '<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1"></i>';
+                            btn.title = 'Save and proceed to next step';
+                            btn._origHtml = btn.innerHTML;
+                            return;
+                        }
+                    }
                     if (btn._origHtml !== undefined) btn.innerHTML = btn._origHtml;
                     if (btn._origVal  !== undefined) btn.value     = btn._origVal;
                 }
@@ -5430,11 +5444,19 @@
                         $hdrBtn.find('.co-btn-spinner').remove();
                         var active = typeof coActiveStep === 'function' ? coActiveStep() : 1;
                         if (active === 5) {
-                            $hdrBtn.find('.co-header-save-label').text('Send Offer Letter');
+                            $hdrBtn.find('.co-header-save-label').text('Send Offer');
                             $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                            $hdrBtn.attr('title', 'Send Offer to Candidate');
+                            if ($hdrBtn[0]) {
+                                $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
+                            }
                         } else {
                             $hdrBtn.find('.co-header-save-label').text('Save & Next');
                             $hdrBtn.find('i').attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                            $hdrBtn.attr('title', 'Save and proceed to next step');
+                            if ($hdrBtn[0]) {
+                                $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1"></i>';
+                            }
                         }
                     }
                 }
@@ -5478,8 +5500,8 @@
                             document.querySelectorAll('.tab-content-section').forEach(function(s) { s.classList.remove("active"); });
                             var nextEl = document.getElementById("step" + nextNum);
                             if (nextEl) nextEl.classList.add("active");
-                            if (typeof syncStepHeader === 'function') syncStepHeader();
                             btnSaveReset(btn);
+                            if (typeof syncStepHeader === 'function') syncStepHeader();
                         }, 300);
                     }
                 }
@@ -7797,7 +7819,7 @@
                         }
                     }
 
-                    // Sync Main Drawer Header Action Button: 'Save & Next' for steps 1-4, 'Send Offer Letter' on step 5
+                    // Sync Main Drawer Header Action Button: 'Save & Next' for steps 1-4, 'Send Offer' on step 5
                     var $hdrBtn = $('#co_header_save_btn');
                     if ($hdrBtn.length) {
                         $hdrBtn.prop('disabled', false);
@@ -7805,11 +7827,19 @@
                         var $label = $hdrBtn.find('.co-header-save-label');
                         var $icon = $hdrBtn.find('i');
                         if (active === 5) {
-                            $label.text('Send Offer Letter');
+                            $label.text('Send Offer');
                             $icon.attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                            $hdrBtn.attr('title', 'Send Offer to Candidate');
+                            if ($hdrBtn[0]) {
+                                $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
+                            }
                         } else {
                             $label.text('Save & Next');
                             $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                            $hdrBtn.attr('title', 'Save and proceed to next step');
+                            if ($hdrBtn[0]) {
+                                $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1"></i>';
+                            }
                         }
                         $hdrBtn.show();
                     }
@@ -8195,7 +8225,7 @@
                     $btn.find('.co-send-submit-wait').show();
 
                     $hdrBtn.prop('disabled', true);
-                    $hdrBtn.find('.co-header-save-label').text('Sending Offer Letter…');
+                    $hdrBtn.find('.co-header-save-label').text('Sending Offer…');
                     $hdrBtn.find('i').attr('class', 'fas fa-spinner fa-spin fs-9 ms-1');
 
                     $.ajax({
@@ -8212,8 +8242,9 @@
                             if (r && r.status === 'coinCheck') {
                                 window.coSendInFlight = false;
                                 $hdrBtn.prop('disabled', false);
-                                $hdrBtn.find('.co-header-save-label').text('Send Offer Letter');
+                                $hdrBtn.find('.co-header-save-label').text('Send Offer');
                                 $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                                if ($hdrBtn[0]) $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
                                 Swal.fire({
                                     title: 'Insufficient Coins',
                                     text: r.message || 'Insufficient coin balance to release this offer letter.',
@@ -8227,8 +8258,9 @@
                             if (r && r.status === 'rateLimited') {
                                 window.coSendInFlight = false;
                                 $hdrBtn.prop('disabled', false);
-                                $hdrBtn.find('.co-header-save-label').text('Send Offer Letter');
+                                $hdrBtn.find('.co-header-save-label').text('Send Offer');
                                 $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                                if ($hdrBtn[0]) $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
                                 Swal.fire({
                                     title: 'Limit Reached',
                                     text: r.message || 'This offer letter has already been sent the maximum number of times recently.',
@@ -8244,6 +8276,7 @@
                             window.coSendInFlight = false;
                             $hdrBtn.find('.co-header-save-label').text('Offer Released ✓');
                             $hdrBtn.find('i').attr('class', 'fas fa-check fs-9 ms-1');
+                            if ($hdrBtn[0]) $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Offer Released ✓</span><i class="fas fa-check fs-9 ms-1"></i>';
 
                             // Update in-drawer status badge in Sub-Header immediately
                             $('#co_send_status_badge')
@@ -8319,8 +8352,9 @@
                             $btn.find('.co-send-submit-wait').hide();
 
                             $hdrBtn.prop('disabled', false);
-                            $hdrBtn.find('.co-header-save-label').text('Send Offer Letter');
+                            $hdrBtn.find('.co-header-save-label').text('Send Offer');
                             $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                            if ($hdrBtn[0]) $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
 
                             var errMsg = 'Failed to send the offer letter. Please check your network and try again.';
                             if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
