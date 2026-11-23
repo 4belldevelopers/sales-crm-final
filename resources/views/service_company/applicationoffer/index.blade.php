@@ -2444,12 +2444,14 @@ body { overflow-x: hidden !important; }
 #kt_fwd_offer_drawer {
     position: fixed !important;
     top: 0; right: 0; bottom: 0;
-    width: 700px !important;
+    width: 720px !important;
+    max-width: 95vw !important;
     z-index: 1055 !important;
     display: flex; flex-direction: column;
     transform: translateX(100%);
-    transition: transform .3s ease;
-    box-shadow: -4px 0 24px rgba(0,0,0,.12);
+    transition: transform .28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -8px 0 32px rgba(15, 23, 42, 0.16);
+    background: #ffffff !important;
 }
 #kt_fwd_offer_drawer.drawer-on {
     transform: translateX(0) !important;
@@ -2457,10 +2459,66 @@ body { overflow-x: hidden !important; }
 #kt_fwd_offer_overlay {
     display: none;
     position: fixed; inset: 0;
-    background: rgba(0,0,0,.35);
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
     z-index: 1054;
 }
 #kt_fwd_offer_overlay.active { display: block; }
+.co-drawer-topbar {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 13px 20px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    min-height: 60px;
+}
+.co-drawer-topbar-ico {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.co-drawer-topbar-title {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25;
+}
+.co-drawer-topbar-sub {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: #64748b !important;
+    margin-top: 2px;
+}
+.co-drawer-topbar-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.co-drawer-topbar-close:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+    color: #ef4444;
+}
 #application_fwd_offer_body_content {
     overflow: hidden !important;
     flex: 1 1 0 !important;
@@ -2470,17 +2528,20 @@ body { overflow-x: hidden !important; }
 </style>
 
 <div id="kt_fwd_offer_overlay"></div>
-<div id="kt_fwd_offer_drawer" class="bg-body">
-    <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column" style="border-radius:0;">
-        <div class="card-header px-5 py-3 d-flex align-items-center justify-content-between flex-shrink-0" style="border-bottom:1px solid #e4e6ef; min-height:56px;">
-            <h3 class="fw-bold text-dark mb-0 fs-5" id="titleSet">Add Approver</h3>
-            <button type="button" id="kt_fwd_offer_close" class="btn btn-sm btn-icon btn-active-light-danger">
-                <span class="svg-icon svg-icon-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"/>
-                        <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)"/>
-                    </svg>
-                </span>
+<div id="kt_fwd_offer_drawer">
+    <div class="d-flex flex-column w-100 h-100 bg-white">
+        <div class="co-drawer-topbar">
+            <div class="d-flex align-items-center gap-3">
+                <div class="co-drawer-topbar-ico">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div>
+                    <h3 class="co-drawer-topbar-title mb-0" id="titleSet">Select Approval</h3>
+                    <div class="co-drawer-topbar-sub">Assign organization or client approvers to review and sign off</div>
+                </div>
+            </div>
+            <button type="button" id="kt_fwd_offer_close" class="co-drawer-topbar-close" aria-label="Close drawer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
         </div>
         <div id="application_fwd_offer_body_content" class="flex-grow-1 overflow-auto position-relative px-0 py-0"></div>

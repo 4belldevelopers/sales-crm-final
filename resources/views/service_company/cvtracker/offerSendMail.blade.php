@@ -90,59 +90,183 @@ if($cc_email_count > 0){
   #kt_activitiesIntTeamsss{width: 750;}
 }
 
-/* ── Approver recipient picker (Internal Company Approvers / Client Company Approvers) ──
-   Scoped to .co-appr-* so it doesn't affect the rest of this shared email-composer modal.
-   Reuses the exact same underlying data + Add/Remove wiring — this only changes presentation. */
-.co-appr-picker, .co-appr-picker * { font-family: 'Poppins', sans-serif; }
+/* ════════════ Modern Card + Sub-Card Approver Recipient Drawer (Rule 20) ════════════
+   Scoped to .co-appr-* so it doesn't affect any other views or modules. */
+.co-appr-picker, .co-appr-picker * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
 .co-appr-picker { font-size: 12px; }
-.co-appr-source-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-.co-appr-source-card {
-    flex: 1 1 220px; display: flex; align-items: center; gap: 10px; cursor: pointer;
-    border: 1px solid #e4e6ef; border-radius: 10px; padding: 10px 12px; background: #fff;
-}
-.co-appr-source-card input { margin: 0 6px 0 0; }
-.co-appr-source-card--active { border-color: #1b84ff; background: #f3f8ff; }
-.co-appr-source-ico { width: 30px; height: 30px; border-radius: 8px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.co-appr-source-ico svg { width: 16px; height: 16px; }
-.co-appr-source-title { font-size: 12px; font-weight: 700; color: #181c32; }
-.co-appr-source-sub { font-size: 10px; color: #7e8299; margin-top: 1px; }
-.co-appr-search { margin-bottom: 10px; }
-.co-appr-search input { height: 34px; font-size: 12px; }
-.co-appr-empty { font-size: 11px; color: #a1a5b7; text-align: center; padding: 14px 4px; }
-/* Action buttons in the approver/CC picker tables — explicit styling so they always render
-   in the AJAX-injected context regardless of Metronic CSS loading order. */
-.co-appr-add-btn {
-    display: inline-block; padding: 4px 14px; font-size: 11.5px; font-weight: 600;
-    color: #1b84ff; background: #e9f3ff; border: 1px solid #b3d5ff;
-    border-radius: 6px; cursor: pointer; text-decoration: none; white-space: nowrap;
-    transition: background .15s, color .15s;
-}
-.co-appr-add-btn:hover { background: #1b84ff; color: #fff; }
-.co-appr-add-btn.co-appr-btn--remove { color: #f1416c; background: #fff0f3; border-color: #f8b4c4; }
-.co-appr-add-btn.co-appr-btn--remove:hover { background: #f1416c; color: #fff; }
 
-/* Self-contained sliding drawer — driven entirely by our own JS/CSS classes below, not
-   Metronic's KTDrawer plugin (which never re-scans HTML injected into the modal via AJAX,
-   so its data-kt-drawer-toggle wiring silently did nothing — that was the "drawer won't
-   open" bug).
-   position:absolute (not fixed) anchored to #application_fwd_offer_body_content, which the
-   modal markup already gives `position-relative`. Bootstrap's modal applies a CSS transform
-   to .modal-dialog for its open/close animation, and any transformed ancestor becomes the
-   containing block for position:fixed descendants — so a fixed drawer here renders relative
-   to the (small, mid-page) modal box instead of the viewport and ends up invisible/off-screen.
-   Anchoring to the already-positioned modal body sidesteps that entirely. */
+/* Self-contained sliding drawer */
 .co-appr-drawer {
     position: absolute !important; top: 0 !important; bottom: 0 !important; right: -100% !important; left: auto !important;
-    width: 100% !important; height: 100% !important; background: #fff !important;
-    box-shadow: -6px 0 24px rgba(24,28,50,.18); z-index: 2147483000 !important;
-    transition: right .25s ease; overflow-y: auto; display: block !important;
+    width: 100% !important; height: 100% !important; background: #ffffff !important;
+    box-shadow: -8px 0 32px rgba(15, 23, 42, 0.16); z-index: 2147483000 !important;
+    transition: right .28s cubic-bezier(0.16, 1, 0.3, 1); overflow-y: auto; display: block !important;
 }
 .co-appr-drawer.co-appr-drawer--open { right: 0 !important; }
 .co-appr-drawer-backdrop {
-    display: none; position: absolute !important; inset: 0; background: rgba(24,28,50,.35);
-    z-index: 2147482999 !important;
+    display: none; position: absolute !important; inset: 0; background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px); z-index: 2147482999 !important;
 }
 .co-appr-drawer-backdrop.co-appr-drawer-backdrop--open { display: block !important; }
+
+/* Tier 2: Source selector sub-cards */
+.co-appr-source-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.co-appr-source-card {
+    flex: 1 1 230px; display: flex; align-items: center; gap: 12px; cursor: pointer;
+    background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 11px 14px;
+    position: relative; transition: all 0.18s ease; user-select: none;
+}
+.co-appr-source-card:hover { border-color: #cbd5e1; background: #f8fafc; }
+.co-appr-source-card--active {
+    border-color: #009ef7 !important; background: #f0f7ff !important;
+    box-shadow: 0 1px 4px rgba(0, 158, 247, 0.12);
+}
+.co-appr-source-ico {
+    width: 36px; height: 36px; border-radius: 8px; background: #f8fafc;
+    border: 1px solid #e2e8f0; color: #64748b; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; transition: all 0.18s ease;
+}
+.co-appr-source-card--active .co-appr-source-ico {
+    background: #009ef7; border-color: #009ef7; color: #ffffff;
+}
+.co-appr-source-ico svg { width: 17px; height: 17px; }
+.co-appr-source-meta { flex: 1; min-width: 0; }
+.co-appr-source-title {
+    font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 700;
+    color: #1e293b; line-height: 1.25;
+}
+.co-appr-source-card--active .co-appr-source-title { color: #009ef7; }
+.co-appr-source-sub { margin-top: 3px; }
+.co-appr-count-pill {
+    display: inline-block; font-family: 'Poppins', sans-serif; font-size: 10.5px;
+    font-weight: 600; padding: 2px 7px; border-radius: 6px; background: #f1f5f9;
+    border: 1px solid #e2e8f0; color: #64748b; line-height: 1.2;
+}
+.co-appr-source-card--active .co-appr-count-pill {
+    background: #e0f2fe; border-color: #bae6fd; color: #0284c7;
+}
+.co-appr-source-check {
+    width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #cbd5e1;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    background: #ffffff; transition: all 0.15s ease;
+}
+.co-appr-source-card--active .co-appr-source-check {
+    border-color: #009ef7; background: #ffffff;
+}
+.co-appr-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: transparent;
+    transition: background 0.15s ease;
+}
+.co-appr-source-card--active .co-appr-dot { background: #009ef7; }
+
+/* Tier 1: Search toolbar card */
+.co-appr-toolbar {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 8px 12px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+}
+.co-appr-searchbox {
+    flex: 1; display: flex; align-items: center; background: #ffffff;
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 0 10px; height: 36px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.co-appr-searchbox:focus-within {
+    border-color: #009ef7; box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+}
+.co-appr-search-ico {
+    width: 14px; height: 14px; color: #94a3b8; margin-right: 8px; flex-shrink: 0;
+}
+.co-appr-search-input {
+    flex: 1; border: none !important; outline: none !important; background: transparent !important;
+    font-family: 'Poppins', sans-serif !important; font-size: 12px !important; color: #0f172a !important;
+    box-shadow: none !important; padding: 0 !important; height: 100% !important;
+}
+.co-appr-search-input::placeholder { color: #94a3b8 !important; }
+.co-appr-search-clear {
+    border: none; background: transparent; color: #94a3b8; font-size: 16px;
+    cursor: pointer; padding: 0 4px; line-height: 1;
+}
+.co-appr-search-clear:hover { color: #0f172a; }
+.co-appr-counter-badge {
+    font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 500;
+    color: #64748b; white-space: nowrap; padding-right: 4px;
+}
+.co-appr-active-count { font-weight: 700; color: #0f172a; }
+
+/* Tier 3: Approver table card & mandatory header background (Rule 20) */
+.co-appr-table-card {
+    background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+.co-appr-table {
+    width: 100%; margin-bottom: 0 !important; border-collapse: separate; border-spacing: 0;
+}
+.co-appr-table thead tr {
+    background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important;
+}
+.co-appr-table thead th {
+    font-family: 'Poppins', sans-serif !important; font-size: 10.5px !important;
+    font-weight: 700 !important; color: #64748b !important; letter-spacing: 0.04em !important;
+    text-transform: uppercase !important; padding: 10px 14px !important;
+    border-bottom: 1px solid #e2e8f0 !important; border-top: none !important;
+}
+.co-appr-table tbody tr { transition: background 0.15s ease; }
+.co-appr-table tbody tr:hover { background: #f8fafc; }
+.co-appr-table tbody td {
+    padding: 11px 14px !important; vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9 !important; border-top: none !important;
+}
+.co-appr-table tbody tr:last-child td { border-bottom: none !important; }
+.co-appr-avatar {
+    width: 34px; height: 34px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-family: 'Poppins', sans-serif;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.co-appr-name {
+    font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600;
+    color: #0f172a; line-height: 1.25;
+}
+.co-appr-role-tag {
+    font-family: 'Poppins', sans-serif; font-size: 10.5px; font-weight: 500;
+    color: #64748b; margin-top: 2px; line-height: 1.2;
+}
+.co-appr-contact, .co-appr-company {
+    display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+}
+.co-appr-contact-ico, .co-appr-company-ico {
+    width: 13px; height: 13px; color: #94a3b8; flex-shrink: 0;
+}
+.co-appr-email-text, .co-appr-company-text {
+    font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500;
+    color: #334155;
+}
+.co-appr-add-btn {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    gap: 5px !important; height: 28px !important; padding: 0 14px !important;
+    font-family: 'Poppins', sans-serif !important; font-size: 11.5px !important;
+    font-weight: 600 !important; color: #ffffff !important; background: #1e293b !important;
+    border: 1px solid #1e293b !important; border-radius: 6px !important; cursor: pointer !important;
+    text-decoration: none !important; white-space: nowrap !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important; transition: all 0.15s ease !important;
+}
+.co-appr-add-btn:hover {
+    background: #0f172a !important; border-color: #0f172a !important; color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.14) !important;
+}
+.co-appr-add-btn.co-appr-btn--remove {
+    background: #ecfdf5 !important; border-color: #a7f3d0 !important; color: #059669 !important;
+}
+.co-appr-add-btn.co-appr-btn--remove:hover {
+    background: #d1fae5 !important; border-color: #6ee7b7 !important; color: #047857 !important;
+}
+.co-appr-empty-cell { padding: 32px 16px !important; text-align: center; }
+.co-appr-empty-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.co-appr-empty-ico {
+    width: 38px; height: 38px; border-radius: 50%; background: #f1f5f9;
+    color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.co-appr-empty-msg {
+    font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; color: #64748b;
+}
 
 /* ════════════ Send Offer Letter (candidate flow, mtype=1) — polished composer ════════════
    Scoped entirely to .co-sendoffer so the shared approval composer (mtype=2) is untouched.
@@ -422,206 +546,318 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
 
 
 <div id="kt_activitiesIntTeam_cc" class="co-appr-drawer">
-  <div class="card-body position-relative px-0 py-0" id="kt__cc_body">
-  <div id="kt_cc_scroll" class="position-relative bg-light pt-2 h-100" style="overflow-y:auto;">
-    <!--begin::Team card-->
-    <div class="card card-custom mx-2">
-      <!--begin::Team header-->
-      <div id="kt__cc_header" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #e4e6ef;background:#fff;min-height:48px;">
-          <span class="fw-bold text-dark" style="font-size:13px;">Select Approver (CC)</span>
-          <button type="button" id="kt_activitiesIntTeam_close_cc" class="btn btn-sm btn-icon btn-active-light-danger" style="width:30px;height:30px;flex-shrink:0;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-      </div>
-      <!--end::Team header-->
-      <!--begin::Team Content-->
-      <div class="card-body py-7 co-appr-picker">
-        {{-- Choose Approver Source: internal team always available; client team only shown
-             when this job actually has a client (i.e. it's not an internal-only job). --}}
+  <div class="position-relative h-100 d-flex flex-column bg-white" id="kt__cc_body">
+    <!--begin::Team header (Rule 20 Anchor Background)-->
+    <div id="kt__cc_header" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;min-height:56px;flex-shrink:0;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width:34px;height:34px;border-radius:8px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;display:flex;align-items:center;justify-content:center;font-size:13.5px;flex-shrink:0;">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div>
+                <span class="fw-bold text-dark" style="font-family:'Poppins',sans-serif;font-size:14px;color:#0f172a;letter-spacing:-0.01em;">Select Approver (CC)</span>
+                <div style="font-size:10.5px;color:#64748b;">Add team members to CC on offer notifications</div>
+            </div>
+        </div>
+        <button type="button" id="kt_activitiesIntTeam_close_cc" class="co-drawer-topbar-close" aria-label="Close CC drawer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+    </div>
+    <!--end::Team header-->
+    <!--begin::Team Content-->
+    <div class="co-appr-picker flex-grow-1 overflow-auto p-4 p-md-5" id="kt_cc_scroll">
+        {{-- Tier 2 Sub-Tabs / Source Cards --}}
         <div class="co-appr-source-row">
-            <label class="co-appr-source-card co-appr-source-card--active" data-source-for="cc" data-source="internal">
-                <input type="radio" name="apprSourceCc" value="internal" checked>
-                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></span>
-                <div>
+            <div class="co-appr-source-card co-appr-source-card--active" data-source-for="cc" data-source="internal">
+                <input type="radio" name="apprSourceCc" value="internal" checked style="display:none;">
+                <span class="co-appr-source-ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg>
+                </span>
+                <div class="co-appr-source-meta">
                     <div class="co-appr-source-title">Internal Company Approvers</div>
-                    <div class="co-appr-source-sub">{{ count($cc_email_internal_data ?? []) }} available</div>
+                    <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($cc_email_internal_data ?? []) }} available</span></div>
                 </div>
-            </label>
+                <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
+            </div>
             @if(!empty($cc_email_client_data))
-            <label class="co-appr-source-card" data-source-for="cc" data-source="client">
-                <input type="radio" name="apprSourceCc" value="client">
-                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                <div>
+            <div class="co-appr-source-card" data-source-for="cc" data-source="client">
+                <input type="radio" name="apprSourceCc" value="client" style="display:none;">
+                <span class="co-appr-source-ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                <div class="co-appr-source-meta">
                     <div class="co-appr-source-title">Client Company Approvers</div>
-                    <div class="co-appr-source-sub">{{ count($cc_email_client_data) }} available</div>
+                    <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($cc_email_client_data) }} available</span></div>
                 </div>
-            </label>
+                <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
+            </div>
             @endif
         </div>
-        <div class="co-appr-search">
-            <input type="text" class="form-control form-control-solid co-appr-search-input" data-search-for="cc" placeholder="Search by name, email or company...">
+
+        {{-- Tier 1 Toolbar / Search Card --}}
+        <div class="co-appr-toolbar">
+            <div class="co-appr-searchbox">
+                <svg class="co-appr-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" class="co-appr-search-input" data-search-for="cc" placeholder="Search by name, email or company...">
+                <button type="button" class="co-appr-search-clear d-none" aria-label="Clear search">&times;</button>
+            </div>
+            <div class="co-appr-counter-badge">
+                <span class="co-appr-active-count">{{ count($cc_email_internal_data ?? []) }}</span> approvers
+            </div>
         </div>
-        <!--begin::Table-->
-        <div style="overflow-x:auto;">
-        <table class="table align-middle table-row-dashed fs-6 gy-5" id="Iteam_Table_cc">
-          <!--begin::Table head-->
-          <thead>
-            <!--begin::Table row-->
-            <tr class="fw-bolder text-muted">
-              <th style="min-width:140px;">Approver</th>
-              <th style="min-width:160px;">Contact</th>
-              <th style="min-width:120px;">Company</th>
-              <th style="min-width:70px;width:70px;">Action</th>
-            </tr>
-            <!--end::Table row-->
-          </thead>
-          <!--end::Table head-->
-          <!--begin::Table body-->
-          <tbody class="text-gray-600 fw-bold">
-            @foreach ([['data' => $cc_email_internal_data ?? [], 'source' => 'internal'], ['data' => $cc_email_client_data ?? [], 'source' => 'client']] as $group)
-                @foreach ($group['data'] as $teamVal)
-                    @php
-                        $bgTextDecore = $strVal = '';
-                        $str = trim(@$teamVal->name);
-                        $str = $strVal = strtolower($str[0] ?? 'c');
-                        $str = ord($str);
-                        if ($str >= 97 && $str <= 101) { $bgTextDecore = 'fs-3 bg-light-danger text-danger'; }
-                        else if ($str >= 102 && $str <= 106) { $bgTextDecore = 'fs-3 bg-light-warning text-warning'; }
-                        else if ($str >= 107 && $str <= 111) { $bgTextDecore = 'fs-3 bg-light-primary text-primary'; }
-                        else if ($str >= 112 && $str <= 116) { $bgTextDecore = 'fs-3 bg-light-success text-success'; }
-                        else if ($str >= 117 && $str <= 121) { $bgTextDecore = 'fs-3 bg-dark text-secondary'; }
-                        else { $bgTextDecore = 'fs-3 bg-light-secondary text-dark'; }
-                    @endphp
-                    <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
-                        data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}">
-                        <!--begin::Name-->
-                        <td><div class="d-flex align-items-center">
-                            <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"> <a href="javascript:void(0);" class="">
-                                <div class="symbol-label {{ @$bgTextDecore }} border-radius-5">{{ strtoupper(@$strVal) }}</div>
-                                </a> </div>
-                            <div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">{{ ucwords(substr(@$teamVal->name, 0, 20)) }}</span> <span class="text-muted fw-bold d-block fs-7">{{ ucwords(substr(@$teamVal->display_name, 0, 25)) }}</span> </div>
-                        </div></td>
-                        <!--end::Name-->
-                        <td><div class="d-flex flex-column">{{ @$teamVal->email }}</div></td>
-                        <td><div class="d-flex flex-column">{{ @$teamVal->company_name }}</div></td>
-                        <!--begin::Action-->
-                        <td><div class="d-flex flex-column"> <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="cp_select co-appr-add-btn"
-                            rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}"  data-email="{{ @$teamVal->email }}"  >Add</a> </div></td>
-                        <!--end::Action-->
-                    </tr>
+
+        {{-- Tier 3 Table Card --}}
+        <div class="co-appr-table-card">
+            <table class="co-appr-table align-middle" id="Iteam_Table_cc">
+              <thead>
+                <tr>
+                  <th style="min-width:180px;">APPROVER</th>
+                  <th style="min-width:170px;">CONTACT</th>
+                  <th style="min-width:140px;">COMPANY</th>
+                  <th style="min-width:80px;width:80px;text-align:center;">ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach ([['data' => $cc_email_internal_data ?? [], 'source' => 'internal'], ['data' => $cc_email_client_data ?? [], 'source' => 'client']] as $group)
+                    @foreach ($group['data'] as $teamVal)
+                        @php
+                            $teamName = trim((string) @$teamVal->name);
+                            $initChar = strtoupper(substr($teamName, 0, 1) ?: 'U');
+                            $charOrd = ord(strtolower($initChar));
+                            $palettes = [
+                                ['bg' => '#eff6ff', 'text' => '#1d4ed8', 'border' => '#bfdbfe'],
+                                ['bg' => '#ecfdf5', 'text' => '#047857', 'border' => '#a7f3d0'],
+                                ['bg' => '#fef3c7', 'text' => '#b45309', 'border' => '#fde68a'],
+                                ['bg' => '#f5f3ff', 'text' => '#6d28d9', 'border' => '#ddd6fe'],
+                                ['bg' => '#fdf2f8', 'text' => '#be185d', 'border' => '#fbcfe8'],
+                                ['bg' => '#f0fdfa', 'text' => '#0f766e', 'border' => '#99f6e4'],
+                            ];
+                            $pal = $palettes[$charOrd % count($palettes)];
+                            $roleText = trim((string) (@$teamVal->display_name ?: @$teamVal->role));
+                        @endphp
+                        <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
+                            data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="co-appr-avatar" style="background:{{ $pal['bg'] }};color:{{ $pal['text'] }};border:1px solid {{ $pal['border'] }};">
+                                        {{ $initChar }}
+                                    </div>
+                                    <div class="d-flex flex-column min-w-0">
+                                        <span class="co-appr-name text-truncate">{{ ucwords(substr(@$teamVal->name, 0, 24)) }}</span>
+                                        @if(!empty($roleText))
+                                            <span class="co-appr-role-tag text-truncate">{{ ucwords(substr($roleText, 0, 25)) }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="co-appr-contact">
+                                    <svg class="co-appr-contact-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                                    </svg>
+                                    <span class="co-appr-email-text text-truncate">{{ @$teamVal->email }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="co-appr-company">
+                                    <svg class="co-appr-company-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/>
+                                    </svg>
+                                    <span class="co-appr-company-text text-truncate">{{ @$teamVal->company_name ?: 'Internal Team' }}</span>
+                                </div>
+                            </td>
+                            <td style="text-align:center;">
+                                <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="cp_select co-appr-add-btn"
+                                    rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}" data-email="{{ @$teamVal->email }}">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    <span>Add</span>
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
                 @endforeach
-            @endforeach
-            <tr class="co-appr-row co-appr-row--internal co-appr-empty-row {{ !empty($cc_email_internal_data) ? 'd-none' : '' }}"><td colspan="4" class="co-appr-empty">No internal approvers found.</td></tr>
-          </tbody>
-          <!--end::Table body-->
-        </table>
+                <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--internal {{ !empty($cc_email_internal_data) ? 'd-none' : '' }}">
+                    <td colspan="4" class="co-appr-empty-cell">
+                        <div class="co-appr-empty-inner">
+                            <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
+                            <div class="co-appr-empty-msg">No internal approvers found</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--client d-none">
+                    <td colspan="4" class="co-appr-empty-cell">
+                        <div class="co-appr-empty-inner">
+                            <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
+                            <div class="co-appr-empty-msg">No client approvers found</div>
+                        </div>
+                    </td>
+                </tr>
+              </tbody>
+            </table>
         </div>
-        <!--end::Table-->
-      </div>
-      <!--end::Team Content-->
     </div>
-    <!--end::Team card-->
+    <!--end::Team Content-->
   </div>
 </div>
-</div>
+
 
 
 
 <div id="kt_activitiesIntTeam_to" class="co-appr-drawer">
-  <div class="card-body position-relative px-0 py-0" id="kt__to_body">
-  <div id="kt_to_scroll" class="position-relative bg-light pt-2 h-100" style="overflow-y:auto;">
-    <!--begin::Team card-->
-    <div class="card card-custom mx-2">
-      <!--begin::Team header-->
-      <div id="kt_to_header" style="display:none;"></div>
-      <!--end::Team header-->
-      <!--begin::Team Content-->
-      <div class="card-body py-7 co-appr-picker">
+  <div class="position-relative h-100 d-flex flex-column bg-white" id="kt__to_body">
+    <!--begin::Team header (Rule 20 Anchor Background)-->
+    <div id="kt_to_header" style="display:none;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 20px;align-items:center;justify-content:space-between;min-height:56px;flex-shrink:0;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width:34px;height:34px;border-radius:8px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;display:flex;align-items:center;justify-content:center;font-size:13.5px;flex-shrink:0;">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div>
+                <span class="fw-bold text-dark" style="font-family:'Poppins',sans-serif;font-size:14px;color:#0f172a;letter-spacing:-0.01em;">Select Approval</span>
+                <div style="font-size:10.5px;color:#64748b;">Assign organization or client approvers to review and sign off</div>
+            </div>
+        </div>
+        <button type="button" id="kt_activitiesIntTeam_close_to" class="co-drawer-topbar-close" aria-label="Close approver drawer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+    </div>
+    <!--end::Team header-->
+    <!--begin::Team Content-->
+    <div class="co-appr-picker flex-grow-1 overflow-auto p-4 p-md-5" id="kt_to_scroll">
+        {{-- Tier 2 Sub-Tabs / Source Cards --}}
         <div class="co-appr-source-row">
-            <label class="co-appr-source-card co-appr-source-card--active" data-source-for="to" data-source="internal">
-                <input type="radio" name="apprSourceTo" value="internal" checked>
-                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></span>
-                <div>
+            <div class="co-appr-source-card co-appr-source-card--active" data-source-for="to" data-source="internal">
+                <input type="radio" name="apprSourceTo" value="internal" checked style="display:none;">
+                <span class="co-appr-source-ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg>
+                </span>
+                <div class="co-appr-source-meta">
                     <div class="co-appr-source-title">Internal Company Approvers</div>
-                    <div class="co-appr-source-sub">{{ count($cc_email_internal_data ?? []) }} available</div>
+                    <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($cc_email_internal_data ?? []) }} available</span></div>
                 </div>
-            </label>
+                <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
+            </div>
             @if(!empty($cc_email_client_data))
-            <label class="co-appr-source-card" data-source-for="to" data-source="client">
-                <input type="radio" name="apprSourceTo" value="client">
-                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                <div>
+            <div class="co-appr-source-card" data-source-for="to" data-source="client">
+                <input type="radio" name="apprSourceTo" value="client" style="display:none;">
+                <span class="co-appr-source-ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                <div class="co-appr-source-meta">
                     <div class="co-appr-source-title">Client Company Approvers</div>
-                    <div class="co-appr-source-sub">{{ count($cc_email_client_data) }} available</div>
+                    <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($cc_email_client_data) }} available</span></div>
                 </div>
-            </label>
+                <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
+            </div>
             @endif
         </div>
-        <div class="co-appr-search">
-            <input type="text" class="form-control form-control-solid co-appr-search-input" data-search-for="to" placeholder="Search by name, email or company...">
+
+        {{-- Tier 1 Toolbar / Search Card --}}
+        <div class="co-appr-toolbar">
+            <div class="co-appr-searchbox">
+                <svg class="co-appr-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" class="co-appr-search-input" data-search-for="to" placeholder="Search by name, email or company...">
+                <button type="button" class="co-appr-search-clear d-none" aria-label="Clear search">&times;</button>
+            </div>
+            <div class="co-appr-counter-badge">
+                <span class="co-appr-active-count">{{ count($cc_email_internal_data ?? []) }}</span> approvers
+            </div>
         </div>
-        <!--begin::Table-->
-        <div style="overflow-x:auto;">
-        <table class="table align-middle table-row-dashed fs-6 gy-5" id="Iteam_Table_to">
-          <!--begin::Table head-->
-          <thead>
-            <!--begin::Table row-->
-            <tr class="fw-bolder text-muted">
-              <th style="min-width:140px;">Approver</th>
-              <th style="min-width:160px;">Contact</th>
-              <th style="min-width:120px;">Company</th>
-              <th style="min-width:70px;width:70px;">Action</th>
-            </tr>
-            <!--end::Table row-->
-          </thead>
-          <!--end::Table head-->
-          <!--begin::Table body-->
-          <tbody class="text-gray-600 fw-bold">
-            @foreach ([['data' => $cc_email_internal_data ?? [], 'source' => 'internal'], ['data' => $cc_email_client_data ?? [], 'source' => 'client']] as $group)
-                @foreach ($group['data'] as $teamVal)
-                    @php
-                        $bgTextDecore = $strVal = '';
-                        $str = trim(@$teamVal->name);
-                        $str = $strVal = strtolower($str[0] ?? 'c');
-                        $str = ord($str);
-                        if ($str >= 97 && $str <= 101) { $bgTextDecore = 'fs-3 bg-light-danger text-danger'; }
-                        else if ($str >= 102 && $str <= 106) { $bgTextDecore = 'fs-3 bg-light-warning text-warning'; }
-                        else if ($str >= 107 && $str <= 111) { $bgTextDecore = 'fs-3 bg-light-primary text-primary'; }
-                        else if ($str >= 112 && $str <= 116) { $bgTextDecore = 'fs-3 bg-light-success text-success'; }
-                        else if ($str >= 117 && $str <= 121) { $bgTextDecore = 'fs-3 bg-dark text-secondary'; }
-                        else { $bgTextDecore = 'fs-3 bg-light-secondary text-dark'; }
-                    @endphp
-                    <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
-                        data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}">
-                        <!--begin::Name-->
-                        <td><div class="d-flex align-items-center">
-                            <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"> <a href="javascript:void(0);" class="">
-                                <div class="symbol-label {{ @$bgTextDecore }} border-radius-5">{{ strtoupper(@$strVal) }}</div>
-                                </a> </div>
-                            <div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">{{ ucwords(substr(@$teamVal->name, 0, 20)) }}</span> <span class="text-muted fw-bold d-block fs-7">{{ ucwords(substr(@$teamVal->display_name, 0, 25)) }}</span> </div>
-                        </div></td>
-                        <!--end::Name-->
-                        <td><div class="d-flex flex-column">{{ @$teamVal->email }}</div></td>
-                        <td><div class="d-flex flex-column">{{ @$teamVal->company_name }}</div></td>
-                        <!--begin::Action-->
-                        <td><div class="d-flex flex-column"> <a id="to_team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="to_select co-appr-add-btn"
-                            rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}"  data-email="{{ @$teamVal->email }}"  >Add</a> </div></td>
-                        <!--end::Action-->
-                    </tr>
+
+        {{-- Tier 3 Table Card --}}
+        <div class="co-appr-table-card">
+            <table class="co-appr-table align-middle" id="Iteam_Table_to">
+              <thead>
+                <tr>
+                  <th style="min-width:180px;">APPROVER</th>
+                  <th style="min-width:170px;">CONTACT</th>
+                  <th style="min-width:140px;">COMPANY</th>
+                  <th style="min-width:80px;width:80px;text-align:center;">ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach ([['data' => $cc_email_internal_data ?? [], 'source' => 'internal'], ['data' => $cc_email_client_data ?? [], 'source' => 'client']] as $group)
+                    @foreach ($group['data'] as $teamVal)
+                        @php
+                            $teamName = trim((string) @$teamVal->name);
+                            $initChar = strtoupper(substr($teamName, 0, 1) ?: 'U');
+                            $charOrd = ord(strtolower($initChar));
+                            $palettes = [
+                                ['bg' => '#eff6ff', 'text' => '#1d4ed8', 'border' => '#bfdbfe'],
+                                ['bg' => '#ecfdf5', 'text' => '#047857', 'border' => '#a7f3d0'],
+                                ['bg' => '#fef3c7', 'text' => '#b45309', 'border' => '#fde68a'],
+                                ['bg' => '#f5f3ff', 'text' => '#6d28d9', 'border' => '#ddd6fe'],
+                                ['bg' => '#fdf2f8', 'text' => '#be185d', 'border' => '#fbcfe8'],
+                                ['bg' => '#f0fdfa', 'text' => '#0f766e', 'border' => '#99f6e4'],
+                            ];
+                            $pal = $palettes[$charOrd % count($palettes)];
+                            $roleText = trim((string) (@$teamVal->display_name ?: @$teamVal->role));
+                        @endphp
+                        <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
+                            data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="co-appr-avatar" style="background:{{ $pal['bg'] }};color:{{ $pal['text'] }};border:1px solid {{ $pal['border'] }};">
+                                        {{ $initChar }}
+                                    </div>
+                                    <div class="d-flex flex-column min-w-0">
+                                        <span class="co-appr-name text-truncate">{{ ucwords(substr(@$teamVal->name, 0, 24)) }}</span>
+                                        @if(!empty($roleText))
+                                            <span class="co-appr-role-tag text-truncate">{{ ucwords(substr($roleText, 0, 25)) }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="co-appr-contact">
+                                    <svg class="co-appr-contact-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                                    </svg>
+                                    <span class="co-appr-email-text text-truncate">{{ @$teamVal->email }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="co-appr-company">
+                                    <svg class="co-appr-company-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/>
+                                    </svg>
+                                    <span class="co-appr-company-text text-truncate">{{ @$teamVal->company_name ?: 'Internal Team' }}</span>
+                                </div>
+                            </td>
+                            <td style="text-align:center;">
+                                <a id="to_team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="to_select co-appr-add-btn"
+                                    rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}" data-email="{{ @$teamVal->email }}">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    <span>Add</span>
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
                 @endforeach
-            @endforeach
-            <tr class="co-appr-row co-appr-row--internal co-appr-empty-row {{ !empty($cc_email_internal_data) ? 'd-none' : '' }}"><td colspan="4" class="co-appr-empty">No internal approvers found.</td></tr>
-          </tbody>
-          <!--end::Table body-->
-        </table>
+                <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--internal {{ !empty($cc_email_internal_data) ? 'd-none' : '' }}">
+                    <td colspan="4" class="co-appr-empty-cell">
+                        <div class="co-appr-empty-inner">
+                            <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
+                            <div class="co-appr-empty-msg">No internal approvers found</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--client d-none">
+                    <td colspan="4" class="co-appr-empty-cell">
+                        <div class="co-appr-empty-inner">
+                            <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
+                            <div class="co-appr-empty-msg">No client approvers found</div>
+                        </div>
+                    </td>
+                </tr>
+              </tbody>
+            </table>
         </div>
-        <!--end::Table-->
-      </div>
-      <!--end::Team Content-->
     </div>
-    <!--end::Team card-->
+    <!--end::Team Content-->
   </div>
-</div>
 </div>
 
 
@@ -856,7 +1092,8 @@ function addEmailToList(rel) {
 		var approverName  = $('#to_team_select_' + rel).attr('data-title') || '';
 		if (!approverEmail) return;
 
-		$btn.text('Sending…').css({'pointer-events':'none','opacity':'0.6'});
+		var resetBtn = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span>Add</span>';
+		$btn.html('<span><i class="fas fa-spinner fa-spin me-1"></i> Sending…</span>').css({'pointer-events':'none','opacity':'0.6'});
 
 		var editorData = '';
 		try { editorData = CKEDITOR.instances.editor1.getData(); } catch(e) {
@@ -882,19 +1119,19 @@ function addEmailToList(rel) {
 		    },
 		    success: function(r) {
 		        if (r.status === 'coinCheck') {
-		            $btn.text('Add').css({'pointer-events':'','opacity':'1'});
+		            $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
 		            Swal.fire("Failed", r.message, "warning");
 		            return;
 		        }
 		        if (r.status === 'rateLimited') {
-		            $btn.text('Add').css({'pointer-events':'','opacity':'1'});
+		            $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
 		            Swal.fire("Already Sent", r.message, "info");
 		            return;
 		        }
 		        if (r.status === 'success') {
 		            // Mark approval as sent so "Save & Next" just advances
 		            $('#step4').data('mgmt-status', 1);
-		            $btn.text('Sent ✓').addClass('co-appr-btn--remove').css({'pointer-events':'none','opacity':'0.7'});
+		            $btn.html('<span><i class="fas fa-check me-1"></i> Sent ✓</span>').addClass('co-appr-btn--remove').css({'pointer-events':'none','opacity':'0.8'});
 		            // Update the step-4 timeline
 		            if (typeof co_updateStep4Timeline === 'function') {
 		                co_updateStep4Timeline(approverEmail, approverName);
@@ -906,12 +1143,12 @@ function addEmailToList(rel) {
 		            $('#kt_fwd_offer_overlay').removeClass('active');
 		            $('body').css('overflow', '');
 		        } else {
-		            $btn.text('Add').css({'pointer-events':'','opacity':'1'});
+		            $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
 		            Swal.fire("Error", r.message || "Could not send approval email.", "error");
 		        }
 		    },
 		    error: function() {
-		        $btn.text('Add').css({'pointer-events':'','opacity':'1'});
+		        $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
 		        Swal.fire("Error", "Could not send approval email. Please try again.", "error");
 		    }
 		});
@@ -1306,12 +1543,24 @@ $(document).on('click', '.co-appr-source-card', function() {
 	$scope.find('.co-appr-row--' + source).removeClass('d-none');
 	$scope.find('.co-appr-empty-row').addClass('d-none');
 	if (source === 'internal') {
-		$scope.find('.co-appr-row--internal.co-appr-empty-row').each(function() {
+		$scope.find('.co-appr-empty-row--internal').each(function() {
 			if ($scope.find('.co-appr-row--internal:not(.co-appr-empty-row)').length === 0) { $(this).removeClass('d-none'); }
+		});
+	} else {
+		$scope.find('.co-appr-empty-row--client').each(function() {
+			if ($scope.find('.co-appr-row--client:not(.co-appr-empty-row)').length === 0) { $(this).removeClass('d-none'); }
 		});
 	}
 	// Re-apply the current search term to whichever source is now visible
 	$scope.find('.co-appr-search-input').trigger('input');
+});
+
+$(document).on('click', '.co-appr-search-clear', function(e) {
+	e.preventDefault();
+	var $box = $(this).closest('.co-appr-searchbox');
+	var $input = $box.find('.co-appr-search-input');
+	$input.val('').trigger('input').focus();
+	$(this).addClass('d-none');
 });
 
 $(document).on('input', '.co-appr-search-input', function() {
@@ -1319,11 +1568,20 @@ $(document).on('input', '.co-appr-search-input', function() {
 	var q = $(this).val().trim().toLowerCase();
 	var $scope = $(this).closest('.co-appr-picker');
 	var activeSource = $scope.find('.co-appr-source-card--active').data('source') || 'internal';
+	var $clearBtn = $(this).siblings('.co-appr-search-clear');
+	if ($clearBtn.length) {
+		$clearBtn.toggleClass('d-none', q === '');
+	}
+	var visibleCount = 0;
 	$scope.find('.co-appr-row--' + activeSource + ':not(.co-appr-empty-row)').each(function() {
 		var $row = $(this);
 		var hay = ($row.data('search-name') + ' ' + $row.data('search-email') + ' ' + $row.data('search-company'));
-		$row.toggleClass('d-none', q !== '' && hay.indexOf(q) === -1);
+		var matches = (q === '' || hay.indexOf(q) !== -1);
+		$row.toggleClass('d-none', !matches);
+		if (matches) visibleCount++;
 	});
+	$scope.find('.co-appr-active-count').text(visibleCount);
+	$scope.find('.co-appr-empty-row--' + activeSource).toggleClass('d-none', visibleCount > 0);
 });
 
 @if((int) @$mtype === 2)
