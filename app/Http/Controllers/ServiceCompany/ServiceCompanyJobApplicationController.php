@@ -13488,20 +13488,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $currentUserId = $this->user->id ?? auth()->id();
+        $finalJobId = (int) ($addJobWiseCondidate->job_id ?? $jobApplication->job_id ?? 0);
+        $finalCompanyId = (int) ($addJobWiseCondidate->company_id ?? $company_id ?? auth()->user()->company_id ?? 0);
         $cachekeys = [
             'alljobslist_version_user_'.$currentUserId,
             'allcvtracker_version_user_'.$currentUserId,
             'allapptracker_version_user_'.$currentUserId,
             'allclientapp_version_user_'.$currentUserId,
+            'allinterviewschedule_version_user_'.$currentUserId,
         ];
         foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
+            GeneralMethod::cacheClean($key, $finalCompanyId);
         }
         // Multi-tenant atomic cache invalidation for Joining Tracker total count
         \Illuminate\Support\Facades\Redis::del('joining_tracker_total_count_'.$company_id);
 
-        $finalJobId = (int) ($addJobWiseCondidate->job_id ?? $jobApplication->job_id ?? 0);
-        $finalCompanyId = (int) ($addJobWiseCondidate->company_id ?? $company_id ?? auth()->user()->company_id ?? 0);
         if ($finalJobId > 0 && $finalCompanyId > 0) {
             app(\App\Services\Apptracker\CounterService::class)->onStageMoved($finalJobId, (int) $application_id, (int) $master_status, $finalCompanyId);
         }
@@ -16343,18 +16344,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $currentUserId = $this->user->id ?? auth()->id();
+        $finalJobId = (int) ($jobId ?? 0);
+        $finalCompanyId = (int) ($company_id ?? auth()->user()->company_id ?? 0);
         $cachekeys = [
             'alljobslist_version_user_'.$currentUserId,
             'allcvtracker_version_user_'.$currentUserId,
             'allapptracker_version_user_'.$currentUserId,
             'allclientapp_version_user_'.$currentUserId,
+            'allinterviewschedule_version_user_'.$currentUserId,
         ];
         foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
+            GeneralMethod::cacheClean($key, $finalCompanyId);
         }
 
-        $finalJobId = (int) ($jobId ?? 0);
-        $finalCompanyId = (int) ($company_id ?? auth()->user()->company_id ?? 0);
         if ($finalJobId > 0 && $finalCompanyId > 0) {
             app(\App\Services\Apptracker\CounterService::class)->onStageMoved($finalJobId, (int) $application_id, (int) $master_status, $finalCompanyId);
         }

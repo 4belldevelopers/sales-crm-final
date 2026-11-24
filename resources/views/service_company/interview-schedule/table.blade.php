@@ -952,10 +952,10 @@
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
 }
 
-/* Upper Discrete Sub-Cards Grid (6 Responsive Fractional Columns) */
+/* Upper Discrete Sub-Cards Grid (7 Responsive Fractional Columns) */
 .it-card-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.9fr) minmax(0, 1.32fr) minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 1.36fr) !important;
+    grid-template-columns: minmax(0, 1.52fr) minmax(0, 1.82fr) minmax(0, 1.32fr) minmax(0, 1.22fr) minmax(0, 1.44fr) minmax(0, 1.38fr) minmax(0, 1.3fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -1908,6 +1908,81 @@
     white-space: nowrap !important;
 }
 
+/* Sub-Card 7: Pipeline & Stage (Display-Only) */
+.it-subcard-stage {
+    cursor: default !important;
+}
+
+.it-stage-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+}
+
+.it-subcard-stage .it-stage-badge {
+    width: fit-content !important;
+    max-width: 100% !important;
+    padding: 2px 8px !important;
+    border-radius: 5px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-substage-txt {
+    font-size: 10.5px !important;
+    color: var(--it-text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+}
+
+.it-substage-txt strong {
+    color: var(--it-text-main) !important;
+    font-weight: 600 !important;
+}
+
+.it-pipeline-meta {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    margin-top: 1px !important;
+    min-width: 0 !important;
+}
+
+.it-pipeline-track {
+    width: 100% !important;
+    height: 3.5px !important;
+    border-radius: 999px !important;
+    background: #e2e8f0 !important;
+    overflow: hidden !important;
+}
+
+.it-pipeline-fill {
+    height: 100% !important;
+    border-radius: 999px !important;
+    transition: width 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.it-pipeline-step {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    color: var(--it-text-muted) !important;
+    font-variant-numeric: tabular-nums !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .it-pipeline-fill { transition: none !important; }
+}
+
 /* Dynamic Attribution Pill (HM / Shared by in Footer Card - Rule 20 & Rule 25 Canonical Tokens) */
 .it-attribution-cell {
     display: inline-flex !important;
@@ -2152,11 +2227,15 @@
         display: none !important;
     }
     .it-card-grid {
-        grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.9fr) minmax(0, 1.32fr) minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 1.36fr) !important;
-        gap: 7px !important;
-        padding: 9px 10px !important;
+        grid-template-columns: minmax(0, 1.52fr) minmax(0, 1.84fr) minmax(0, 1.32fr) minmax(0, 1.24fr) minmax(0, 1.44fr) minmax(0, 1.38fr) minmax(0, 1.26fr) !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
     }
-    .it-subcard { padding: 7px 9px !important; }
+    .it-subcard { padding: 7px 8px !important; }
+    .it-subcard-label { font-size: 8.5px !important; letter-spacing: 0.25px !important; }
+    .it-avatar { width: 34px !important; height: 34px !important; min-width: 34px !important; font-size: 13px !important; }
+    .it-cand-body { gap: 7px !important; }
+    .it-panel-count { font-size: 8px !important; padding: 1px 5px !important; }
 }
 
 @media (max-width: 1200px) {
@@ -2164,8 +2243,14 @@
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
     .it-card-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
         gap: 8px !important;
+    }
+}
+
+@media (max-width: 992px) {
+    .it-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 }
 
@@ -3775,7 +3860,7 @@ var itCurrentXhr = null;
 // ── JeroInterviewScheduleLocalStore — Native Browser IndexedDB Engine ────────
 const JeroInterviewScheduleLocalStore = (function() {
     const DB_NAME = 'jero_interview_schedule_db';
-    const DB_VERSION = 7; // Bumped to v7 with onblocked, auto-timeout, and connection close guards
+    const DB_VERSION = 8; // Bumped to v8 for 7-subcard Pipeline & Stage card layout
     const CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
     const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
     const CACHE_TTL_MS = 15 * 60 * 1000;
@@ -3945,11 +4030,18 @@ function patchInterviewRowDelta(interviewId, delta) {
         }
     }
 
-    // 2. Stage delta patch
+    // 2. Stage & Substage delta patch
     if (delta.stage) {
-        var $stageBadge = $card.find('.it-stage-cell .it-stage-badge');
+        var $stageBadge = $card.find('.it-subcard-stage .it-stage-badge, .it-stage-cell .it-stage-badge');
         if ($stageBadge.length) {
             $stageBadge.text(delta.stage);
+        }
+    }
+    if (delta.sub_stage_name !== undefined || delta.substage !== undefined) {
+        var subText = (delta.sub_stage_name || delta.substage || '').trim() || 'Standard';
+        var $subEl = $card.find('.it-subcard-stage .it-substage-txt strong');
+        if ($subEl.length) {
+            $subEl.text(subText);
         }
     }
 

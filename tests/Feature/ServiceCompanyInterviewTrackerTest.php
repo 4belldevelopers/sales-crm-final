@@ -145,7 +145,7 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
             'userCaptainJobIds' => [86 => true],
         ])->render();
 
-        // Rule 20 Card + 6 Discrete Sub-Cards + Bottom Strip
+        // Rule 20 Card + 7 Discrete Sub-Cards + Bottom Strip
         $this->assertStringContainsString('class="it-card"', $html);
         $this->assertStringContainsString('it-card-grid', $html);
         $this->assertStringContainsString('it-subcard-candidate', $html);
@@ -154,6 +154,11 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertStringContainsString('it-subcard-panel', $html);
         $this->assertStringContainsString('it-subcard-owner', $html);
         $this->assertStringContainsString('it-subcard-feedback', $html);
+        $this->assertStringContainsString('it-subcard-stage', $html);
+        $this->assertStringContainsString('Pipeline &amp; Stage', $html);
+        $this->assertStringContainsString('Sub:', $html);
+        $this->assertStringContainsString('it-pipeline-meta', $html);
+        $this->assertStringContainsString('it-pipeline-step', $html);
         $this->assertStringContainsString('it-card-bottom', $html);
 
         // Candidate Subcard: Current Company shown instead of location
@@ -192,16 +197,21 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertStringNotContainsString('it-time-tag', $html);
         $this->assertStringNotContainsString('it-platform-pill', $html);
 
-        // Follow-up dropdown placed in bottom activity strip (next to Stage), NOT in candidate subcard header
+        // Follow-up dropdown placed in bottom activity strip (NOT in candidate subcard header); Stage moved to display-only Sub-Card 7
         $firstCandStart = strpos($html, '<!-- Sub-Card 1: CANDIDATE -->');
         $candSection = substr($html, $firstCandStart, $firstReqStart - $firstCandStart);
         $this->assertStringNotContainsString('it-followup-dropdown', $candSection);
+
+        $firstStageStart = strpos($html, '<!-- Sub-Card 7: PIPELINE & STAGE (Display-Only) -->');
+        $this->assertNotFalse($firstStageStart);
 
         $firstBottomStart = strpos($html, '<!-- Bottom Activity & Pipeline Strip -->');
         $this->assertNotFalse($firstBottomStart);
         $bottomSection = substr($html, $firstBottomStart);
         $this->assertStringContainsString('it-followup-dropdown', $bottomSection);
-        $this->assertStringContainsString('it-stage-cell', $bottomSection);
+        $this->assertStringNotContainsString('it-stage-cell', $html);
+        $this->assertStringNotContainsString('stage_sub_stage', $html);
+        $this->assertStringNotContainsString('Update Stage', $html);
 
         // Add Feedback button with white plus icon
         $this->assertStringContainsString('it-fb-btn-add', $html);
@@ -412,6 +422,12 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         // White plus icon on Add Feedback button via CSS
         $this->assertStringContainsString('.it-fb-btn-add i,', $content);
         $this->assertStringContainsString('color: #ffffff !important;', $content);
+
+        // 7-column card grid, Pipeline & Stage sub-card CSS, and IndexedDB v8 cache bust
+        $this->assertStringContainsString('.it-subcard-stage', $content);
+        $this->assertStringContainsString('.it-pipeline-track', $content);
+        $this->assertStringContainsString('const DB_VERSION = 8;', $content);
+        $this->assertStringContainsString('minmax(0, 1.52fr) minmax(0, 1.82fr) minmax(0, 1.32fr) minmax(0, 1.22fr) minmax(0, 1.44fr) minmax(0, 1.38fr) minmax(0, 1.3fr)', $content);
     }
 
     public function test_interview_tracker_footer_card_renders_dynamic_hm_for_internal_and_my_org(): void
@@ -592,5 +608,119 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertStringContainsString('.it-attr-direct', $shellCss);
         $this->assertStringContainsString('.it-attr-hm', $shellCss);
         $this->assertStringContainsString('.it-attr-val', $shellCss);
+    }
+
+    public function test_interview_tracker_pipeline_subcard_prefers_live_candidate_meta_and_substage(): void
+    {
+        $html = View::make('service_company.ajax_pages.interview-tracker-ajax', [
+            'data' => [
+                [
+                    'id' => 501,
+                    'wiseID' => 901,
+                    'jobId' => 221,
+                    'job_id' => 221,
+                    'job_company_id' => 2,
+                    'full_name' => 'Aarav Kulkarni',
+                    'job_title' => 'Staff Platform Engineer',
+                    'employment_type' => 1,
+                    'self_company' => 0,
+                    'client_name' => 'Acme Corp',
+                    'to_company_id' => 2,
+                    'from_company_id' => 2,
+                    'ClientComID' => 2,
+                    'schedule_date' => '2026-11-24 14:30:00',
+                    'schedule_to_time' => '14:30',
+                    'timezone_abbreviation' => 'IST',
+                    'interview_mode' => 2,
+                    'mode_name' => 'Video',
+                    'master_status_id' => 2,
+                    'master_status_name' => 'Screening',
+                    'child_status_id' => 11,
+                    'child_status_name' => 'Stale Screening',
+                    'feedback' => 0,
+                    'available_status' => 0,
+                ],
+                [
+                    'id' => 502,
+                    'wiseID' => 0,
+                    'recommendation_id' => 77,
+                    'jobId' => 222,
+                    'job_id' => 222,
+                    'job_company_id' => 999,
+                    'full_name' => 'Meera Nair',
+                    'job_title' => 'Principal Data Architect',
+                    'employment_type' => 1,
+                    'self_company' => 0,
+                    'client_name' => 'Linear Labs',
+                    'to_company_id' => 2,
+                    'from_company_id' => 88,
+                    'ClientComID' => 2,
+                    'schedule_date' => '2026-11-25 11:00:00',
+                    'schedule_to_time' => '11:00',
+                    'timezone_abbreviation' => 'IST',
+                    'interview_mode' => 2,
+                    'mode_name' => 'Video',
+                    'master_status_id' => 2,
+                    'master_status_name' => 'Screening',
+                    'child_status_id' => 0,
+                    'feedback' => 0,
+                    'available_status' => 0,
+                ],
+            ],
+            'userPermissions' => ['view_schedule'],
+            'feedback_status' => [],
+            'available_status' => [],
+            'company_id' => 2,
+            'chkAdminRole' => 1,
+            'tenantTimezone' => 'Asia/Kolkata',
+            'followupMap' => collect(),
+            'feedbackMap' => collect(),
+            'spokpersonMap' => collect(),
+            'clientCompanyMap' => [221 => 'Acme Corp', 222 => 'Linear Labs'],
+            'jobMetaMap' => [],
+            'candidateMetaMap' => [
+                'by_wise' => [
+                    901 => [
+                        'master_status_id' => 5,
+                        'child_status_id' => 42,
+                        'designation' => 'Lead Engineer',
+                        'current_company' => 'Atlassian',
+                    ],
+                ],
+                'by_app' => [
+                    77 => [
+                        'master_status_id' => 8,
+                        'child_status_id' => 0,
+                        'designation' => 'Data Lead',
+                        'current_company' => 'Snowflake',
+                    ],
+                ],
+            ],
+            'masterStatusMap' => [
+                2 => 'Screening',
+                5 => 'Offer',
+                8 => 'InReview',
+            ],
+            'childStatusMap' => [
+                11 => 'Stale Screening',
+                42 => 'Offer Approved',
+            ],
+            'userCaptainJobIds' => [],
+            'sharedByMap' => [],
+            'fromCompanyNames' => [],
+        ])->render();
+
+        $this->assertStringContainsString('it-stage-off', $html);
+        $this->assertStringContainsString('Offer Approved', $html);
+        $this->assertStringContainsString('Step 6 of 7', $html);
+        $this->assertStringNotContainsString('Stale Screening', $html);
+
+        $this->assertStringContainsString('it-stage-inw', $html);
+        $this->assertStringContainsString('Step 1 of 7', $html);
+        $this->assertStringContainsString('Sub: <strong>Private</strong>', $html);
+
+        $this->assertStringNotContainsString('it-stage-cell', $html);
+        $this->assertStringNotContainsString('stage_sub_stage', $html);
+        $this->assertStringNotContainsString('Update Stage', $html);
     }
 }

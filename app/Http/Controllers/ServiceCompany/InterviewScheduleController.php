@@ -239,7 +239,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $sort = [];
 
         $cachePayload = [
-            'ui_v' => 'card_v8',
+            'ui_v' => 'card_v9',
             'page' => $page,
             'size' => $size,
             'company' => $company_id,
@@ -288,6 +288,9 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     'userCaptainJobIds' => [],
                     'sharedByMap' => [],
                     'fromCompanyNames' => [],
+                    'childStatusMap' => [],
+                    'masterStatusMap' => [],
+                    'tenantTimezone' => 'Asia/Kolkata',
                 ])->render(),
                 'total' => 0,
                 'from' => 0,
@@ -813,6 +816,13 @@ class InterviewScheduleController extends ServiceCompanyBaseController
      */
     private function prepareViewMaps(array $data, int $companyId, int $userId): array
     {
+        $tenantTimezone = 'Asia/Kolkata';
+        try {
+            $tenantTimezone = GeneralMethod::defaultTimeZone($companyId) ?: 'Asia/Kolkata';
+        } catch (\Throwable $e) {
+            $tenantTimezone = 'Asia/Kolkata';
+        }
+
         if (empty($data)) {
             return [
                 'followupMap' => collect(),
@@ -824,6 +834,9 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 'userCaptainJobIds' => [],
                 'sharedByMap' => [],
                 'fromCompanyNames' => [],
+                'childStatusMap' => [],
+                'masterStatusMap' => [],
+                'tenantTimezone' => $tenantTimezone,
             ];
         }
 
@@ -996,7 +1009,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             }
         }
 
-        // Batch Candidate Meta (current_company + submitted_at) — ES-first via ELASTIC_CANDIDATES mget with scoped fallback
+        // Batch Candidate Meta (current_company, submitted_at, live pipeline stage & substage) — ES-first via ELASTIC_CANDIDATES mget with scoped fallback
         $candidateMetaMap = [
             'by_wise' => [],
             'by_app' => [],
@@ -1006,7 +1019,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             try {
                 $mgetRes = $this->elasticService->getClient()->mget([
                     'index' => ELASTIC_CANDIDATES,
-                    '_source' => ['id', 'current_company', 'created_at', 'job_application_id'],
+                    '_source' => ['id', 'current_company', 'created_at', 'job_application_id', 'job_master_status_id', 'childStatus', 'name'],
                     'body' => ['ids' => array_map('strval', $wiseIds)],
                 ]);
                 $foundWise = [];
@@ -1018,12 +1031,15 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                             $meta = [
                                 'current_company' => trim((string) ($src['current_company'] ?? '')),
                                 'submitted_at' => (string) ($src['created_at'] ?? ''),
+                                'master_status_id' => (int) ($src['job_master_status_id'] ?? 0),
+                                'master_status_name' => trim((string) ($src['name'] ?? '')),
+                                'child_status_id' => (int) ($src['childStatus'] ?? 0),
                             ];
                             $candidateMetaMap['by_wise'][$wId] = $meta;
                             if (! empty($src['job_application_id'])) {
                                 $candidateMetaMap['by_app'][(int) $src['job_application_id']] = $meta;
                             }
-                            if ($meta['current_company'] !== '' || $meta['submitted_at'] !== '') {
+                            if (($meta['current_company'] !== '' || $meta['submitted_at'] !== '') && $meta['master_status_id'] > 0) {
                                 $foundWise[] = $wId;
                             }
                         }
@@ -1039,11 +1055,15 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             if (! empty($missingWiseIds)) {
                 $wiseRows = DB::table('add_job_wise_condidates')
                     ->leftJoin('job_applications', 'job_applications.id', '=', 'add_job_wise_condidates.job_application_id')
+                    ->leftJoin('master_status', 'master_status.id', '=', 'add_job_wise_condidates.master_status_id')
                     ->whereIn('add_job_wise_condidates.id', $missingWiseIds)
                     ->get([
                         'add_job_wise_condidates.id as wise_id',
                         'add_job_wise_condidates.job_application_id',
                         'add_job_wise_condidates.created_at as submitted_at',
+                        'add_job_wise_condidates.master_status_id',
+                        'add_job_wise_condidates.child_status_id',
+                        'master_status.name as master_status_name',
                         'job_applications.current_company',
                     ]);
                 foreach ($wiseRows as $wr) {
@@ -1051,6 +1071,9 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     $meta = [
                         'current_company' => trim((string) ($wr->current_company ?? ($existing['current_company'] ?? ''))),
                         'submitted_at' => (string) ($wr->submitted_at ?? ($existing['submitted_at'] ?? '')),
+                        'master_status_id' => (int) ($wr->master_status_id ?? ($existing['master_status_id'] ?? 0)),
+                        'master_status_name' => trim((string) ($wr->master_status_name ?? ($existing['master_status_name'] ?? ''))),
+                        'child_status_id' => (int) ($wr->child_status_id ?? ($existing['child_status_id'] ?? 0)),
                     ];
                     $candidateMetaMap['by_wise'][(int) $wr->wise_id] = $meta;
                     if (! empty($wr->job_application_id)) {
@@ -1062,16 +1085,46 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             $missingAppIds = array_values(array_diff($jobAppIds, array_keys($candidateMetaMap['by_app'])));
             if (! empty($missingAppIds)) {
                 $appRows = DB::table('job_applications')
-                    ->whereIn('id', $missingAppIds)
-                    ->get(['id', 'current_company', 'created_at']);
+                    ->leftJoin('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
+                    ->whereIn('job_applications.id', $missingAppIds)
+                    ->get([
+                        'job_applications.id',
+                        'job_applications.current_company',
+                        'job_applications.created_at',
+                        'job_applications.master_status_id',
+                        'job_applications.child_status_id',
+                        'master_status.name as master_status_name',
+                    ]);
                 foreach ($appRows as $ar) {
                     $candidateMetaMap['by_app'][(int) $ar->id] = [
                         'current_company' => trim((string) ($ar->current_company ?? '')),
                         'submitted_at' => (string) ($ar->created_at ?? ''),
+                        'master_status_id' => (int) ($ar->master_status_id ?? 0),
+                        'master_status_name' => trim((string) ($ar->master_status_name ?? '')),
+                        'child_status_id' => (int) ($ar->child_status_id ?? 0),
                     ];
                 }
             }
         }
+
+        // Batch resolve master_status names and candidate_status (sub-stage) names for live Pipeline & Stage sub-card
+        $masterStatusMap = cache()->remember('it_master_status_id_name_map', now()->addHours(6), function () {
+            return DB::table('master_status')->pluck('name', 'id')->toArray();
+        });
+
+        $childStatusIds = collect($data)
+            ->map(fn ($r) => (int) ($r['child_status_id'] ?? ($r['childStatus'] ?? 0)))
+            ->merge(collect($candidateMetaMap['by_wise'])->pluck('child_status_id'))
+            ->merge(collect($candidateMetaMap['by_app'])->pluck('child_status_id'))
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        // Intent: Resolve candidate_status substage names in one batch by PK across direct client and tenant records.
+        $childStatusMap = ! empty($childStatusIds)
+            ? DB::table('candidate_status')->whereIn('id', $childStatusIds)->pluck('name', 'id')->toArray()
+            : [];
 
         return [
             'followupMap' => $followupMap,
@@ -1083,6 +1136,9 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'userCaptainJobIds' => $userCaptainJobIds,
             'sharedByMap' => $sharedByMap,
             'fromCompanyNames' => $fromCompanyNames,
+            'childStatusMap' => $childStatusMap,
+            'masterStatusMap' => $masterStatusMap,
+            'tenantTimezone' => $tenantTimezone,
         ];
     }
 
