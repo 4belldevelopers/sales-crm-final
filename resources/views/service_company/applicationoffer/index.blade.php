@@ -2502,22 +2502,40 @@ body { overflow-x: hidden !important; }
     margin-top: 2px;
 }
 .co-drawer-topbar-close {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all .15s ease;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    color: #475569 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all .15s ease !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    line-height: 1 !important;
 }
 .co-drawer-topbar-close:hover {
-    background: #fee2e2;
-    border-color: #fecaca;
-    color: #ef4444;
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #dc2626 !important;
+}
+.co-drawer-topbar-close i,
+.co-drawer-topbar-close svg {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+    color: #475569 !important;
+    stroke: #475569 !important;
+    line-height: 1 !important;
+    display: block !important;
+}
+.co-drawer-topbar-close:hover i,
+.co-drawer-topbar-close:hover svg {
+    color: #dc2626 !important;
+    stroke: #dc2626 !important;
 }
 #application_fwd_offer_body_content {
     overflow: hidden !important;
@@ -2541,7 +2559,7 @@ body { overflow-x: hidden !important; }
                 </div>
             </div>
             <button type="button" id="kt_fwd_offer_close" class="co-drawer-topbar-close" aria-label="Close drawer">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <i class="fas fa-times"></i>
             </button>
         </div>
         <div id="application_fwd_offer_body_content" class="flex-grow-1 overflow-auto position-relative px-0 py-0"></div>

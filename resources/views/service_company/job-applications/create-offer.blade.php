@@ -1959,9 +1959,9 @@
         }
         .co-appr-tl-grid {
             display: grid !important;
-            grid-template-columns: minmax(260px, 2.2fr) minmax(120px, 0.9fr) minmax(150px, 1fr) !important;
+            grid-template-columns: minmax(190px, 1.35fr) minmax(160px, 1fr) minmax(165px, 1.05fr) !important;
             align-items: center !important;
-            gap: 10px !important;
+            gap: 12px !important;
             width: 100% !important;
         }
         .co-appr-tl-col-hd {
@@ -1978,7 +1978,7 @@
             border: 1px solid #e2e8f0 !important;
             border-left: 3.5px solid #f59e0b !important;
             border-radius: 8px !important;
-            padding: 8px 12px !important;
+            padding: 9px 12px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
             margin-bottom: 6px !important;
             transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
@@ -1992,22 +1992,24 @@
         .co-appr-tl-card--approved { border-color: #e2e8f0 !important; border-left-color: #10b981 !important; background: #ffffff !important; }
         .co-appr-tl-card--rejected { border-color: #e2e8f0 !important; border-left-color: #ef4444 !important; background: #fff8f8 !important; }
 
-        .co-appr-tl-appr { display: flex !important; align-items: center !important; gap: 8px !important; min-width: 0 !important; }
+        .co-appr-tl-appr { display: flex !important; align-items: center !important; gap: 10px !important; min-width: 0 !important; }
         .co-appr-tl-avatar {
-            width: 30px !important;
-            height: 30px !important;
+            width: 36px !important;
+            height: 36px !important;
             border-radius: 50% !important;
             background: #eff6ff !important;
             color: #2563eb !important;
-            border: 1px solid #bfdbfe !important;
+            border: 1.5px solid #bfdbfe !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 12px !important;
+            font-size: 13px !important;
             font-weight: 700 !important;
             flex-shrink: 0 !important;
         }
-        .co-appr-tl-name { font-size: 12px !important; font-weight: 600 !important; color: #0f172a !important; line-height: 1.25 !important; }
+        .co-appr-tl-details { display: flex !important; flex-direction: column !important; justify-content: center !important; min-width: 0 !important; gap: 2px !important; }
+        .co-appr-tl-name { font-size: 12.5px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.25 !important; }
+        .co-appr-tl-role-wrap { line-height: 1.2 !important; }
         .co-appr-tl-sub  { font-size: 10.5px !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 1px !important; }
         .co-appr-tl-email { font-size: 11px !important; color: #64748b !important; line-height: 1.25 !important; }
         .co-appr-tl-email svg { color: #94a3b8 !important; }
@@ -2021,7 +2023,7 @@
         .co-appr-tl-badge--waiting  { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important; }
         .co-appr-tl-badge--approved { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
         .co-appr-tl-badge--rejected { background: #fee2e2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important; }
-        .co-appr-tl-date { font-size: 10px !important; color: #64748b !important; font-variant-numeric: tabular-nums !important; }
+        .co-appr-tl-date { font-size: 10.5px !important; color: #64748b !important; font-variant-numeric: tabular-nums !important; white-space: nowrap !important; }
 
         .co-appr-tl-rem { display: flex !important; flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; }
         .co-appr-remind-send {
@@ -2065,7 +2067,7 @@
             border-color: #fca5a5 !important;
             color: #b91c1c !important;
         }
-        .co-appr-tl-last-sent { font-size: 10px !important; color: #94a3b8 !important; margin-top: 2px !important; text-align: right !important; font-variant-numeric: tabular-nums !important; }
+        .co-appr-tl-last-sent { font-size: 10px !important; color: #94a3b8 !important; margin-top: 3px !important; text-align: right !important; font-variant-numeric: tabular-nums !important; white-space: nowrap !important; }
 
         .co-appr-note {
             display: flex !important;
@@ -2246,6 +2248,32 @@
             opacity: .65;
         }
 
+        /* System-generated locked fields (Email ID & Reply Email ID) */
+        .co-send-locked-field {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+            height: 40px !important;
+            padding: 0 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            color: #1e293b !important;
+            cursor: default !important;
+            user-select: text !important;
+            transition: border-color 0.15s ease !important;
+        }
+        .co-send-locked-field:hover {
+            border-color: #cbd5e1 !important;
+        }
+        .co-send-locked-field .co-chip-lock {
+            width: 13px !important;
+            height: 13px !important;
+            color: #64748b !important;
+            opacity: 0.75 !important;
+            flex-shrink: 0 !important;
+        }
+
         /* Attachments */
         .co-send-attachrow {
             display: flex;
@@ -2331,8 +2359,43 @@
         .co-send-drawer-icon { width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 13.5px; flex-shrink: 0; }
         .co-send-drawer-title { font-size: 14px !important; font-weight: 700; color: #0f172a; font-family: 'Poppins', sans-serif; letter-spacing: -0.01em; }
         .co-send-drawer-sub { font-size: 10.5px; color: #64748b; margin-top: 1px; }
-        .co-send-drawer-x { background: #f1f5f9; border: 1px solid #e2e8f0; width: 28px; height: 28px; border-radius: 6px; font-size: 16px; color: #64748b; cursor: pointer; line-height: 1; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
-        .co-send-drawer-x:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+        .co-send-drawer-x {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            color: #475569 !important;
+            cursor: pointer !important;
+            line-height: 1 !important;
+            flex-shrink: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            transition: all 0.15s ease !important;
+        }
+        .co-send-drawer-x:hover {
+            background: #fee2e2 !important;
+            border-color: #fca5a5 !important;
+            color: #dc2626 !important;
+        }
+        .co-send-drawer-x i,
+        .co-send-drawer-x svg {
+            font-size: 14px !important;
+            width: 14px !important;
+            height: 14px !important;
+            color: #475569 !important;
+            stroke: #475569 !important;
+            line-height: 1 !important;
+            display: block !important;
+        }
+        .co-send-drawer-x:hover i,
+        .co-send-drawer-x:hover svg {
+            color: #dc2626 !important;
+            stroke: #dc2626 !important;
+        }
         .co-send-drawer-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; padding: 16px 20px 20px; }
 
         /* Sub-Tabs / Source Cards (Tier 2 Sub-Tabs) */
@@ -2368,27 +2431,28 @@
         .co-send-table-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
         .co-send-drawer .co-appr-table { width: 100%; table-layout: fixed; margin-bottom: 0; border-collapse: separate; border-spacing: 0; font-family: 'Poppins', sans-serif; }
         .co-send-drawer .co-appr-table thead tr { background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; }
-        .co-send-drawer .co-appr-table thead th { font-size: 10.5px !important; color: #475569 !important; font-weight: 700 !important; padding: 9px 12px !important; border-bottom: 1px solid #e2e8f0 !important; border-top: none !important; text-transform: uppercase !important; letter-spacing: 0.04em !important; text-align: left; }
+        .co-send-drawer .co-appr-table thead th { font-size: 10.5px !important; color: #475569 !important; font-weight: 700 !important; padding: 10px 14px !important; border-bottom: 1px solid #e2e8f0 !important; border-top: none !important; text-transform: uppercase !important; letter-spacing: 0.04em !important; text-align: left; }
         .co-send-drawer .co-appr-table tbody tr { transition: background 0.15s ease; border-bottom: 1px solid #f1f5f9; }
         .co-send-drawer .co-appr-table tbody tr:hover { background: #f8fafc; }
         .co-send-drawer .co-appr-table tbody tr:last-child { border-bottom: none !important; }
-        .co-send-drawer .co-appr-table tbody td { padding: 9px 12px !important; vertical-align: middle; border-bottom: 1px solid #f1f5f9; border-top: none !important; color: #334155; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .co-send-drawer .co-appr-table tbody td { padding: 10px 14px !important; vertical-align: middle; border-bottom: 1px solid #f1f5f9; border-top: none !important; color: #334155; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .co-send-drawer .co-appr-table tbody td:first-child { white-space: normal; }
-        .co-send-drawer .co-appr-avatar { width: 30px; height: 30px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; font-family: 'Poppins', sans-serif; }
-        .co-send-drawer .co-appr-name { font-size: 12px; font-weight: 600; color: #0f172a; }
-        .co-send-drawer .co-appr-role-tag { font-size: 10px; color: #64748b; font-weight: 500; }
-        .co-send-drawer .co-appr-contact { display: flex; align-items: center; gap: 6px; min-width: 0; }
-        .co-send-drawer .co-appr-contact-ico { width: 13px; height: 13px; color: #64748b; flex-shrink: 0; }
-        .co-send-drawer .co-appr-email-text { font-size: 11.5px; color: #334155; }
+        .co-send-drawer .co-appr-avatar { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; flex-shrink: 0; font-family: 'Poppins', sans-serif; }
+        .co-send-drawer .co-appr-name { font-size: 12px; font-weight: 600; color: #0f172a; line-height: 1.25; }
+        .co-send-drawer .co-appr-position { font-size: 11px; font-weight: 500; color: #64748b; line-height: 1.25; margin-top: 1px; }
+        .co-send-drawer .co-appr-email { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #64748b; margin-top: 2px; max-width: 100%; }
+        .co-send-drawer .co-appr-email-ico { width: 12px; height: 12px; color: #94a3b8; flex-shrink: 0; }
+        .co-send-drawer .co-appr-email-text { font-size: 11px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .co-send-drawer .co-appr-company { display: flex; align-items: center; gap: 6px; min-width: 0; }
         .co-send-drawer .co-appr-company-ico { width: 13px; height: 13px; color: #64748b; flex-shrink: 0; }
         .co-send-drawer .co-appr-company-text { font-size: 11.5px; color: #475569; }
 
-        /* Add / Added Button Styling */
-        .co-send-mrow-add { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px !important; font-size: 11px !important; font-weight: 600; border-radius: 6px !important; background: #eff6ff !important; color: #009ef7 !important; border: 1px solid #bfdbfe !important; text-decoration: none !important; transition: all 0.15s ease; cursor: pointer; }
-        .co-send-mrow-add:hover { background: #009ef7 !important; color: #ffffff !important; border-color: #009ef7 !important; }
-        .co-send-mrow-add.co-send-mrow--added { background: #ecfdf5 !important; color: #059669 !important; border-color: #a7f3d0 !important; cursor: pointer; }
-        .co-send-mrow-add.co-send-mrow--added:hover { background: #fee2e2 !important; color: #dc2626 !important; border-color: #fca5a5 !important; }
+        /* Unified Action Button (Add / Remove) */
+        .co-send-drawer .co-appr-btn { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 5px !important; height: 30px !important; padding: 0 14px !important; font-family: 'Poppins', sans-serif !important; font-size: 11.5px !important; font-weight: 600 !important; border-radius: 6px !important; cursor: pointer !important; text-decoration: none !important; white-space: nowrap !important; transition: all 0.15s ease !important; user-select: none !important; }
+        .co-send-drawer .co-appr-btn--add { background: #009ef7 !important; border: 1px solid #009ef7 !important; color: #ffffff !important; box-shadow: 0 1px 2px rgba(0, 158, 247, 0.16) !important; }
+        .co-send-drawer .co-appr-btn--add:hover { background: #0086d4 !important; border-color: #0086d4 !important; color: #ffffff !important; box-shadow: 0 2px 4px rgba(0, 158, 247, 0.24) !important; }
+        .co-send-drawer .co-appr-btn--remove { background: #fef2f2 !important; border: 1px solid #fecaca !important; color: #dc2626 !important; box-shadow: 0 1px 2px rgba(220, 38, 38, 0.06) !important; }
+        .co-send-drawer .co-appr-btn--remove:hover { background: #fee2e2 !important; border-color: #fca5a5 !important; color: #b91c1c !important; box-shadow: 0 2px 4px rgba(220, 38, 38, 0.12) !important; }
 
         /* Empty State */
         .co-send-drawer .co-appr-empty-cell { padding: 32px 16px !important; text-align: center; }
@@ -4912,13 +4976,18 @@
                                                             }
                                                         @endphp
                                                         <div class="co-appr-tl-card co-appr-tl-grid {{ $row_card ? 'co-appr-tl-card--'.$row_card : '' }} co-appr-tl-entry" data-approver-email="{{ strtolower($row_email) }}">
-                                                            {{-- Col 1: Approver & Role (Single Horizontal Row: Name + Designation + Email ID) --}}
+                                                            {{-- Col 1: Approver & Role (Vertically Stacked: Row 1 Name, Row 2 Designation, Row 3 Email ID) --}}
                                                             <div class="co-appr-tl-appr">
                                                                 <div class="co-appr-tl-avatar flex-shrink-0">{{ $row_initial }}</div>
-                                                                <div class="d-flex align-items-center gap-2 min-w-0 flex-nowrap flex-grow-1">
-                                                                    <span class="co-appr-tl-name text-truncate fw-bold text-gray-900" style="max-width: 140px; font-size: 12px;" title="{{ $row_label }}">{{ $row_label }}</span>
-                                                                    <span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle text-truncate flex-shrink-0" style="font-size: 10px; border-radius: 4px; max-width: 110px;" title="{{ $row_role ?: 'Internal Approver' }}">{{ $row_role ?: 'Internal Approver' }}</span>
-                                                                    <span class="co-appr-tl-email text-muted d-inline-flex align-items-center gap-1 text-truncate flex-shrink-1" style="font-size: 11px; min-width: 0;" title="{{ $row_email }}">
+                                                                <div class="co-appr-tl-details d-flex flex-column justify-content-center min-w-0 flex-grow-1">
+                                                                    {{-- Row 1: Approver Name --}}
+                                                                    <span class="co-appr-tl-name text-truncate fw-bold text-gray-900" title="{{ $row_label }}">{{ $row_label }}</span>
+                                                                    {{-- Row 2: Designation --}}
+                                                                    <div class="co-appr-tl-role-wrap d-flex align-items-center">
+                                                                        <span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle text-truncate" style="font-size: 10px; border-radius: 4px; max-width: 100%; line-height: 1.2;" title="{{ $row_role ?: 'Internal Approver' }}">{{ $row_role ?: 'Internal Approver' }}</span>
+                                                                    </div>
+                                                                    {{-- Row 3: Email ID --}}
+                                                                    <span class="co-appr-tl-email text-muted d-inline-flex align-items-center gap-1 text-truncate" title="{{ $row_email }}">
                                                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                                                                         <span class="text-truncate">{{ $row_email }}</span>
                                                                     </span>
@@ -4937,9 +5006,9 @@
                                                                     @endif
                                                                     {{ $row_label_status }}
                                                                 </span>
-                                                                <div class="co-appr-tl-date d-flex align-items-center gap-1 text-muted mt-1">
+                                                                <div class="co-appr-tl-date d-flex align-items-center gap-1 text-muted mt-1 text-nowrap">
                                                                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                                                    <span>{{ $row_date ?: '—' }}</span>
+                                                                    <span class="text-nowrap">{{ $row_date ?: '—' }}</span>
                                                                 </div>
                                                             </div>
 
@@ -4954,7 +5023,7 @@
                                                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                                                                     </button>
                                                                 </div>
-                                                                <div class="co-appr-tl-last-sent text-end">Last sent: {{ $row_date ?: 'just now' }}</div>
+                                                                <div class="co-appr-tl-last-sent text-end text-nowrap">Last sent: {{ $row_date ?: 'just now' }}</div>
                                                             </div>
                                                         </div>
                                                         @endforeach
@@ -5107,7 +5176,7 @@
                                     $so_company = @$co_company_name ?: '';
                                     $so_initial = strtoupper(substr(trim($so_name), 0, 1) ?: 'C');
                                     $so_from_name  = auth()->user()->name ?? '';
-                                    $so_from_email = 'notify@jeroworks.com';
+                                    $so_from_email = auth()->user()->email ?? 'notify@jeroworks.com';
                                     // Logged-in user email used for Reply-To so candidate replies route directly to sender
                                     $so_reply_to_email = auth()->user()->email ?? 'notify@jeroworks.com';
                                     $so_currencyArr = ['INR','EUR','JPY','GBP','USD','AED'];
@@ -5196,23 +5265,32 @@
                                                 <div class="co-subcard-badge">Recipient Setup</div>
                                             </div>
                                             <div class="co-subcard-body p-4">
-                                                <!-- Row 1: From Email & Reply To (2 columns) -->
+                                                <!-- Row 1: Email ID & Reply Email ID (2 columns) -->
                                                 <div class="row g-3 mb-3">
                                                     <div class="col-md-6">
                                                         <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
                                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-                                                            From Email ID
+                                                            Email ID
                                                         </label>
-                                                        <input type="text" class="form-control form-control-solid fs-7 h-40px bg-light-secondary text-gray-700" value="{{ $so_from_name ? $so_from_name.' <'.$so_from_email.'>' : $so_from_email }}" readonly>
-                                                        <div class="co-send-hint">This will be the email sender address</div>
+                                                        <div class="co-send-locked-field" title="System-locked sender email (logged-in user: {{ $so_from_email }})">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" class="flex-shrink-0"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                                                            <span class="text-truncate fw-semibold text-gray-800 fs-7 flex-grow-1">{{ $so_from_email }}</span>
+                                                            <svg class="co-chip-lock" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Locked: system-generated email"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                                                        </div>
+                                                        <div class="co-send-hint">Sender address associated with your logged-in account (read-only)</div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
                                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
-                                                            Reply To
+                                                            Reply Email ID
                                                         </label>
-                                                        <input type="email" class="form-control fs-7 h-40px" id="co_send_replyto" value="{{ $so_reply_to_email }}" placeholder="Enter reply-to email address">
-                                                        <div class="co-send-hint">Direct candidate replies to this address (defaults to logged-in user: {{ $so_reply_to_email }})</div>
+                                                        <div class="co-send-locked-field" title="System-locked reply-to email (logged-in user: {{ $so_reply_to_email }})">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" class="flex-shrink-0"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                                                            <span class="text-truncate fw-semibold text-gray-800 fs-7 flex-grow-1">{{ $so_reply_to_email }}</span>
+                                                            <svg class="co-chip-lock" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Locked: system-generated email"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                                                            <input type="hidden" id="co_send_replyto" value="{{ $so_reply_to_email }}">
+                                                        </div>
+                                                        <div class="co-send-hint">Direct candidate replies will be routed to your account email (read-only)</div>
                                                     </div>
                                                 </div>
 
@@ -5389,7 +5467,7 @@
                                             </div>
                                         </div>
                                         <button type="button" class="co-send-drawer-x" id="co_send_drawer_close" aria-label="Close drawer">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                            <i class="fas fa-times"></i>
                                         </button>
                                     </div>
 
@@ -5441,7 +5519,7 @@
                                                 <svg class="co-appr-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                                     <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                                                 </svg>
-                                                <input type="text" class="co-appr-search-input" id="co_send_drawer_search" placeholder="Search by name, email, or company...">
+                                                <input type="text" class="co-appr-search-input" id="co_send_drawer_search" placeholder="Search by name, position, email, or company...">
                                                 <button type="button" class="co-appr-search-clear d-none" id="co_send_search_clear" aria-label="Clear search">&times;</button>
                                             </div>
                                             <div class="co-appr-counter-badge">
@@ -5454,10 +5532,9 @@
                                             <table class="co-appr-table align-middle" id="co_send_member_table">
                                                 <thead>
                                                     <tr>
-                                                        <th style="min-width:180px;">RECIPIENT / ROLE</th>
-                                                        <th style="min-width:170px;">EMAIL ADDRESS</th>
-                                                        <th style="min-width:140px;">ORGANIZATION</th>
-                                                        <th style="min-width:90px;width:90px;text-align:center;">ACTION</th>
+                                                        <th style="min-width:240px;width:50%;">RECIPIENT DETAILS</th>
+                                                        <th style="min-width:160px;width:32%;">COMPANY</th>
+                                                        <th style="min-width:105px;width:105px;text-align:center;">ACTION</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -5478,69 +5555,90 @@
                                                                 $pal = $palettes[$charOrd % count($palettes)];
                                                                 $roleText = trim((string) (@$teamVal->display_name ?: @$teamVal->role));
                                                                 $orgName = trim((string) @$teamVal->company_name) ?: ($group['source'] === 'client' ? 'Client Company' : 'Internal Organization');
+                                                                $emailClean = strtolower(trim((string) @$teamVal->email));
                                                             @endphp
                                                             <tr class="co-send-mrow co-send-mrow--{{ $group['source'] }} {{ $group['source'] !== 'internal' ? 'd-none' : '' }}"
-                                                                data-email="{{ @$teamVal->email }}"
-                                                                data-search="{{ strtolower(trim((string) @$teamVal->name).' '.@$teamVal->email.' '.$orgName) }}">
+                                                                data-source="{{ $group['source'] }}"
+                                                                data-email="{{ $emailClean }}"
+                                                                data-name="{{ $teamName }}"
+                                                                data-search="{{ strtolower($teamName . ' ' . $emailClean . ' ' . $roleText . ' ' . $orgName) }}">
+                                                                {{-- Column 1: Recipient Details (3-Row Vertical Stack) --}}
                                                                 <td>
                                                                     <div class="d-flex align-items-center gap-3">
                                                                         <div class="co-appr-avatar" style="background:{{ $pal['bg'] }};color:{{ $pal['text'] }};border:1px solid {{ $pal['border'] }};">
                                                                             {{ $initChar }}
                                                                         </div>
-                                                                        <div class="d-flex flex-column min-w-0">
-                                                                            <span class="co-appr-name text-truncate">{{ ucwords(substr(@$teamVal->name, 0, 24)) }}</span>
+                                                                        <div class="d-flex flex-column min-w-0" style="gap:2px;">
+                                                                            {{-- Row 1: Recipient Name --}}
+                                                                            <span class="co-appr-name text-truncate" title="{{ $teamName }}">{{ ucwords(substr($teamName, 0, 30)) }}</span>
+                                                                            {{-- Row 2: Designation / Role --}}
                                                                             @if(!empty($roleText))
-                                                                                <span class="co-appr-role-tag text-truncate">{{ ucwords(substr($roleText, 0, 25)) }}</span>
+                                                                                <span class="co-appr-position text-truncate" title="{{ $roleText }}">{{ ucwords(substr($roleText, 0, 32)) }}</span>
                                                                             @endif
+                                                                            {{-- Row 3: Email ID --}}
+                                                                            <div class="co-appr-email text-truncate" title="{{ @$teamVal->email }}">
+                                                                                <svg class="co-appr-email-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                                                                                </svg>
+                                                                                <span class="co-appr-email-text">{{ @$teamVal->email }}</span>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td>
-                                                                    <div class="co-appr-contact">
-                                                                        <svg class="co-appr-contact-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                                                                        </svg>
-                                                                        <span class="co-appr-email-text text-truncate">{{ @$teamVal->email }}</span>
-                                                                    </div>
-                                                                </td>
+                                                                {{-- Column 2: Organization / Company --}}
                                                                 <td>
                                                                     <div class="co-appr-company">
                                                                         <svg class="co-appr-company-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                                             <path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/>
                                                                         </svg>
-                                                                        <span class="co-appr-company-text text-truncate">{{ $orgName }}</span>
+                                                                        <span class="co-appr-company-text text-truncate" title="{{ $orgName }}">{{ $orgName }}</span>
                                                                     </div>
                                                                 </td>
+                                                                {{-- Column 3: Action --}}
                                                                 <td style="text-align:center;">
-                                                                    <button type="button" class="co-send-mrow-add">
-                                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                                                    <button type="button" class="co-appr-btn co-appr-btn--action co-appr-btn--add co-send-mrow-action"
+                                                                        data-action="add"
+                                                                        data-email="{{ $emailClean }}"
+                                                                        data-name="{{ $teamName }}"
+                                                                        title="Add email recipient">
+                                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                                                         <span>Add</span>
                                                                     </button>
                                                                 </td>
                                                             </tr>
                                                         @endforeach
                                                     @endforeach
-                                                    <tr class="co-send-mrow-empty co-send-mrow--internal {{ !empty($co_send_internal) ? 'd-none' : '' }}">
-                                                        <td colspan="4" class="co-appr-empty-cell">
+                                                    <tr class="co-send-mrow-empty co-send-mrow-empty--internal {{ !empty($co_send_internal) ? 'd-none' : '' }}">
+                                                        <td colspan="3" class="co-appr-empty-cell">
                                                             <div class="co-appr-empty-inner">
                                                                 <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
                                                                 <div class="co-appr-empty-msg">No internal team members found</div>
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                    <tr class="co-send-mrow-empty co-send-mrow--client d-none">
-                                                        <td colspan="4" class="co-appr-empty-cell">
+                                                    <tr class="co-send-mrow-empty co-send-mrow-empty--client d-none">
+                                                        <td colspan="3" class="co-appr-empty-cell">
                                                             <div class="co-appr-empty-inner">
                                                                 <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
                                                                 <div class="co-appr-empty-msg">No client company contacts found</div>
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                    <tr class="co-send-mrow-empty co-send-mrow--agency d-none">
-                                                        <td colspan="4" class="co-appr-empty-cell">
+                                                    @if(!empty($co_send_agency))
+                                                    <tr class="co-send-mrow-empty co-send-mrow-empty--agency d-none">
+                                                        <td colspan="3" class="co-appr-empty-cell">
                                                             <div class="co-appr-empty-inner">
                                                                 <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
                                                                 <div class="co-appr-empty-msg">No agency / partner contacts found</div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    @endif
+                                                    <tr class="co-send-mrow-empty co-send-mrow-empty--search d-none">
+                                                        <td colspan="3" class="co-appr-empty-cell">
+                                                            <div class="co-appr-empty-inner">
+                                                                <div class="co-appr-empty-ico"><i class="fas fa-search"></i></div>
+                                                                <div class="co-appr-empty-msg">No contacts found matching your search</div>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -5705,10 +5803,12 @@
                         '<div class="co-appr-tl-card co-appr-tl-card--pending co-appr-tl-grid co-appr-tl-entry mb-1.5" data-approver-email="' + cleanEmail + '">' +
                             '<div class="co-appr-tl-appr">' +
                                 '<div class="co-appr-tl-avatar flex-shrink-0">' + initial + '</div>' +
-                                '<div class="d-flex align-items-center gap-2 min-w-0 flex-nowrap flex-grow-1">' +
-                                    '<span class="co-appr-tl-name text-truncate fw-bold text-gray-900" style="max-width: 140px; font-size: 12px;" title="' + safeName + '">' + safeName + '</span>' +
-                                    '<span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle text-truncate flex-shrink-0" style="font-size: 10px; border-radius: 4px; max-width: 110px;" title="' + safeRole + '">' + safeRole + '</span>' +
-                                    '<span class="co-appr-tl-email text-muted d-inline-flex align-items-center gap-1 text-truncate flex-shrink-1" style="font-size: 11px; min-width: 0;" title="' + safeEmail + '">' +
+                                '<div class="co-appr-tl-details d-flex flex-column justify-content-center min-w-0 flex-grow-1">' +
+                                    '<span class="co-appr-tl-name text-truncate fw-bold text-gray-900" title="' + safeName + '">' + safeName + '</span>' +
+                                    '<div class="co-appr-tl-role-wrap d-flex align-items-center">' +
+                                        '<span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle text-truncate" style="font-size: 10px; border-radius: 4px; max-width: 100%; line-height: 1.2;" title="' + safeRole + '">' + safeRole + '</span>' +
+                                    '</div>' +
+                                    '<span class="co-appr-tl-email text-muted d-inline-flex align-items-center gap-1 text-truncate" title="' + safeEmail + '">' +
                                         '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
                                         '<span class="text-truncate">' + safeEmail + '</span>' +
                                     '</span>' +
@@ -5719,9 +5819,9 @@
                                     '<svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
                                     'Pending' +
                                 '</span>' +
-                                '<div class="co-appr-tl-date d-flex align-items-center gap-1 text-muted mt-1">' +
+                                '<div class="co-appr-tl-date d-flex align-items-center gap-1 text-muted mt-1 text-nowrap">' +
                                     '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
-                                    '<span>Sent just now</span>' +
+                                    '<span class="text-nowrap">Sent just now</span>' +
                                 '</div>' +
                             '</div>' +
                             '<div class="co-appr-tl-rem">' +
@@ -5734,7 +5834,7 @@
                                         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>' +
                                     '</button>' +
                                 '</div>' +
-                                '<div class="co-appr-tl-last-sent text-end">Last sent: just now</div>' +
+                                '<div class="co-appr-tl-last-sent text-end text-nowrap">Last sent: just now</div>' +
                             '</div>' +
                         '</div>';
 
@@ -8234,9 +8334,15 @@
                     var $c = $('#' + containerId);
                     // de-dupe
                     var exists = false;
-                    $c.find('.co-send-chip').each(function () { if ($(this).clone().children().remove().end().text().trim() === email) exists = true; });
+                    $c.find('.co-send-chip').each(function () {
+                        var chipEmail = $(this).attr('data-raw-email') || $(this).clone().children().remove().end().text().trim();
+                        if (chipEmail.toLowerCase() === email.toLowerCase()) exists = true;
+                    });
                     if (exists) return;
-                    $('<span class="co-send-chip"></span>').text(email).append('<i class="co-chip-x">&times;</i>').insertBefore($c.find('.co-send-chip-input'));
+                    $('<span class="co-send-chip" data-raw-email="' + email + '"></span>')
+                        .text(email)
+                        .append('<button type="button" class="co-send-chip-x co-chip-x" aria-label="Remove">&times;</button>')
+                        .insertBefore($c.find('.co-send-chip-input'));
                 }
                 function coCollectChips(containerId) {
                     var out = [];
@@ -8260,13 +8366,20 @@
                     if (e.key === 'Enter' || e.key === ',') {
                         e.preventDefault();
                         var target = $(this).closest('.co-send-chips').attr('id');
-                        coAddChip(target, $(this).val()); $(this).val('');
+                        coAddChip(target, $(this).val());
+                        $(this).val('');
+                        coSyncDrawerAddedState();
                     }
                 });
-                $(document).on('click', '.co-send-chip .co-chip-x', function () { $(this).closest('.co-send-chip').remove(); coSyncDrawerAddedState(); });
+                $(document).on('click', '.co-send-chip .co-chip-x, .co-send-chip .co-send-chip-x', function () {
+                    $(this).closest('.co-send-chip').remove();
+                    coSyncDrawerAddedState();
+                });
 
-                // ── Add-Email drawer (previous "Select Approver" design: source cards + table) ──
-                function coSendActiveSource() { return $('#co_send_drawer .co-appr-source-card--active').data('source') || 'internal'; }
+                // ── Add-Email drawer (Unified Approver & Recipient Design Standard) ──
+                function coSendActiveSource() {
+                    return $('#co_send_drawer .co-appr-source-card--active').attr('data-source') || $('#co_send_drawer .co-appr-source-card--active').data('source') || 'internal';
+                }
                 function coOpenSendDrawer(target) {
                     $('#co_send_drawer').attr('data-target', target).addClass('co-send-drawer--open');
                     $('#co_send_drawer_bd').addClass('co-send-drawer-bd--open');
@@ -8279,26 +8392,29 @@
                 }
                 // Reflect which members are already chips in the current target field.
                 function coSyncDrawerAddedState() {
-                    var target = $('#co_send_drawer').attr('data-target') || 'co_to_chips';
-                    var present = coCollectChips(target).map(function (e) { return e.toLowerCase(); });
+                    var target = $('#co_send_drawer').attr('data-target') || 'co_cc_chips';
+                    var present = coCollectChips(target).map(function (e) { return String(e || '').trim().toLowerCase(); });
                     $('#co_send_drawer .co-send-mrow').each(function () {
-                        var em = String($(this).data('email') || '').toLowerCase();
-                        var added = present.indexOf(em) !== -1;
-                        var $btn = $(this).find('.co-send-mrow-add');
-                        $btn.toggleClass('co-send-mrow--added', added);
+                        var em = String($(this).attr('data-email') || $(this).data('email') || '').trim().toLowerCase();
+                        var added = (em !== '' && present.indexOf(em) !== -1);
+                        var $btn = $(this).find('.co-send-mrow-action, .co-send-mrow-add');
                         if (added) {
-                            $btn.html('<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Added</span>');
-                            $btn.attr('title', 'Click to remove from CC');
+                            $btn.removeClass('co-appr-btn--add').addClass('co-appr-btn--remove');
+                            $btn.attr('data-action', 'remove');
+                            $btn.attr('title', 'Remove email recipient');
+                            $btn.html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Remove</span>');
                         } else {
-                            $btn.html('<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span>Add</span>');
-                            $btn.removeAttr('title');
+                            $btn.removeClass('co-appr-btn--remove').addClass('co-appr-btn--add');
+                            $btn.attr('data-action', 'add');
+                            $btn.attr('title', 'Add email recipient');
+                            $btn.html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span>');
                         }
                     });
                 }
                 $(document).on('click', '#co_send_drawer_close, #co_send_drawer_bd', function () { coCloseSendDrawer(); });
                 // Source cards (Internal / Client / Agency)
                 $(document).on('click', '#co_send_drawer .co-appr-source-card', function () {
-                    var src = $(this).data('source');
+                    var src = $(this).attr('data-source') || $(this).data('source') || 'internal';
                     $('#co_send_drawer .co-appr-source-card').removeClass('co-appr-source-card--active');
                     $(this).addClass('co-appr-source-card--active');
                     $(this).find('input[type=radio]').prop('checked', true);
@@ -8309,20 +8425,24 @@
                     var q = $(this).val().trim().toLowerCase();
                     var src = coSendActiveSource();
                     var visible = 0;
+                    var totalInSource = 0;
                     $('#co_send_member_table .co-send-mrow').addClass('d-none');
                     $('#co_send_member_table .co-send-mrow-empty').addClass('d-none');
 
                     $('#co_send_member_table .co-send-mrow--' + src).each(function () {
-                        var hay = String($(this).data('search') || '');
-                        var match = q === '' || hay.indexOf(q) !== -1;
+                        totalInSource++;
+                        var hay = String($(this).attr('data-search') || $(this).data('search') || '').toLowerCase();
+                        var match = (q === '' || hay.indexOf(q) !== -1);
                         if (match) {
                             $(this).removeClass('d-none');
                             visible++;
                         }
                     });
 
-                    if (visible === 0) {
-                        $('#co_send_member_table .co-send-mrow-empty.co-send-mrow--' + src).removeClass('d-none');
+                    if (totalInSource === 0) {
+                        $('#co_send_member_table .co-send-mrow-empty--' + src).removeClass('d-none');
+                    } else if (visible === 0 && q !== '') {
+                        $('#co_send_member_table .co-send-mrow-empty--search').removeClass('d-none');
                     }
 
                     $('#co_send_active_count').text(visible);
@@ -8333,12 +8453,14 @@
                     $('#co_send_drawer_search').val('').trigger('input').focus();
                 });
                 // Add / remove a member email from the current target field
-                $(document).on('click', '.co-send-mrow-add', function () {
+                $(document).on('click', '.co-send-mrow-action, .co-send-mrow-add', function (e) {
+                    e.preventDefault();
                     var $row = $(this).closest('.co-send-mrow');
-                    var email = String($row.data('email') || '').trim();
+                    var email = String($row.attr('data-email') || $row.data('email') || '').trim();
                     if (!email) return;
-                    var target = $('#co_send_drawer').attr('data-target') || 'co_to_chips';
-                    if ($(this).hasClass('co-send-mrow--added')) {
+                    var target = $('#co_send_drawer').attr('data-target') || 'co_cc_chips';
+                    var action = $(this).attr('data-action') || ($(this).hasClass('co-appr-btn--remove') ? 'remove' : 'add');
+                    if (action === 'remove') {
                         $('#' + target).find('.co-send-chip').each(function () {
                             var chipEmail = $(this).attr('data-raw-email') || $(this).clone().children().remove().end().text().trim();
                             if (chipEmail.toLowerCase() === email.toLowerCase()) {

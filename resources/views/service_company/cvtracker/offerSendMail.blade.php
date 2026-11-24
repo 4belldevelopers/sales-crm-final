@@ -117,6 +117,42 @@ if($cc_email_count > 0){
 .co-appr-drawer-backdrop.co-appr-drawer-backdrop--open { display: block !important; }
 
 /* Tier 2: Source selector sub-cards */
+.co-drawer-topbar-close {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    color: #475569 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all .15s ease !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    line-height: 1 !important;
+}
+.co-drawer-topbar-close:hover {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #dc2626 !important;
+}
+.co-drawer-topbar-close i,
+.co-drawer-topbar-close svg {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+    color: #475569 !important;
+    stroke: #475569 !important;
+    line-height: 1 !important;
+    display: block !important;
+}
+.co-drawer-topbar-close:hover i,
+.co-drawer-topbar-close:hover svg {
+    color: #dc2626 !important;
+    stroke: #dc2626 !important;
+}
 .co-appr-source-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .co-appr-source-card {
     flex: 1 1 230px; display: flex; align-items: center; gap: 12px; cursor: pointer;
@@ -632,7 +668,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
             </div>
         </div>
         <button type="button" id="kt_activitiesIntTeam_close_cc" class="co-drawer-topbar-close" aria-label="Close CC drawer">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <i class="fas fa-times"></i>
         </button>
     </div>
     <!--end::Team header-->
@@ -685,10 +721,9 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
             <table class="co-appr-table align-middle" id="Iteam_Table_cc">
               <thead>
                 <tr>
-                  <th style="min-width:180px;">RECIPIENT / ROLE</th>
-                  <th style="min-width:170px;">EMAIL ADDRESS</th>
-                  <th style="min-width:140px;">ORGANIZATION</th>
-                  <th style="min-width:80px;width:80px;text-align:center;">ACTION</th>
+                  <th style="min-width:240px;width:50%;">RECIPIENT DETAILS</th>
+                  <th style="min-width:160px;width:32%;">COMPANY</th>
+                  <th style="min-width:105px;width:105px;text-align:center;">ACTION</th>
                 </tr>
               </thead>
               <tbody>
@@ -711,40 +746,45 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                             $orgName = trim((string) @$teamVal->company_name) ?: ($group['source'] === 'client' ? 'Client Company' : 'Internal Organization');
                         @endphp
                         <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
-                            data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower($orgName) }}">
+                            data-source="{{ $group['source'] }}"
+                            data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower($orgName) }}"
+                            data-search-text="{{ strtolower($teamName . ' ' . $roleText . ' ' . @$teamVal->email . ' ' . $orgName) }}">
+                            {{-- Column 1: Recipient Details --}}
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="co-appr-avatar" style="background:{{ $pal['bg'] }};color:{{ $pal['text'] }};border:1px solid {{ $pal['border'] }};">
                                         {{ $initChar }}
                                     </div>
-                                    <div class="d-flex flex-column min-w-0">
-                                        <span class="co-appr-name text-truncate">{{ ucwords(substr(@$teamVal->name, 0, 24)) }}</span>
+                                    <div class="d-flex flex-column min-w-0" style="gap:2px;">
+                                        <span class="co-appr-name text-truncate" title="{{ $teamName }}">{{ ucwords(substr($teamName, 0, 30)) }}</span>
                                         @if(!empty($roleText))
-                                            <span class="co-appr-role-tag text-truncate">{{ ucwords(substr($roleText, 0, 25)) }}</span>
+                                            <span class="co-appr-position text-truncate" title="{{ $roleText }}">{{ ucwords(substr($roleText, 0, 32)) }}</span>
                                         @endif
+                                        <div class="co-appr-email text-truncate" title="{{ @$teamVal->email }}">
+                                            <svg class="co-appr-email-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                                            </svg>
+                                            <span class="co-appr-email-text">{{ @$teamVal->email }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                <div class="co-appr-contact">
-                                    <svg class="co-appr-contact-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                                    </svg>
-                                    <span class="co-appr-email-text text-truncate">{{ @$teamVal->email }}</span>
-                                </div>
-                            </td>
+                            {{-- Column 2: Company --}}
                             <td>
                                 <div class="co-appr-company">
                                     <svg class="co-appr-company-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/>
                                     </svg>
-                                    <span class="co-appr-company-text text-truncate">{{ $orgName }}</span>
+                                    <span class="co-appr-company-text text-truncate" title="{{ $orgName }}">{{ $orgName }}</span>
                                 </div>
                             </td>
+                            {{-- Column 3: Action --}}
                             <td style="text-align:center;">
-                                <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="cp_select co-appr-add-btn"
-                                    rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}" data-email="{{ @$teamVal->email }}">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);"
+                                    class="cp_select co-appr-btn co-appr-btn--action co-appr-btn--add"
+                                    rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}" data-email="{{ @$teamVal->email }}"
+                                    title="Add email recipient">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                     <span>Add</span>
                                 </a>
                             </td>
@@ -752,7 +792,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                     @endforeach
                 @endforeach
                 <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--internal {{ !empty($cc_email_internal_data) ? 'd-none' : '' }}">
-                    <td colspan="4" class="co-appr-empty-cell">
+                    <td colspan="3" class="co-appr-empty-cell">
                         <div class="co-appr-empty-inner">
                             <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
                             <div class="co-appr-empty-msg">No internal team members found</div>
@@ -760,7 +800,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                     </td>
                 </tr>
                 <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--client d-none">
-                    <td colspan="4" class="co-appr-empty-cell">
+                    <td colspan="3" class="co-appr-empty-cell">
                         <div class="co-appr-empty-inner">
                             <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
                             <div class="co-appr-empty-msg">No client company contacts found</div>
@@ -792,7 +832,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
             </div>
         </div>
         <button type="button" id="kt_activitiesIntTeam_close_to" class="co-drawer-topbar-close" aria-label="Close approver drawer">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <i class="fas fa-times"></i>
         </button>
     </div>
     <!--end::Team header-->
@@ -1605,18 +1645,20 @@ if (_btnSubmitEl) _btnSubmitEl.addEventListener("click", ()=>{
 			var title					=	$('#team_select_'+rel).attr("data-title");
 			var email					=	$('#team_select_'+rel).attr("data-email");
 			
-			if(assign ==0)
+			if(assign == 0)
 			{
-				$(this).addClass("co-appr-btn--remove");
-				$(this).text('Remove');
+				$(this).removeClass("co-appr-btn--add").addClass("co-appr-btn--remove");
+				$(this).html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Remove</span>');
 				$(this).attr("data-assign", 1);
+				$(this).attr("title", "Remove email recipient");
 				AddEvent(title, email);
 			}
-			else if(assign ==1)
+			else if(assign == 1)
 			{
-				$(this).removeClass("co-appr-btn--remove");
-				$(this).text('Add');
+				$(this).removeClass("co-appr-btn--remove").addClass("co-appr-btn--add");
+				$(this).html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span>');
 				$(this).attr("data-assign", 0);
+				$(this).attr("title", "Add email recipient");
 				DeleteEvent(title, email);
 			}
 			
