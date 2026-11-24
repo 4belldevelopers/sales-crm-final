@@ -643,7 +643,7 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
                 [
                     'id' => 502,
                     'wiseID' => 0,
-                    'recommendation_id' => 77,
+                    'job_application_id' => 77,
                     'jobId' => 222,
                     'job_id' => 222,
                     'job_company_id' => 999,
