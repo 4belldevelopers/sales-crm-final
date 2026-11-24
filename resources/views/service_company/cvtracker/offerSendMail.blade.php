@@ -103,6 +103,13 @@ if($cc_email_count > 0){
     transition: right .28s cubic-bezier(0.16, 1, 0.3, 1); overflow-y: auto; display: block !important;
 }
 .co-appr-drawer.co-appr-drawer--open { right: 0 !important; }
+@if((int) @$mtype === 2)
+#kt_activitiesIntTeam_to {
+    position: relative !important; top: auto !important; bottom: auto !important; right: 0 !important; left: auto !important;
+    width: 100% !important; height: 100% !important; box-shadow: none !important;
+}
+#co_appr_drawer_backdrop { display: none !important; }
+@endif
 .co-appr-drawer-backdrop {
     display: none; position: absolute !important; inset: 0; background: rgba(15, 23, 42, 0.45);
     backdrop-filter: blur(2px); z-index: 2147482999 !important;
@@ -217,13 +224,28 @@ if($cc_email_count > 0){
 }
 .co-appr-table tbody tr:last-child td { border-bottom: none !important; }
 .co-appr-avatar {
-    width: 34px; height: 34px; border-radius: 50%; display: flex;
+    width: 36px; height: 36px; border-radius: 50%; display: flex;
     align-items: center; justify-content: center; font-family: 'Poppins', sans-serif;
-    font-size: 12px; font-weight: 700; flex-shrink: 0;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
 }
 .co-appr-name {
     font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600;
     color: #0f172a; line-height: 1.25;
+}
+.co-appr-position {
+    font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 500;
+    color: #64748b; line-height: 1.25; margin-top: 1px;
+}
+.co-appr-email {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400;
+    color: #475569; line-height: 1.25; margin-top: 2px;
+}
+.co-appr-email-ico {
+    width: 12px; height: 12px; color: #94a3b8; flex-shrink: 0;
+}
+.co-appr-email-text {
+    color: #475569;
 }
 .co-appr-role-tag {
     font-family: 'Poppins', sans-serif; font-size: 10.5px; font-weight: 500;
@@ -233,10 +255,10 @@ if($cc_email_count > 0){
     display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
 }
 .co-appr-contact-ico, .co-appr-company-ico {
-    width: 13px; height: 13px; color: #94a3b8; flex-shrink: 0;
+    width: 13.5px; height: 13.5px; color: #94a3b8; flex-shrink: 0;
 }
-.co-appr-email-text, .co-appr-company-text {
-    font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500;
+.co-appr-company-text {
+    font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500;
     color: #334155;
 }
 .co-appr-status-badge {
@@ -250,6 +272,30 @@ if($cc_email_count > 0){
 }
 .co-appr-status--not-added {
     background: #f8fafc !important; color: #64748b !important; border: 1px solid #e2e8f0 !important;
+}
+/* Unified Approver Action Button */
+.co-appr-btn {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    gap: 6px !important; height: 30px !important; min-width: 88px !important; padding: 0 14px !important;
+    font-family: 'Poppins', sans-serif !important; font-size: 11.5px !important; font-weight: 600 !important;
+    border-radius: 6px !important; cursor: pointer !important; text-decoration: none !important;
+    white-space: nowrap !important; transition: all 0.15s ease !important; user-select: none !important;
+}
+.co-appr-btn--add {
+    background: #009ef7 !important; border: 1px solid #009ef7 !important; color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(0, 158, 247, 0.16) !important;
+}
+.co-appr-btn--add:hover {
+    background: #0086d4 !important; border-color: #0086d4 !important; color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.24) !important;
+}
+.co-appr-btn--remove {
+    background: #fef2f2 !important; border: 1px solid #fecaca !important; color: #dc2626 !important;
+    box-shadow: 0 1px 2px rgba(220, 38, 38, 0.06) !important;
+}
+.co-appr-btn--remove:hover {
+    background: #fee2e2 !important; border-color: #fca5a5 !important; color: #b91c1c !important;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.12) !important;
 }
 .co-appr-remove-btn {
     display: inline-flex !important; align-items: center !important; justify-content: center !important;
@@ -353,7 +399,7 @@ if($cc_email_count > 0){
 .co-sendoffer-footer .co-so-send:hover { filter: brightness(.95); }
 </style>
 <div class="co-appr-drawer-backdrop" id="co_appr_drawer_backdrop"></div>
-<link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
+<link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css"/>
 
 
 @php
@@ -751,7 +797,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
     </div>
     <!--end::Team header-->
     <!--begin::Team Content-->
-    <div class="co-appr-picker flex-grow-1 overflow-auto p-4 p-md-5" id="kt_to_scroll">
+    <div class="co-appr-picker flex-grow-1 overflow-auto p-3 p-md-4" id="kt_to_scroll">
         {{-- Tier 2 Sub-Tabs / Source Cards --}}
         <div class="co-appr-source-row">
             <div class="co-appr-source-card co-appr-source-card--active" data-source-for="to" data-source="internal">
@@ -765,7 +811,6 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                 </div>
                 <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
             </div>
-            @if(!empty($cc_email_client_data))
             <div class="co-appr-source-card" data-source-for="to" data-source="client">
                 <input type="radio" name="apprSourceTo" value="client" style="display:none;">
                 <span class="co-appr-source-ico">
@@ -773,11 +818,10 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                 </span>
                 <div class="co-appr-source-meta">
                     <div class="co-appr-source-title">Client Company Approvers</div>
-                    <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($cc_email_client_data) }} available</span></div>
+                    <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($cc_email_client_data ?? []) }} available</span></div>
                 </div>
                 <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
             </div>
-            @endif
         </div>
 
         {{-- Tier 1 Toolbar / Search Card --}}
@@ -786,7 +830,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                 <svg class="co-appr-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="text" class="co-appr-search-input" data-search-for="to" placeholder="Search by name, email or company...">
+                <input type="text" class="co-appr-search-input" data-search-for="to" placeholder="Search by name, position, email or company...">
                 <button type="button" class="co-appr-search-clear d-none" aria-label="Clear search">&times;</button>
             </div>
             <div class="co-appr-counter-badge">
@@ -794,20 +838,33 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
             </div>
         </div>
 
-        {{-- Tier 3 Table Card --}}
+        {{-- Tier 3 Table Card (Mandatory Rule 20 Header Background + 3 Clean Columns) --}}
         <div class="co-appr-table-card">
             <table class="co-appr-table align-middle" id="Iteam_Table_to">
               <thead>
                 <tr>
-                  <th style="min-width:170px;">APPROVER</th>
-                  <th style="min-width:160px;">CONTACT</th>
-                  <th style="min-width:130px;">COMPANY</th>
-                  <th style="min-width:125px;text-align:center;">STATUS</th>
-                  <th style="min-width:90px;width:90px;text-align:center;">ACTION</th>
+                  <th style="min-width:250px;width:50%;">APPROVER DETAILS</th>
+                  <th style="min-width:170px;width:32%;">COMPANY</th>
+                  <th style="min-width:105px;width:105px;text-align:center;">ACTION</th>
                 </tr>
               </thead>
               <tbody>
-                @foreach ([['data' => $cc_email_internal_data ?? [], 'source' => 'internal'], ['data' => $cc_email_client_data ?? [], 'source' => 'client']] as $group)
+                @php
+                    $approverGroups = [
+                        [
+                            'source' => 'internal',
+                            'title' => 'Internal Company Approvers',
+                            'data' => $cc_email_internal_data ?? [],
+                        ],
+                        [
+                            'source' => 'client',
+                            'title' => 'Client Company Approvers',
+                            'data' => $cc_email_client_data ?? [],
+                        ],
+                    ];
+                    $alreadyAddedSet = array_map(function($e) { return strtolower(trim((string)$e)); }, $already_added_approvers ?? []);
+                @endphp
+                @foreach ($approverGroups as $group)
                     @foreach ($group['data'] as $teamVal)
                         @php
                             $teamName = trim((string) @$teamVal->name);
@@ -824,82 +881,91 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                             $pal = $palettes[$charOrd % count($palettes)];
                             $roleText = trim((string) (@$teamVal->display_name ?: @$teamVal->role));
                             $approverEmailClean = strtolower(trim((string) @$teamVal->email));
-                            $isAlreadyAdded = in_array($approverEmailClean, $already_added_approvers ?? []);
+                            $isAlreadyAdded = in_array($approverEmailClean, $alreadyAddedSet, true);
+                            $companyName = trim((string) @$teamVal->company_name) ?: ($group['source'] === 'client' ? 'Client Company' : 'Internal Organization');
+                            $rowKey = $group['source'] . '_' . (@$teamVal->id ?: md5($approverEmailClean));
                         @endphp
                         <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
-                            data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}"
-                            data-approver-email="{{ $approverEmailClean }}" data-row-id="{{ @$teamVal->id }}">
+                            data-source="{{ $group['source'] }}"
+                            data-row-key="{{ $rowKey }}"
+                            data-row-id="{{ @$teamVal->id }}"
+                            data-approver-email="{{ $approverEmailClean }}"
+                            data-search-text="{{ strtolower($teamName . ' ' . $roleText . ' ' . $approverEmailClean . ' ' . $companyName) }}">
+                            {{-- Column 1: Approver Details --}}
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="co-appr-avatar" style="background:{{ $pal['bg'] }};color:{{ $pal['text'] }};border:1px solid {{ $pal['border'] }};">
                                         {{ $initChar }}
                                     </div>
                                     <div class="d-flex flex-column min-w-0">
-                                        <span class="co-appr-name text-truncate">{{ ucwords(substr(@$teamVal->name, 0, 24)) }}</span>
+                                        <span class="co-appr-name text-truncate" title="{{ $teamName }}">{{ ucwords(substr($teamName, 0, 30)) }}</span>
                                         @if(!empty($roleText))
-                                            <span class="co-appr-role-tag text-truncate">{{ ucwords(substr($roleText, 0, 25)) }}</span>
+                                            <span class="co-appr-position text-truncate" title="{{ $roleText }}">{{ ucwords(substr($roleText, 0, 32)) }}</span>
                                         @endif
+                                        <div class="co-appr-email text-truncate" title="{{ @$teamVal->email }}">
+                                            <svg class="co-appr-email-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                                            </svg>
+                                            <span class="co-appr-email-text">{{ @$teamVal->email }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                <div class="co-appr-contact">
-                                    <svg class="co-appr-contact-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                                    </svg>
-                                    <span class="co-appr-email-text text-truncate">{{ @$teamVal->email }}</span>
-                                </div>
-                            </td>
+                            {{-- Column 2: Company --}}
                             <td>
                                 <div class="co-appr-company">
                                     <svg class="co-appr-company-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/>
                                     </svg>
-                                    <span class="co-appr-company-text text-truncate">{{ @$teamVal->company_name ?: 'Internal Team' }}</span>
+                                    <span class="co-appr-company-text text-truncate" title="{{ $companyName }}">{{ $companyName }}</span>
                                 </div>
                             </td>
+                            {{-- Column 3: Action --}}
                             <td style="text-align:center;">
-                                <span class="co-appr-status-badge {{ $isAlreadyAdded ? 'co-appr-status--added' : 'co-appr-status--not-added' }}" id="co_appr_status_badge_{{ @$teamVal->id }}">
+                                <button type="button"
+                                    class="co-appr-btn co-appr-btn--action {{ $isAlreadyAdded ? 'co-appr-btn--remove' : 'co-appr-btn--add' }}"
+                                    data-action="{{ $isAlreadyAdded ? 'remove' : 'add' }}"
+                                    data-source="{{ $group['source'] }}"
+                                    data-row-key="{{ $rowKey }}"
+                                    data-row-id="{{ @$teamVal->id }}"
+                                    data-email="{{ $approverEmailClean }}"
+                                    data-name="{{ $teamVal->name }}"
+                                    data-role="{{ @$teamVal->designation ?: @$teamVal->role ?: ($group['source'] === 'internal' ? 'Internal Approver' : 'Client Approver') }}"
+                                    data-offerid="{{ $offerId }}"
+                                    title="{{ $isAlreadyAdded ? 'Remove approver from workflow' : 'Add approver to workflow' }}">
                                     @if($isAlreadyAdded)
-                                        <i class="fas fa-check-circle me-1"></i> Already Added
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                        <span>Remove</span>
                                     @else
-                                        <i class="far fa-circle me-1"></i> Not Added
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        <span>Add</span>
                                     @endif
-                                </span>
-                            </td>
-                            <td style="text-align:center;">
-                                {{-- Remove Button (shown when already added) --}}
-                                <button type="button" class="to_remove co-appr-remove-btn {{ $isAlreadyAdded ? '' : 'd-none' }}"
-                                    id="to_team_remove_{{ @$teamVal->id }}"
-                                    rel="{{ @$teamVal->id }}"
-                                    data-title="{{ @$teamVal->name }}"
-                                    data-email="{{ @$teamVal->email }}"
-                                    data-offerid="{{ $offerId }}">
-                                    <i class="fas fa-trash-alt me-1 fs-9"></i> Remove
                                 </button>
-                                {{-- Add Button (shown when not yet added) --}}
-                                <a id="to_team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="to_select co-appr-add-btn {{ $isAlreadyAdded ? 'd-none' : '' }}"
-                                    rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}" data-email="{{ @$teamVal->email }}">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                    <span>Add</span>
-                                </a>
                             </td>
                         </tr>
                     @endforeach
                 @endforeach
                 <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--internal {{ !empty($cc_email_internal_data) ? 'd-none' : '' }}">
-                    <td colspan="5" class="co-appr-empty-cell">
+                    <td colspan="3" class="co-appr-empty-cell">
                         <div class="co-appr-empty-inner">
                             <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
-                            <div class="co-appr-empty-msg">No internal approvers found</div>
+                            <div class="co-appr-empty-msg">No internal company approvers found</div>
                         </div>
                     </td>
                 </tr>
-                <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--client d-none">
-                    <td colspan="5" class="co-appr-empty-cell">
+                <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--client {{ !empty($cc_email_client_data) ? 'd-none' : '' }}">
+                    <td colspan="3" class="co-appr-empty-cell">
                         <div class="co-appr-empty-inner">
                             <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
-                            <div class="co-appr-empty-msg">No client approvers found</div>
+                            <div class="co-appr-empty-msg">No client company approvers found</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="co-appr-row co-appr-empty-search-row d-none">
+                    <td colspan="3" class="co-appr-empty-cell">
+                        <div class="co-appr-empty-inner">
+                            <div class="co-appr-empty-ico"><i class="fas fa-search"></i></div>
+                            <div class="co-appr-empty-msg co-appr-search-empty-text">No approvers matching your search</div>
                         </div>
                     </td>
                 </tr>
@@ -1098,180 +1164,215 @@ function validateEmailInput() {
 
 function addEmailToList(rel) {
     let emailInput = document.getElementById('to_email').value.trim();
-    // Simple validation to check if the email is valid
-	var assign					=	$('#to_team_select_'+rel).attr("data-assign");
-	var title					=	$('#to_team_select_'+rel).attr("data-title");
-	var email					=	$('#to_team_select_'+rel).attr("data-email");
-	
-	$('.to_select').removeClass("co-appr-btn--remove");
-	$('.to_select').text('Add');
-	$('.to_select').attr("data-assign", 0);
-
-
+    var $btn = $('button.co-appr-btn--action[data-row-id="' + rel + '"]');
+    var email = $btn.attr("data-email") || $('#to_team_select_' + rel).attr("data-email");
+    
     if (emailInput.split(',').length > 1 || emailInput.split(';').length > 1) {
-
         alert('Please enter only one email address.');
-        document.getElementById('to_email').value = ''; // Clear the input
-
-			$('#to_team_select_'+rel).removeClass("co-appr-btn--remove");
-			$('#to_team_select_'+rel).text('Add');
-			$('#to_team_select_'+rel).attr("data-assign", 0);
-
-        }else{
-
-				$('#to_team_select_'+rel).addClass("co-appr-btn--remove");
-				$('#to_team_select_'+rel).text('Remove');
-				$('#to_team_select_'+rel).attr("data-assign", 1);
-
-	}
+        document.getElementById('to_email').value = '';
+    } else {
+        if (email) {
+            document.getElementById('to_email').value = email;
+        }
+    }
 }
 
   // Attach event listeners (only for single-select compose form, not approval flow)
   @if((int) @$mtype !== 2)
+  if (document.getElementById('to_email')) {
 	document.getElementById('to_email').addEventListener('input', validateEmailInput);
 	document.getElementById('to_email').addEventListener('change', validateEmailInput);
+  }
   @endif
 
-	$(document).on('click', '.to_select', function() {
-		var rel = $(this).attr('rel');
+// ══════════════════════════════════════════════════════════════════════════════
+// CENTRALIZED APPROVER SELECTION ENGINE (SINGLE SOURCE OF TRUTH & SYNC)
+// ══════════════════════════════════════════════════════════════════════════════
+window.coSelectedApproverEmails = new Set(<?php echo json_encode(array_values($alreadyAddedSet ?? [])); ?>);
 
-		@if((int) @$mtype === 2)
-		// Approval flow: "Add" sends the approval email immediately (1 at a time).
-		// The compose form is hidden — template/subject/body are auto-populated on load.
-		var $btn         = $(this);
-		var approverEmail = $('#to_team_select_' + rel).attr('data-email');
-		var approverName  = $('#to_team_select_' + rel).attr('data-title') || '';
-		if (!approverEmail) return;
+window.coSyncApproverState = function(email, isAdded) {
+    var cleanEmail = (email || '').toLowerCase().trim();
+    if (!cleanEmail) return;
+    if (window.coSelectedApproverEmails) {
+        if (isAdded) {
+            window.coSelectedApproverEmails.add(cleanEmail);
+        } else {
+            window.coSelectedApproverEmails.delete(cleanEmail);
+        }
+    }
+    // Update every matching row in the drawer
+    $('tr[data-approver-email="' + cleanEmail + '"]').each(function() {
+        var $btn = $(this).find('.co-appr-btn--action');
+        if (isAdded) {
+            $btn.removeClass('co-appr-btn--add').addClass('co-appr-btn--remove')
+                .attr('data-action', 'remove')
+                .attr('title', 'Remove approver from workflow')
+                .html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Remove</span>')
+                .css({'pointer-events':'', 'opacity':'1'});
+        } else {
+            $btn.removeClass('co-appr-btn--remove').addClass('co-appr-btn--add')
+                .attr('data-action', 'add')
+                .attr('title', 'Add approver to workflow')
+                .html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span>')
+                .css({'pointer-events':'', 'opacity':'1'});
+        }
+    });
+};
 
-		var resetBtn = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span>Add</span>';
-		$btn.html('<span><i class="fas fa-spinner fa-spin me-1"></i> Sending…</span>').css({'pointer-events':'none','opacity':'0.6'});
+// Delegated Unified Action Handler (Add / Remove Approver)
+$(document).on('click', '.co-appr-btn--action', function(e) {
+    e.preventDefault();
+    var $btn = $(this);
+    var action = $btn.attr('data-action');
+    var approverEmail = ($btn.attr('data-email') || '').toLowerCase().trim();
+    var approverName = $btn.attr('data-name') || approverEmail;
+    var offerId = $btn.attr('data-offerid') || $('#offerId').val();
 
-		var editorData = '';
-		try { editorData = CKEDITOR.instances.editor1.getData(); } catch(e) {
-		    editorData = $('#editor1').val() || '';
-		}
+    if (!approverEmail || !offerId) return;
 
-		$.ajax({
-		    type: 'POST',
-		    url: "{{ route('service_company.cvtracker.fwd_offer_send') }}",
-		    data: {
-		        '_token':     "{{ csrf_token() }}",
-		        'template':   $('#template').val()    || '',
-		        'from_email': $('#from_email').val()  || '',
-		        'to_email':   approverEmail,
-		        'cc_email':   '',
-		        'subject':    $('#subject').val()     || '',
-		        'attached_cv': 0,
-		        'editor1':    editorData,
-		        'arr':        [],
-		        'mtypeId':    8,
-		        'offerId':    $('#offerId').val(),
-		        'signature':  0
-		    },
-		    success: function(r) {
-		        $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
-		        if (r.status === 'coinCheck') {
-		            Swal.fire("Failed", r.message, "warning");
-		            return;
-		        }
-		        if (r.status === 'alreadyExists') {
-		            // Status update: approver already in workflow
-		            $('#co_appr_status_badge_' + rel).removeClass('co-appr-status--not-added').addClass('co-appr-status--added').html('<i class="fas fa-check-circle me-1"></i> Already Added');
-		            $btn.addClass('d-none');
-		            $('#to_team_remove_' + rel).removeClass('d-none');
-		            Swal.fire("Already Added", r.message, "info");
-		            return;
-		        }
-		        if (r.status === 'rateLimited') {
-		            Swal.fire("Already Sent", r.message, "info");
-		            return;
-		        }
-		        if (r.status === 'success') {
-		            // Mark approval as sent so "Save & Next" just advances
-		            $('#step4').data('mgmt-status', 1);
+    @if((int) @$mtype === 2)
+    if (action === 'add') {
+        // Prevent accidental duplicate addition
+        if (window.coSelectedApproverEmails && window.coSelectedApproverEmails.has(approverEmail)) {
+            window.coSyncApproverState(approverEmail, true);
+            Swal.fire({icon: 'info', title: 'Already Added', text: 'This approver is already in the workflow.', timer: 1500, showConfirmButton: false});
+            return;
+        }
 
-		            // Update row UI to Already Added + Remove button
-		            $('#co_appr_status_badge_' + rel).removeClass('co-appr-status--not-added').addClass('co-appr-status--added').html('<i class="fas fa-check-circle me-1"></i> Already Added');
-		            $btn.addClass('d-none');
-		            $('#to_team_remove_' + rel).removeClass('d-none');
+        var resetAddHtml = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add</span>';
+        $btn.html('<span><i class="fas fa-spinner fa-spin me-1"></i> Adding…</span>').css({'pointer-events':'none', 'opacity':'0.65'});
 
-		            // Update the step-4 timeline in real-time
-		            if (typeof co_updateStep4Timeline === 'function') {
-		                co_updateStep4Timeline(approverEmail, approverName);
-		            }
+        var editorData = '';
+        try { editorData = CKEDITOR.instances.editor1.getData(); } catch(err) {
+            editorData = $('#editor1').val() || '';
+        }
 
-		            Swal.fire({
-		                icon: 'success',
-		                title: 'Approver Added',
-		                text: 'Approver has been added to the workflow.',
-		                timer: 1200,
-		                showConfirmButton: false
-		            });
-		        } else {
-		            Swal.fire("Error", r.message || "Could not send approval email.", "error");
-		        }
-		    },
-		    error: function() {
-		        $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
-		        Swal.fire("Error", "Could not send approval email. Please try again.", "error");
-		    }
-		});
-		@else
-		addEmailToList(rel);
-		@endif
-	});
+        $.ajax({
+            type: 'POST',
+            url: "{{ route('service_company.cvtracker.fwd_offer_send') }}",
+            data: {
+                '_token':     "{{ csrf_token() }}",
+                'template':   $('#template').val()    || '',
+                'from_email': $('#from_email').val()  || '',
+                'to_email':   approverEmail,
+                'cc_email':   '',
+                'subject':    $('#subject').val()     || '',
+                'attached_cv': 0,
+                'editor1':    editorData,
+                'arr':        [],
+                'mtypeId':    8,
+                'offerId':    offerId,
+                'signature':  0
+            },
+            success: function(r) {
+                if (r.status === 'coinCheck') {
+                    $btn.html(resetAddHtml).css({'pointer-events':'', 'opacity':'1'});
+                    Swal.fire("Failed", r.message, "warning");
+                    return;
+                }
+                if (r.status === 'alreadyExists') {
+                    window.coSyncApproverState(approverEmail, true);
+                    Swal.fire("Already Added", r.message || "This approver is already in the workflow.", "info");
+                    return;
+                }
+                if (r.status === 'rateLimited') {
+                    $btn.html(resetAddHtml).css({'pointer-events':'', 'opacity':'1'});
+                    Swal.fire("Already Sent", r.message, "info");
+                    return;
+                }
+                if (r.status === 'success') {
+                    // Mark step4 mgmt status active
+                    $('#step4').data('mgmt-status', 1);
 
-	// Approver Removal Handler (Select Approval Drawer)
-	$(document).on('click', '.to_remove', function(e) {
-	    e.preventDefault();
-	    var rel = $(this).attr('rel');
-	    var $btn = $(this);
-	    var approverEmail = $btn.attr('data-email');
-	    var offerId = $btn.attr('data-offerid') || $('#offerId').val();
+                    // Update UI to Remove state atomically
+                    window.coSyncApproverState(approverEmail, true);
 
-	    if (!approverEmail || !offerId) return;
+                    // Update Step 4 timeline in real-time
+                    if (typeof co_updateStep4Timeline === 'function') {
+                        var approverRole = $btn.attr('data-role') || ($btn.attr('data-source') === 'internal' ? 'Internal Approver' : 'Client Approver');
+                        co_updateStep4Timeline(approverEmail, approverName, approverRole);
+                    }
 
-	    var resetRemoveBtn = '<i class="fas fa-trash-alt me-1 fs-9"></i> Remove';
-	    $btn.html('<span><i class="fas fa-spinner fa-spin me-1"></i> Removing…</span>').css({'pointer-events':'none','opacity':'0.6'});
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Approver Added',
+                        text: approverName + ' has been added to the workflow.',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                } else {
+                    $btn.html(resetAddHtml).css({'pointer-events':'', 'opacity':'1'});
+                    Swal.fire("Error", r.message || "Could not add approver.", "error");
+                }
+            },
+            error: function() {
+                $btn.html(resetAddHtml).css({'pointer-events':'', 'opacity':'1'});
+                Swal.fire("Error", "Could not add approver. Please try again.", "error");
+            }
+        });
 
-	    $.ajax({
-	        type: 'POST',
-	        url: "{{ route('service_company.cvtracker.remove_offer_approver') }}",
-	        data: {
-	            '_token': "{{ csrf_token() }}",
-	            'offerId': offerId,
-	            'email': approverEmail
-	        },
-	        success: function(r) {
-	            $btn.html(resetRemoveBtn).css({'pointer-events':'','opacity':'1'});
-	            if (r.status === 'success') {
-	                // Update row UI to Not Added + Add button
-	                $('#co_appr_status_badge_' + rel).removeClass('co-appr-status--added').addClass('co-appr-status--not-added').html('<i class="far fa-circle me-1"></i> Not Added');
-	                $btn.addClass('d-none');
-	                $('#to_team_select_' + rel).removeClass('d-none');
+    } else if (action === 'remove') {
+        var resetRemoveHtml = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Remove</span>';
+        $btn.html('<span><i class="fas fa-spinner fa-spin me-1"></i> Removing…</span>').css({'pointer-events':'none', 'opacity':'0.65'});
 
-	                // Update Step 4 view in real-time
-	                if (typeof co_removeStep4Approver === 'function') {
-	                    co_removeStep4Approver(approverEmail, r.remaining_approvers);
-	                }
+        $.ajax({
+            type: 'POST',
+            url: "{{ route('service_company.cvtracker.remove_offer_approver') }}",
+            data: {
+                '_token': "{{ csrf_token() }}",
+                'offerId': offerId,
+                'email': approverEmail
+            },
+            success: function(r) {
+                if (r.status === 'success') {
+                    // Update UI to Add state atomically
+                    window.coSyncApproverState(approverEmail, false);
 
-	                Swal.fire({
-	                    icon: 'success',
-	                    title: 'Approver Removed',
-	                    text: 'Approver removed from workflow.',
-	                    timer: 1200,
-	                    showConfirmButton: false
-	                });
-	            } else {
-	                Swal.fire("Error", r.message || "Could not remove approver.", "error");
-	            }
-	        },
-	        error: function() {
-	            $btn.html(resetRemoveBtn).css({'pointer-events':'','opacity':'1'});
-	            Swal.fire("Error", "Could not remove approver. Please try again.", "error");
-	        }
-	    });
-	});
+                    // Update Step 4 view in real-time
+                    if (typeof co_removeStep4Approver === 'function') {
+                        co_removeStep4Approver(approverEmail, r.remaining_approvers);
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Approver Removed',
+                        text: approverName + ' has been removed from the workflow.',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                } else {
+                    $btn.html(resetRemoveHtml).css({'pointer-events':'', 'opacity':'1'});
+                    Swal.fire("Error", r.message || "Could not remove approver.", "error");
+                }
+            },
+            error: function() {
+                $btn.html(resetRemoveHtml).css({'pointer-events':'', 'opacity':'1'});
+                Swal.fire("Error", "Could not remove approver. Please try again.", "error");
+            }
+        });
+    }
+    @else
+    // Legacy flow for non-approval compose
+    var rel = $btn.attr('data-row-id') || $btn.attr('rel');
+    addEmailToList(rel);
+    @endif
+});
+
+// Legacy backward-compatibility aliases
+$(document).on('click', '.to_select', function(e) {
+    e.preventDefault();
+    var email = ($(this).attr('data-email') || '').toLowerCase().trim();
+    if (email) {
+        $('button.co-appr-btn--action[data-email="' + email + '"]').click();
+    }
+});
+$(document).on('click', '.to_remove', function(e) {
+    e.preventDefault();
+    var email = ($(this).attr('data-email') || '').toLowerCase().trim();
+    if (email) {
+        $('button.co-appr-btn--action[data-email="' + email + '"]').click();
+    }
+});
 
 // document.getElementById('to_select').addEventListener('click', addEmailToList);
 
@@ -1646,9 +1747,6 @@ $(document).on('click', '#kt_activitiesIntTeam_close_cc, #kt_activitiesIntTeam_c
 });
 
 // ── Approver source toggle (Internal / Client) + search filter ──
-// Purely presentational: it only shows/hides rows already rendered server-side from real
-// data (cc_email_internal_data / cc_email_client_data). The existing Add/Remove wiring
-// (cp_select / to_select, AddEvent*/DeleteEvent*) above is untouched.
 $(document).on('click', '.co-appr-source-card', function() {
 	var drawer = $(this).data('source-for'); // "cc" or "to"
 	var source = $(this).data('source'); // "internal" or "client"
@@ -1658,6 +1756,7 @@ $(document).on('click', '.co-appr-source-card', function() {
 	$scope.find('.co-appr-row').addClass('d-none');
 	$scope.find('.co-appr-row--' + source).removeClass('d-none');
 	$scope.find('.co-appr-empty-row').addClass('d-none');
+	$scope.find('.co-appr-empty-search-row').addClass('d-none');
 	if (source === 'internal') {
 		$scope.find('.co-appr-empty-row--internal').each(function() {
 			if ($scope.find('.co-appr-row--internal:not(.co-appr-empty-row)').length === 0) { $(this).removeClass('d-none'); }
@@ -1689,15 +1788,28 @@ $(document).on('input', '.co-appr-search-input', function() {
 		$clearBtn.toggleClass('d-none', q === '');
 	}
 	var visibleCount = 0;
+	var totalSourceCount = 0;
 	$scope.find('.co-appr-row--' + activeSource + ':not(.co-appr-empty-row)').each(function() {
+		totalSourceCount++;
 		var $row = $(this);
-		var hay = ($row.data('search-name') + ' ' + $row.data('search-email') + ' ' + $row.data('search-company'));
+		var hay = ($row.data('search-text') || ($row.data('search-name') + ' ' + $row.data('search-email') + ' ' + $row.data('search-company')) || '').toLowerCase();
 		var matches = (q === '' || hay.indexOf(q) !== -1);
 		$row.toggleClass('d-none', !matches);
 		if (matches) visibleCount++;
 	});
 	$scope.find('.co-appr-active-count').text(visibleCount);
-	$scope.find('.co-appr-empty-row--' + activeSource).toggleClass('d-none', visibleCount > 0);
+	
+	// Manage empty state visibility
+	$scope.find('.co-appr-empty-row--' + activeSource).toggleClass('d-none', totalSourceCount > 0);
+	var $emptySearch = $scope.find('.co-appr-empty-search-row');
+	if ($emptySearch.length) {
+		if (totalSourceCount > 0 && visibleCount === 0 && q !== '') {
+			$emptySearch.find('.co-appr-search-empty-text').text('No approvers found matching "' + q + '"');
+			$emptySearch.removeClass('d-none');
+		} else {
+			$emptySearch.addClass('d-none');
+		}
+	}
 });
 
 @if((int) @$mtype === 2)

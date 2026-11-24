@@ -7678,7 +7678,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->co_appr_timeline = DB::table('updatetimeline')
             ->leftJoin('users', 'users.email', '=', 'updatetimeline.email_id_hr')
             ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-            ->select('updatetimeline.*', 'users_profile.designation as approver_designation')
+            ->select('updatetimeline.*', 'users_profile.designation as approver_designation', 'users.name as user_real_name')
             ->where('updatetimeline.application_id', $this->application->id)
             ->where('updatetimeline.job_id', $this->application->job_id)
             ->whereIn('updatetimeline.mtypeSection', [2, 8]) // 2 = legacy approval, 8 = new approval flow (mtypeId=8)

@@ -1959,7 +1959,7 @@
         }
         .co-appr-tl-grid {
             display: grid !important;
-            grid-template-columns: minmax(190px, 1.4fr) minmax(130px, 1fr) minmax(170px, 1.1fr) !important;
+            grid-template-columns: minmax(260px, 2.2fr) minmax(120px, 0.9fr) minmax(150px, 1fr) !important;
             align-items: center !important;
             gap: 10px !important;
             width: 100% !important;
@@ -2009,6 +2009,8 @@
         }
         .co-appr-tl-name { font-size: 12px !important; font-weight: 600 !important; color: #0f172a !important; line-height: 1.25 !important; }
         .co-appr-tl-sub  { font-size: 10.5px !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 1px !important; }
+        .co-appr-tl-email { font-size: 11px !important; color: #64748b !important; line-height: 1.25 !important; }
+        .co-appr-tl-email svg { color: #94a3b8 !important; }
 
         .co-appr-tl-status { display: flex !important; flex-direction: column !important; gap: 2px !important; }
         .co-appr-tl-badge { display: inline-flex !important; align-items: center !important; font-size: 10.5px !important; font-weight: 600 !important; padding: 2px 8px !important; border-radius: 99px !important; width: fit-content !important; line-height: 1.2 !important; }
@@ -2677,12 +2679,14 @@
         </div>
         <div class="co-drawer-actions">
             <button type="button" class="btn btn-sm co-header-nav-btn" id="co_header_nav_btn" title="Close drawer">
-                <i class="fas fa-times fs-9" id="co_header_nav_icon"></i>
+                <span id="co_header_nav_icon_wrap" class="d-inline-flex align-items-center me-1">
+                    <svg id="co_header_nav_svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </span>
                 <span id="co_header_nav_label">Close</span>
             </button>
             <button type="button" class="btn btn-sm co-header-save-btn" id="co_header_save_btn">
                 <span class="co-header-save-label">Save &amp; Next</span>
-                <i class="fas fa-arrow-right fs-9 ms-1"></i>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ms-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
             {{-- Native close button hidden; primary close/back handled via #co_header_nav_btn --}}
             <button type="button" class="btn btn-sm btn-icon co-close-btn" id="kt_offercreate_close" title="Close drawer" aria-label="Close drawer" style="display: none !important;">
@@ -4881,8 +4885,14 @@
                                                         @php $co_appr_asc = $co_appr_all_tl->reverse()->values(); @endphp
                                                         @foreach($co_appr_asc as $co_tl_row)
                                                         @php
-                                                            $row_label   = trim((string)(@$co_tl_row->name_hr ?: @$co_tl_row->email_id_hr ?? ''));
-                                                            $row_email   = trim((string)(@$co_tl_row->email_id_hr ?? ''));
+                                                            $row_raw_name = trim((string)(@$co_tl_row->user_real_name ?: @$co_tl_row->name_hr ?? ''));
+                                                            $row_email    = trim((string)(@$co_tl_row->email_id_hr ?? ''));
+                                                            if (!$row_raw_name || strtolower($row_raw_name) === strtolower($row_email)) {
+                                                                $parts = explode('@', $row_email);
+                                                                $row_label = ucwords(str_replace(['.', '_', '-'], ' ', $parts[0] ?? 'Approver'));
+                                                            } else {
+                                                                $row_label = $row_raw_name;
+                                                            }
                                                             $row_initial = $row_label ? strtoupper(substr($row_label,0,1)) : '?';
                                                             $row_role    = trim((string)(@$co_tl_row->designation_offer ?: @$co_tl_row->approver_designation ?? ''));
                                                             $row_date    = !empty($co_tl_row->create_at) ? \Carbon\Carbon::parse($co_tl_row->create_at)->setTimezone($tenantTimezone)->format('d M Y, h:i A T') : '';
@@ -4902,18 +4912,16 @@
                                                             }
                                                         @endphp
                                                         <div class="co-appr-tl-card co-appr-tl-grid {{ $row_card ? 'co-appr-tl-card--'.$row_card : '' }} co-appr-tl-entry" data-approver-email="{{ strtolower($row_email) }}">
-                                                            {{-- Col 1: Approver & Role --}}
+                                                            {{-- Col 1: Approver & Role (Single Horizontal Row: Name + Designation + Email ID) --}}
                                                             <div class="co-appr-tl-appr">
-                                                                <div class="co-appr-tl-avatar">{{ $row_initial }}</div>
-                                                                <div class="min-w-0 flex-grow-1">
-                                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                                        <span class="co-appr-tl-name text-truncate" title="{{ $row_label ?: $row_email ?: '—' }}">{{ $row_label ?: $row_email ?: '—' }}</span>
-                                                                        <span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle" style="font-size: 10.5px; border-radius: 4px;">{{ $row_role ?: 'Internal Approver' }}</span>
-                                                                    </div>
-                                                                    <div class="co-appr-tl-sub text-truncate d-flex align-items-center gap-1 mt-0.5" title="{{ $row_email }}">
+                                                                <div class="co-appr-tl-avatar flex-shrink-0">{{ $row_initial }}</div>
+                                                                <div class="d-flex align-items-center gap-2 min-w-0 flex-nowrap flex-grow-1">
+                                                                    <span class="co-appr-tl-name text-truncate fw-bold text-gray-900" style="max-width: 140px; font-size: 12px;" title="{{ $row_label }}">{{ $row_label }}</span>
+                                                                    <span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle text-truncate flex-shrink-0" style="font-size: 10px; border-radius: 4px; max-width: 110px;" title="{{ $row_role ?: 'Internal Approver' }}">{{ $row_role ?: 'Internal Approver' }}</span>
+                                                                    <span class="co-appr-tl-email text-muted d-inline-flex align-items-center gap-1 text-truncate flex-shrink-1" style="font-size: 11px; min-width: 0;" title="{{ $row_email }}">
                                                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                                                                         <span class="text-truncate">{{ $row_email }}</span>
-                                                                    </div>
+                                                                    </span>
                                                                 </div>
                                                             </div>
 
@@ -4943,7 +4951,7 @@
                                                                         Send Reminder
                                                                     </button>
                                                                     <button type="button" class="btn btn-sm btn-icon btn-light-danger co-appr-card-remove" data-email="{{ $row_email }}" data-name="{{ $row_label }}" data-offerid="{{ $offer_id }}" title="Remove this approver">
-                                                                        <i class="fas fa-trash-alt fs-8 text-danger"></i>
+                                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                                                                     </button>
                                                                 </div>
                                                                 <div class="co-appr-tl-last-sent text-end">Last sent: {{ $row_date ?: 'just now' }}</div>
@@ -5018,20 +5026,12 @@
                                                             <span class="co-appr-detail-value" id="co-appr-doj-display">{{ $co_cand_doj_fmt }}</span>
                                                         </div>
                                                         {{-- 4. Amount (CTC) --}}
-                                                        <div class="co-appr-detail-row">
+                                                        <div class="co-appr-detail-row border-bottom-0 pb-0">
                                                             <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
                                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" class="flex-shrink-0"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="18"/></svg>
                                                                 Amount (CTC)
                                                             </span>
                                                             <span class="co-appr-detail-value fw-bold text-gray-900" id="co-appr-amount-display">{{ $co_cand_amt_fmt }}</span>
-                                                        </div>
-                                                        {{-- 5. Offer Template --}}
-                                                        <div class="co-appr-detail-row border-bottom-0 pb-0">
-                                                            <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                                                                Offer Template
-                                                            </span>
-                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 165px;" id="co_appr_tpl_name" title="{{ $selected_offer_template_label }}">{{ $selected_offer_template_label }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -5679,11 +5679,19 @@
                 }
 
                 // Called by offerSendMail after each approval email is sent — adds a new row to the approval stream
-                function co_updateStep4Timeline(email, name) {
-                    var displayName = (name && name !== email) ? name : email;
+                function co_updateStep4Timeline(email, name, role) {
+                    var rawName = (name && name !== email) ? name : '';
+                    if (!rawName) {
+                        var parts = (email || '').split('@');
+                        rawName = parts[0] ? parts[0].replace(/[._-]/g, ' ') : 'Approver';
+                        rawName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+                    }
+                    var displayName = rawName;
+                    var displayRole = role || 'Internal Approver';
                     var initial     = displayName ? displayName.charAt(0).toUpperCase() : '?';
-                    var safeEmail   = $('<span/>').text(email).html();
+                    var safeEmail   = $('<span/>').text(email || '').html();
                     var safeName    = $('<span/>').text(displayName).html();
+                    var safeRole    = $('<span/>').text(displayRole).html();
                     var offId       = '{{ $offer_id }}';
                     var cleanEmail  = email ? email.toLowerCase().trim() : '';
 
@@ -5696,16 +5704,14 @@
                     var newEntry =
                         '<div class="co-appr-tl-card co-appr-tl-card--pending co-appr-tl-grid co-appr-tl-entry mb-1.5" data-approver-email="' + cleanEmail + '">' +
                             '<div class="co-appr-tl-appr">' +
-                                '<div class="co-appr-tl-avatar">' + initial + '</div>' +
-                                '<div class="min-w-0 flex-grow-1">' +
-                                    '<div class="d-flex align-items-center gap-2 flex-wrap">' +
-                                        '<span class="co-appr-tl-name text-truncate" title="' + safeName + '">' + safeName + '</span>' +
-                                        '<span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle" style="font-size: 10px; border-radius: 4px;">Internal Approver</span>' +
-                                    '</div>' +
-                                    '<div class="co-appr-tl-sub text-truncate d-flex align-items-center gap-1 mt-0.5" title="' + safeEmail + '">' +
+                                '<div class="co-appr-tl-avatar flex-shrink-0">' + initial + '</div>' +
+                                '<div class="d-flex align-items-center gap-2 min-w-0 flex-nowrap flex-grow-1">' +
+                                    '<span class="co-appr-tl-name text-truncate fw-bold text-gray-900" style="max-width: 140px; font-size: 12px;" title="' + safeName + '">' + safeName + '</span>' +
+                                    '<span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle text-truncate flex-shrink-0" style="font-size: 10px; border-radius: 4px; max-width: 110px;" title="' + safeRole + '">' + safeRole + '</span>' +
+                                    '<span class="co-appr-tl-email text-muted d-inline-flex align-items-center gap-1 text-truncate flex-shrink-1" style="font-size: 11px; min-width: 0;" title="' + safeEmail + '">' +
                                         '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
                                         '<span class="text-truncate">' + safeEmail + '</span>' +
-                                    '</div>' +
+                                    '</span>' +
                                 '</div>' +
                             '</div>' +
                             '<div class="co-appr-tl-status">' +
@@ -5725,7 +5731,7 @@
                                         'Send Reminder' +
                                     '</button>' +
                                     '<button type="button" class="btn btn-sm btn-icon btn-light-danger co-appr-card-remove" data-email="' + safeEmail + '" data-name="' + safeName + '" data-offerid="' + offId + '" title="Remove this approver">' +
-                                        '<i class="fas fa-trash-alt fs-8 text-danger"></i>' +
+                                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>' +
                                     '</button>' +
                                 '</div>' +
                                 '<div class="co-appr-tl-last-sent text-end">Last sent: just now</div>' +
@@ -5830,7 +5836,10 @@
                                 success: function(r) {
                                     if (r.status === 'success') {
                                         co_removeStep4Approver(rEmail, r.remaining_approvers);
-                                        // Also update drawer row if open
+                                        // Also update Select Approval drawer if open (Single Source of Truth)
+                                        if (typeof window.coSyncApproverState === 'function') {
+                                            window.coSyncApproverState(rEmail, false);
+                                        }
                                         var $drawerRow = $('tr[data-approver-email="' + rEmail.toLowerCase().trim() + '"]');
                                         if ($drawerRow.length) {
                                             var rowId = $drawerRow.data('row-id');
@@ -8078,14 +8087,18 @@
                     var $navBtn = $('#co_header_nav_btn');
                     if ($navBtn.length) {
                         var $navLabel = $('#co_header_nav_label');
-                        var $navIcon = $('#co_header_nav_icon');
+                        var $navWrap = $('#co_header_nav_icon_wrap');
                         if (active === 1) {
                             $navLabel.text('Close');
-                            $navIcon.attr('class', 'fas fa-times fs-9');
+                            if ($navWrap.length) {
+                                $navWrap.html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>');
+                            }
                             $navBtn.attr('title', 'Close drawer');
                         } else {
                             $navLabel.text('Back');
-                            $navIcon.attr('class', 'fas fa-arrow-left fs-9');
+                            if ($navWrap.length) {
+                                $navWrap.html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>');
+                            }
                             $navBtn.attr('title', 'Go back to previous step');
                         }
                     }
@@ -8102,7 +8115,7 @@
                                 $hdrBtn[0]._origHtml = $hdrBtn.html();
                             }
                         } else {
-                            $hdrBtn.html('<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1 text-white"></i>');
+                            $hdrBtn.html('<span class="co-header-save-label">Save &amp; Next</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ms-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>');
                             $hdrBtn.attr('title', 'Save and proceed to next step');
                             if ($hdrBtn[0]) {
                                 $hdrBtn[0]._origHtml = $hdrBtn.html();
