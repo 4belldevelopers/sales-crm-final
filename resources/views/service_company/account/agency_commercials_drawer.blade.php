@@ -22,9 +22,9 @@
       <div><h3 data-agency-commercial-title>Edit Commercial Terms</h3><p data-agency-commercial-subtitle>Configure the commercial structure for agencies. These terms reflect in agreements and job assignments.</p></div>
     </div>
     <div class="aat-drawer-actions aat-drawer-meta">
-      <button type="button" class="aat-btn cd-btn-outline" id="cancelAgencyCommercialTerms"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Cancel</button>
+      <button type="button" class="aat-btn cd-btn-outline" id="cancelAgencyCommercialTerms" data-no-spinner="true"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Cancel</button>
       <button type="button" class="aat-btn primary cd-btn-primary save" id="saveAgencyCommercialTerms"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Save &amp; Update</button>
-      <button type="button" class="aat-drawer-close" id="closeAgencyCommercialDrawer" aria-label="Close">&times;</button>
+      <button type="button" class="aat-drawer-close" id="closeAgencyCommercialDrawer" data-no-spinner="true" aria-label="Close">&times;</button>
     </div>
   </div>
   <div class="aat-drawer-body">
@@ -33,7 +33,7 @@
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2" style="flex:0 0 16px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <span data-agency-alert-text>These commercial terms define how agencies will be paid for successful placements. They populate the agreement and can be overridden at job level if required.</span>
       </div>
-      <button type="button" class="aat-drawer-close" style="width:26px;height:26px;font-size:16px;">&times;</button>
+      <button type="button" class="aat-drawer-close" data-no-spinner="true" style="width:26px;height:26px;font-size:16px;">&times;</button>
     </div>
 
     {{-- Defaults that the include site (account/index.blade.php) computes and passes in via $aatPartialVars. --}}
@@ -46,8 +46,8 @@
       </div>
       <div class="aat-edit-grid">
         <div class="aat-model-grid">
-          <button type="button" class="aat-model-option {{ $aatFulltimeFeeModel === 'percentage' ? 'active' : '' }}" data-aat-commercial-model="percentage" role="radio" aria-checked="{{ $aatFulltimeFeeModel === 'percentage' ? 'true' : 'false' }}"><span class="aat-model-icon">%</span><span><b>Percentage Based</b><small>Charge a percentage of the candidate's cost to company.</small></span><i></i></button>
-          <button type="button" class="aat-model-option {{ $aatFulltimeFeeModel === 'fixed' ? 'active' : '' }}" data-aat-commercial-model="fixed" role="radio" aria-checked="{{ $aatFulltimeFeeModel === 'fixed' ? 'true' : 'false' }}"><span class="aat-model-icon">&#8377;</span><span><b>Fixed Fee</b><small>Charge a fixed amount for each successful placement.</small></span><i></i></button>
+          <button type="button" class="aat-model-option {{ $aatFulltimeFeeModel === 'percentage' ? 'active' : '' }}" data-aat-commercial-model="percentage" data-no-spinner="true" role="radio" aria-checked="{{ $aatFulltimeFeeModel === 'percentage' ? 'true' : 'false' }}"><span class="aat-model-icon">%</span><span><b>Percentage Based</b><small>Charge a percentage of the candidate's cost to company.</small></span><i></i></button>
+          <button type="button" class="aat-model-option {{ $aatFulltimeFeeModel === 'fixed' ? 'active' : '' }}" data-aat-commercial-model="fixed" data-no-spinner="true" role="radio" aria-checked="{{ $aatFulltimeFeeModel === 'fixed' ? 'true' : 'false' }}"><span class="aat-model-icon">&#8377;</span><span><b>Fixed Fee</b><small>Charge a fixed amount for each successful placement.</small></span><i></i></button>
         </div>
         <div class="aat-info blue"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span id="aatCommercialModelHelp">{{ $aatFulltimeFeeModel === 'fixed' ? 'Billing is calculated from the configured fixed rate for each experience range.' : 'Placement fees are calculated as a percentage of the candidate\'s Cost to Company (CTC).' }}</span></div>
       </div>
@@ -110,7 +110,7 @@
                 <option value="Weekly" {{ @$aatTerms->fulltime_fixed_fee_unit === 'Weekly' ? 'selected' : '' }}>Weekly</option>
                 <option value="Quarterly" {{ @$aatTerms->fulltime_fixed_fee_unit === 'Quarterly' ? 'selected' : '' }}>Quarterly</option>
               </select>
-              <button type="button" class="aat-range-reset" data-aat-range-reset data-aat-row-index="{{ $rangeIndex }}" title="Reset to default" aria-label="Reset {{ $range['label'] }}">&#8634;</button>
+              <button type="button" class="aat-range-reset" data-aat-range-reset data-no-spinner="true" data-aat-row-index="{{ $rangeIndex }}" title="Reset to default" aria-label="Reset {{ $range['label'] }}">&#8634;</button>
               <input type="hidden" name="fulltime_experience_label[]" value="{{ $rangeLabel }}" data-aat-row-label-input data-aat-row-index="{{ $rangeIndex }}">
               <input type="hidden" name="fulltime_experience_rate[]" value="{{ $rangeRate }}" data-aat-row-rate-hidden-input data-aat-row-index="{{ $rangeIndex }}">
             </div>
@@ -192,7 +192,7 @@
               <div class="aat-rate-wrap aat-standard-pricing-field">
                 <input type="text" class="aat-control" name="contract_range_rate[{{ $rangeIndex }}]" value="{{ $rangeRate }}" placeholder="Depend upon job requirements" data-aat-row-index="{{ $rangeIndex }}">
               </div>
-              <button type="button" class="aat-range-reset" data-aat-contract-range-reset data-aat-row-index="{{ $rangeIndex }}" title="Reset to default" aria-label="Reset {{ $range['label'] }}">&#8634;</button>
+              <button type="button" class="aat-range-reset" data-aat-contract-range-reset data-no-spinner="true" data-aat-row-index="{{ $rangeIndex }}" title="Reset to default" aria-label="Reset {{ $range['label'] }}">&#8634;</button>
               <input type="hidden" name="contract_experience_label[]" value="{{ $rangeLabel }}" data-aat-contract-row-label-input data-aat-row-index="{{ $rangeIndex }}">
               <input type="hidden" name="contract_experience_rate[]" value="{{ $rangeRate }}" data-aat-contract-row-rate-hidden-input data-aat-row-index="{{ $rangeIndex }}">
             </div>
