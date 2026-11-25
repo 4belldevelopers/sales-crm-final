@@ -116,7 +116,7 @@ class CustomModuleController extends SuperAdminBaseController
      */
     public function update(Request $request, $id)
     {
-        $module = Module::find($id);
+        $module = Module::withoutGlobalScopes()->find($id);
 
         if ($request->status == 'active') {
             $module->enable();

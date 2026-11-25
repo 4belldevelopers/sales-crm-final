@@ -39,7 +39,7 @@ class FrontIconFeatureController extends SuperAdminBaseController
         return view('super-admin.icon-feature.edit', $this->data);
     }
     public function update(StoreIconFeature $request, $id) {
-        $feature = FrontIconFeature::findOrFail($id);
+        $feature = FrontIconFeature::withoutGlobalScopes()->findOrFail($id);
         $feature->title = $request->title;
         $feature->description = $request->description;
         $feature->icon = $request->icon;
