@@ -104,3 +104,21 @@ The agency commercial terms configuration drawer allows service companies to def
    - Unescaped `{!! !!}` statements: 0 added.
 3. **Multi-Tenancy Guard:**
    - All backend persistence operations in `ServiceCompanyAccountSettingsController` remain strictly scoped by `company_id`.
+
+---
+
+## 6. Commercial Model Tab Spinner Fix & Non-AJAX Action Exclusion
+
+### Root Cause Analysis
+- The global loading spinner utility in `resources/views/service_company/account/index.blade.php` listened to a generic selector:
+  `buttonSpinnerSelector = 'button, a.btn, .aat-btn, .cv2-edit, .candidate-action-icon'`
+- Because the commercial model selection options (`.aat-model-option`), the experience band reset buttons (`.aat-range-reset`), and the drawer topbar cancel button (`#cancelAgencyCommercialTerms`) were authored as `<button>` elements, clicking any of them triggered `setButtonLoading($(this))`.
+- Since toggling the commercial model (between Percentage and Fixed) and resetting local range rates operate 100% in browser memory and do **NOT** make AJAX network calls, `$(document).ajaxStop()` never triggered to remove `.jero-btn-loading`.
+- The `:before` pseudo-element with its CSS keyframe spin animation (`jero-btn-spin`) remained attached indefinitely, with `pointer-events: none` blocking subsequent interaction. This gave the visual impression of stuck background loading.
+
+### Resolution Implemented
+1. **HTML Guard:** Added `data-no-spinner="true"` to `.aat-model-option` (Percentage & Fixed), `.aat-range-reset` (both Full-Time and Contract tables), `#cancelAgencyCommercialTerms`, and `#closeAgencyCommercialDrawer`.
+2. **JS Selector Exclusion:** Expanded `buttonSpinnerExclude` to explicitly include `.aat-model-option`, `[data-aat-commercial-model]`, `.aat-range-reset`, `[data-aat-range-reset]`, `[data-aat-contract-range-reset]`, `#cancelAgencyCommercialTerms`, `#closeAgencyCommercialDrawer`, and `[data-no-spinner="true"]`.
+3. **Form-Level Safety Constraint:** In `setButtonLoading()`, added `($button.closest('#agency_commercial_terms_form').length && !$button.is('#saveAgencyCommercialTerms'))`, ensuring no button inside the drawer except the actual Save & Update button can ever acquire the spinner.
+4. **Lifecycle Cleanup:** In both `openAgencyCommercialDrawer()` and `closeAgencyCommercialDrawer()`, actively strip any stale `.jero-btn-loading` classes from the form DOM.
+5. **CSS Suppression:** Added CSS overrides to `.aat-drawer.agency-commercial-mode` ensuring `:before` spinner pseudo-elements are completely suppressed (`display: none !important`) and `pointer-events: auto !important` is preserved on all non-AJAX drawer buttons.

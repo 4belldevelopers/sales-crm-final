@@ -1,13 +1,46 @@
 {{--
   JERO ATS — Service Company Interview Tracker Card Stream Partial
   Intent: Renders Elasticsearch interview projections as Rule 20 Modern Primary Cards
-          with 6 discrete upper sub-cards and a bottom activity/stage strip.
+          with 7 discrete upper sub-cards (including display-only Pipeline & Stage)
+          and a bottom follow-up/attribution/action strip.
   Tenancy & Security: Strictly scoped by company_id in controller; all outputs Blade-escaped.
   Screen Fit: Fractional minmax(0, ...fr) grid prevents horizontal overflow on 15.6" screens.
 --}}
 @php
     use App\Helper\GeneralMethod;
     use Carbon\Carbon;
+
+    $resolvedTimezone = $tenantTimezone ?? null;
+    if (empty($resolvedTimezone)) {
+        try {
+            $resolvedTimezone = GeneralMethod::defaultTimeZone($company_id ?? (auth()->user()->company_id ?? null));
+        } catch (\Throwable $e) {
+            $resolvedTimezone = 'Asia/Kolkata';
+        }
+    }
+    $tenantTimezone = $resolvedTimezone ?: 'Asia/Kolkata';
+    $stageTokensAll = GeneralMethod::pipelineStageTokens();
+    $stageIdToKey = [
+        8 => 'inreview',
+        1 => 'sourcing',
+        2 => 'screening',
+        3 => 'evaluation',
+        4 => 'negotation',
+        5 => 'offer',
+        6 => 'joined',
+        7 => 'rejected',
+        9 => 'rejected',
+    ];
+    $stageClassMap = [
+        'inreview'   => 'it-stage-inw',
+        'sourcing'   => 'it-stage-sou',
+        'screening'  => 'it-stage-scr',
+        'evaluation' => 'it-stage-eva',
+        'negotation' => 'it-stage-neg',
+        'offer'      => 'it-stage-off',
+        'joined'     => 'it-stage-joi',
+        'rejected'   => 'it-stage-rej',
+    ];
 
     $itClean = function($val) {
         $trimmed = trim((string) ($val ?? ''));
@@ -42,6 +75,8 @@
     $userCaptainJobIds = $userCaptainJobIds ?? [];
     $sharedByMap       = $sharedByMap ?? [];
     $fromCompanyNames  = $fromCompanyNames ?? [];
+    $childStatusMap    = $childStatusMap ?? [];
+    $masterStatusMap   = $masterStatusMap ?? [];
 
     $panelPalette = [
         ['bg' => '#eff6ff', 'color' => '#2563eb'],
@@ -223,35 +258,66 @@
             $submittedRaw       = $itClean($candMeta['submitted_at'] ?? (@$row->submitted_at ?? (@$row->created_at ?? '')));
             $submittedAgo       = $itSubmittedAgo($submittedRaw);
 
-            // ── 7. Stage & Substage ────────────────────────────────────────
+            // ── 7. Pipeline, Stage & Substage (Authoritative Live Resolution) ──
+            $liveStageId = (int) ($candMeta['master_status_id'] ?? 0);
+            $rowStageId  = (int) (@$row->master_status_id ?? 0);
+            $masterStatusId = $liveStageId > 0 ? $liveStageId : $rowStageId;
+
+            $liveChildId = isset($candMeta['child_status_id']) ? (int) $candMeta['child_status_id'] : null;
+            $childStatusId = ($liveStageId > 0 && $liveChildId !== null)
+                ? $liveChildId
+                : (int) (@$row->child_status_id ?? (@$row->childStatus ?? 0));
+
+            $rawMasterStatusName = '';
+            if ($liveStageId > 0) {
+                $rawMasterStatusName = trim((string) ($candMeta['master_status_name'] ?? ($masterStatusMap[$liveStageId] ?? '')));
+            }
+            if ($rawMasterStatusName === '') {
+                $rawMasterStatusName = trim((string) (@$row->master_status_name ?: ($masterStatusMap[$masterStatusId] ?? '')));
+            }
+
             $childStageName = '';
-            if ((int) (@$row->master_status_id ?? 0) === 8) {
+            if ($childStatusId > 0) {
+                $fallbackRowChild = ($liveStageId === 0 || (int) (@$row->child_status_id ?? 0) === $childStatusId)
+                    ? (@$row->child_status_name ?? '')
+                    : '';
+                $childStageName = $itClean($childStatusMap[$childStatusId] ?? $fallbackRowChild);
+            }
+            if ($childStageName === '' && $masterStatusId === 8) {
                 $childStageName = 'Private';
             }
-            if (!empty($row->child_status_id) && (int) $row->child_status_id > 0) {
-                $childStageName = (string) (@$row->child_status_name ?? '');
+            $childStageName = $childStageName !== '' ? ucwords($childStageName) : '';
+
+            $stageNameLower = strtolower($rawMasterStatusName);
+            $resolvedStageKey = $stageIdToKey[$masterStatusId] ?? null;
+            if ($rawMasterStatusName !== '') {
+                if (str_contains($stageNameLower, 'review') || str_contains($stageNameLower, 'inw')) {
+                    $resolvedStageKey = 'inreview';
+                } elseif (str_contains($stageNameLower, 'sourc') || str_contains($stageNameLower, 'sou')) {
+                    $resolvedStageKey = 'sourcing';
+                } elseif (str_contains($stageNameLower, 'screen') || str_contains($stageNameLower, 'scr')) {
+                    $resolvedStageKey = 'screening';
+                } elseif (str_contains($stageNameLower, 'evaluat') || str_contains($stageNameLower, 'eva') || str_contains($stageNameLower, 'interview')) {
+                    $resolvedStageKey = 'evaluation';
+                } elseif (str_contains($stageNameLower, 'negot') || str_contains($stageNameLower, 'neg')) {
+                    $resolvedStageKey = 'negotation';
+                } elseif (str_contains($stageNameLower, 'offer') || str_contains($stageNameLower, 'off')) {
+                    $resolvedStageKey = 'offer';
+                } elseif (str_contains($stageNameLower, 'join') || str_contains($stageNameLower, 'onboard') || str_contains($stageNameLower, 'joi')) {
+                    $resolvedStageKey = 'joined';
+                } elseif (str_contains($stageNameLower, 'reject') || str_contains($stageNameLower, 'declin') || str_contains($stageNameLower, 'rej')) {
+                    $resolvedStageKey = 'rejected';
+                }
             }
-            $masterStatusName = trim((string) (@$row->master_status_name ?: 'In Review'));
-            $stageNameLower   = strtolower($masterStatusName);
-            if (str_contains($stageNameLower, 'review') || str_contains($stageNameLower, 'inw')) {
-                $stageBadgeClass = 'it-stage-inw';
-            } elseif (str_contains($stageNameLower, 'sourc') || str_contains($stageNameLower, 'sou')) {
-                $stageBadgeClass = 'it-stage-sou';
-            } elseif (str_contains($stageNameLower, 'screen') || str_contains($stageNameLower, 'scr')) {
-                $stageBadgeClass = 'it-stage-scr';
-            } elseif (str_contains($stageNameLower, 'evaluat') || str_contains($stageNameLower, 'eva')) {
-                $stageBadgeClass = 'it-stage-eva';
-            } elseif (str_contains($stageNameLower, 'negot') || str_contains($stageNameLower, 'neg')) {
-                $stageBadgeClass = 'it-stage-neg';
-            } elseif (str_contains($stageNameLower, 'offer') || str_contains($stageNameLower, 'off')) {
-                $stageBadgeClass = 'it-stage-off';
-            } elseif (str_contains($stageNameLower, 'join') || str_contains($stageNameLower, 'joi')) {
-                $stageBadgeClass = 'it-stage-joi';
-            } elseif (str_contains($stageNameLower, 'reject') || str_contains($stageNameLower, 'rej')) {
-                $stageBadgeClass = 'it-stage-rej';
-            } else {
-                $stageBadgeClass = 'it-stage-eva';
-            }
+            $resolvedStageKey = $resolvedStageKey ?: 'evaluation';
+            $stageBadgeClass = $stageClassMap[$resolvedStageKey] ?? 'it-stage-eva';
+            $stageToken = $stageTokensAll[$resolvedStageKey] ?? $stageTokensAll['evaluation'];
+            $stageOrder = (int) ($stageToken['order'] ?? 4);
+            $isRejectedStage = ($resolvedStageKey === 'rejected');
+            $pipelineProgressPct = $isRejectedStage ? 100 : (int) round((min(max($stageOrder, 1), 7) / 7) * 100);
+            $pipelineStepText = $isRejectedStage ? 'Exited Pipeline' : ('Step ' . min(max($stageOrder, 1), 7) . ' of 7');
+            $pipelineBarColor = $stageToken['accent'] ?? '#2563eb';
+            $masterStatusName = $rawMasterStatusName !== '' ? $rawMasterStatusName : ($stageToken['label'] ?? 'InReview');
 
             // ── 8. Feedback, Attendance & Permissions ──────────────────────
             $latestFb       = $feedbackMap->get($row->id) ?? null;
@@ -443,7 +509,7 @@
         <!-- Master Primary Interview Card (Rule 20 Card + Sub-Card System) -->
         <div class="it-card" data-interview-id="{{ $row->id }}" data-wise-id="{{ @$row->wiseID }}" data-job-id="{{ $jobId }}" data-schedule-ts="{{ $scheduleCarbon ? $scheduleCarbon->timestamp : 0 }}" data-created-ts="{{ !empty($row->created_at) ? (int) strtotime((string) $row->created_at) : 0 }}" data-mode-id="{{ (int) $modeId }}" style="border-left: 3.5px solid {{ $cardAccentColor }} !important;">
 
-            <!-- Upper Discrete Sub-Cards Grid (6 Responsive Enterprise Sub-Cards) -->
+            <!-- Upper Discrete Sub-Cards Grid (7 Responsive Enterprise Sub-Cards) -->
             <div class="it-card-grid">
 
                 <!-- Sub-Card 1: CANDIDATE -->
@@ -687,20 +753,33 @@
                     </div>
                 </div>
 
+                <!-- Sub-Card 7: PIPELINE & STAGE (Display-Only) -->
+                <div class="it-subcard it-subcard-stage"
+                     title="{{ $masterStatusName }}{{ $childStageName !== '' ? ' · Sub-stage: ' . $childStageName : '' }} ({{ $pipelineStepText }})">
+                    <div class="it-subcard-header">
+                        <span class="it-subcard-label">Pipeline &amp; Stage</span>
+                    </div>
+                    <div class="it-stage-body">
+                        <span class="it-stage-badge {{ $stageBadgeClass }}">{{ $masterStatusName }}</span>
+                        <div class="it-substage-txt" title="{{ $childStageName !== '' ? 'Sub-stage: ' . $childStageName : 'Sub-stage: Standard' }}">
+                            Sub: <strong>{{ $childStageName !== '' ? $childStageName : 'Standard' }}</strong>
+                        </div>
+                        <div class="it-pipeline-meta" aria-label="Pipeline progress: {{ $pipelineStepText }}">
+                            <div class="it-pipeline-track">
+                                <div class="it-pipeline-fill" style="width: {{ $pipelineProgressPct }}%; background: {{ $pipelineBarColor }};"></div>
+                            </div>
+                            <span class="it-pipeline-step">{{ $pipelineStepText }}</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <!-- End Upper Sub-Cards Grid -->
 
             <!-- Bottom Activity & Pipeline Strip -->
             <div class="it-card-bottom">
                 <div class="it-bottom-left">
-                    <div class="it-bottom-item it-stage-cell">
-                        <span class="it-bottom-lbl">Stage:</span>
-                        <span class="it-stage-badge {{ $stageBadgeClass }}">{{ $masterStatusName }}</span>
-                        @if($childStageName)
-                            <span class="it-substage-pill">{{ $childStageName }}</span>
-                        @endif
-                    </div>
-                    <div class="it-followup-dropdown ms-1" data-fid="{{ $row->id }}">
+                    <div class="it-followup-dropdown" data-fid="{{ $row->id }}">
                         <button class="it-followup-btn it-followup-trigger {{ $fuClass }}" onclick="toggleFollowUp(this)" type="button" title="Update candidate follow-up status">
                             @if(!$fuStatus)
                                 <i class="far fa-comment-dots fu-cta-icon"></i>
@@ -724,10 +803,18 @@
                         </div>
                     </div>
                     @if($fuStatus && $fuAt)
+                        @php
+                            $fuFormattedAt = '';
+                            try {
+                                $fuFormattedAt = Carbon::parse($fuAt)->setTimezone($tenantTimezone)->format('d M y, h:i A T');
+                            } catch (\Throwable $e) {
+                                $fuFormattedAt = (string) $fuAt;
+                            }
+                        @endphp
                         <span class="it-dot-sep">&bull;</span>
                         <div class="it-bottom-item">
                             <span class="it-bottom-lbl">Follow-up:</span>
-                            <span class="it-bottom-muted">{{ Carbon::parse($fuAt)->format('d M, h:i A') }}</span>
+                            <span class="it-bottom-muted">{{ $fuFormattedAt }}</span>
                         </div>
                     @endif
 

@@ -498,6 +498,25 @@ input[type="radio"]:checked {
 .aat-drawer.agency-commercial-mode .aat-drawer-tabs { display:none; }
 .aat-drawer.agency-commercial-mode .aat-drawer-footer { display:none !important; }
 
+/* Zero-spinner guards for non-AJAX drawer buttons */
+.aat-drawer.agency-commercial-mode .aat-model-option,
+.aat-drawer.agency-commercial-mode .aat-range-reset,
+.aat-drawer.agency-commercial-mode #cancelAgencyCommercialTerms,
+.aat-drawer.agency-commercial-mode #closeAgencyCommercialDrawer {
+  pointer-events: auto !important;
+}
+.aat-drawer.agency-commercial-mode .aat-model-option:before,
+.aat-drawer.agency-commercial-mode .aat-range-reset:before,
+.aat-drawer.agency-commercial-mode #cancelAgencyCommercialTerms:before,
+.aat-drawer.agency-commercial-mode #closeAgencyCommercialDrawer:before,
+.aat-drawer.agency-commercial-mode .aat-model-option.jero-btn-loading:before,
+.aat-drawer.agency-commercial-mode .aat-range-reset.jero-btn-loading:before,
+.aat-drawer.agency-commercial-mode #cancelAgencyCommercialTerms.jero-btn-loading:before,
+.aat-drawer.agency-commercial-mode #closeAgencyCommercialDrawer.jero-btn-loading:before {
+  display: none !important;
+  content: none !important;
+}
+
 /* Alert strip */
 .aat-drawer.agency-commercial-mode .aat-edit-alert { margin-bottom:14px; padding:10px 14px; border:1px solid #e2e8f0 !important; border-left:3.5px solid #2563eb !important; border-radius:8px; background:#f8fafc !important; color:#475569 !important; font-size:11.5px !important; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .aat-drawer.agency-commercial-contract .aat-edit-alert { border-left-color:#d97706 !important; background:#fffdfa !important; }
@@ -5577,9 +5596,9 @@ new Tagify(input)
 $(document).ready(function(){
         // Intent: give every real account-page action immediate loading feedback without changing the underlying AJAX or submit business logic.
         var buttonSpinnerSelector = 'button, a.btn, .aat-btn, .cv2-edit, .candidate-action-icon';
-        var buttonSpinnerExclude = '.aat-drawer-close, .aga-close, .avd-close, .apv-close, .btn-icon, .nav-link, [data-toggle="tab"], .aga-tab, .aat-drawer-tab, .co-var-chip, .aga-var-item, .avd-row-actions button, [data-no-spinner], .aat-edit-pill, [data-agency-commercial-open], #toggleAgencyCommercialTerms';
+        var buttonSpinnerExclude = '.aat-drawer-close, .aga-close, .avd-close, .apv-close, .btn-icon, .nav-link, [data-toggle="tab"], .aga-tab, .aat-drawer-tab, .co-var-chip, .aga-var-item, .avd-row-actions button, [data-no-spinner], [data-no-spinner="true"], .aat-edit-pill, [data-agency-commercial-open], #toggleAgencyCommercialTerms, .aat-model-option, [data-aat-commercial-model], .aat-range-reset, [data-aat-range-reset], [data-aat-contract-range-reset], #cancelAgencyCommercialTerms, #closeAgencyCommercialDrawer';
         function setButtonLoading($button) {
-            if (!$button.length || $button.is(buttonSpinnerExclude) || $button.hasClass('jero-btn-loading')) {
+            if (!$button.length || $button.is(buttonSpinnerExclude) || $button.attr('data-no-spinner') === 'true' || ($button.closest('#agency_commercial_terms_form').length && !$button.is('#saveAgencyCommercialTerms')) || $button.hasClass('jero-btn-loading')) {
                 return;
             }
             $button.addClass('jero-btn-loading').attr('aria-busy', 'true');
@@ -5605,6 +5624,7 @@ $(document).ready(function(){
                 .removeClass('agency-commercial-fulltime agency-commercial-contract')
                 .addClass('open agency-commercial-mode agency-commercial-' + commercialMode)
                 .attr('aria-hidden', 'false');
+            $('#agency_commercial_terms_form').find('.jero-btn-loading').removeClass('jero-btn-loading').removeAttr('aria-busy');
             $('[data-agency-commercial-title]').text(title);
             $('[data-agency-commercial-subtitle]').text(subtitle);
             $('[data-agency-alert-text]').text(commercialMode === 'contract'
@@ -5628,6 +5648,7 @@ $(document).ready(function(){
         window.closeAgencyCommercialDrawer = function() {
             $('#agencyCommercialDrawerOverlay').removeClass('show');
             $('#agency_commercial_terms_form').removeClass('open agency-commercial-fulltime agency-commercial-contract').attr('aria-hidden', 'true');
+            $('#agency_commercial_terms_form').find('.jero-btn-loading').removeClass('jero-btn-loading').removeAttr('aria-busy');
             $('body').removeClass('modal-open');
         };
         var closeAgencyCommercialDrawer = window.closeAgencyCommercialDrawer;
@@ -5699,13 +5720,15 @@ $(document).ready(function(){
                 label.text(text ? text.toLowerCase() : 'replacement');
             }
         }
-        $('body').on('click', '[data-aat-commercial-model]', function(){
+        $('body').on('click', '[data-aat-commercial-model]', function(e){
+            e.preventDefault();
             var $option = $(this);
+            $option.removeClass('jero-btn-loading').removeAttr('aria-busy');
             var model = $option.data('aat-commercial-model');
             $('[name="fulltime_fee_model"]').val(model);
             $('[data-aat-commercial-model]').each(function(){
                 var isActive = $(this).data('aat-commercial-model') === model;
-                $(this).toggleClass('active', isActive).attr('aria-checked', isActive ? 'true' : 'false');
+                $(this).toggleClass('active', isActive).attr('aria-checked', isActive ? 'true' : 'false').removeClass('jero-btn-loading').removeAttr('aria-busy');
             });
             if (model === 'fixed') {
                 $('#aatCommercialModelHelp').text('Billing is calculated from the configured fixed rate for each experience range.');

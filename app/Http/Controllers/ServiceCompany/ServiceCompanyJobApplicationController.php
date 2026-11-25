@@ -7673,17 +7673,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // (management_status/send_approved_date_time/approved_date_time). The approver's own
         // name/email only lives on updatetimeline (written by fwd_offer_send()/saveSignature()),
         // so pull the latest approval-type row for this application, plus a short activity feed.
-        // Fetch ALL approval emails sent for this offer (one row per approver/resend).
+        // Fetch approval emails sent for this offer (deduplicated by approver email, preserving latest status).
         // Left-join users_profile by email to get the approver's designation when available.
         $this->co_appr_timeline = DB::table('updatetimeline')
             ->leftJoin('users', 'users.email', '=', 'updatetimeline.email_id_hr')
             ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-            ->select('updatetimeline.*', 'users_profile.designation as approver_designation')
+            ->select('updatetimeline.*', 'users_profile.designation as approver_designation', 'users.name as user_real_name')
             ->where('updatetimeline.application_id', $this->application->id)
             ->where('updatetimeline.job_id', $this->application->job_id)
             ->whereIn('updatetimeline.mtypeSection', [2, 8]) // 2 = legacy approval, 8 = new approval flow (mtypeId=8)
             ->orderByDesc('updatetimeline.id')
-            ->get();
+            ->get()
+            ->unique(function ($item) {
+                return strtolower(trim((string) ($item->email_id_hr ?: $item->name_hr)));
+            })
+            ->values();
 
         $this->co_activity_log = DB::table('updatetimeline')
             ->where('application_id', $this->application->id)
@@ -13484,20 +13488,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $currentUserId = $this->user->id ?? auth()->id();
+        $finalJobId = (int) ($addJobWiseCondidate->job_id ?? $jobApplication->job_id ?? 0);
+        $finalCompanyId = (int) ($addJobWiseCondidate->company_id ?? $company_id ?? auth()->user()->company_id ?? 0);
         $cachekeys = [
             'alljobslist_version_user_'.$currentUserId,
             'allcvtracker_version_user_'.$currentUserId,
             'allapptracker_version_user_'.$currentUserId,
             'allclientapp_version_user_'.$currentUserId,
+            'allinterviewschedule_version_user_'.$currentUserId,
         ];
         foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
+            GeneralMethod::cacheClean($key, $finalCompanyId);
         }
         // Multi-tenant atomic cache invalidation for Joining Tracker total count
         \Illuminate\Support\Facades\Redis::del('joining_tracker_total_count_'.$company_id);
 
-        $finalJobId = (int) ($addJobWiseCondidate->job_id ?? $jobApplication->job_id ?? 0);
-        $finalCompanyId = (int) ($addJobWiseCondidate->company_id ?? $company_id ?? auth()->user()->company_id ?? 0);
         if ($finalJobId > 0 && $finalCompanyId > 0) {
             app(\App\Services\Apptracker\CounterService::class)->onStageMoved($finalJobId, (int) $application_id, (int) $master_status, $finalCompanyId);
         }
@@ -16339,18 +16344,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $currentUserId = $this->user->id ?? auth()->id();
+        $finalJobId = (int) ($jobId ?? 0);
+        $finalCompanyId = (int) ($company_id ?? auth()->user()->company_id ?? 0);
         $cachekeys = [
             'alljobslist_version_user_'.$currentUserId,
             'allcvtracker_version_user_'.$currentUserId,
             'allapptracker_version_user_'.$currentUserId,
             'allclientapp_version_user_'.$currentUserId,
+            'allinterviewschedule_version_user_'.$currentUserId,
         ];
         foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
+            GeneralMethod::cacheClean($key, $finalCompanyId);
         }
 
-        $finalJobId = (int) ($jobId ?? 0);
-        $finalCompanyId = (int) ($company_id ?? auth()->user()->company_id ?? 0);
         if ($finalJobId > 0 && $finalCompanyId > 0) {
             app(\App\Services\Apptracker\CounterService::class)->onStageMoved($finalJobId, (int) $application_id, (int) $master_status, $finalCompanyId);
         }

@@ -1244,6 +1244,42 @@
 .cd-req-terms-btn:hover {
     text-decoration: underline !important;
 }
+
+/* Job Tracker Card Footer Strip: Skills on Left Edge, Posted Date Right-Aligned (Rule 17 Page-Isolated) */
+#allJobList .cd-job-card-bottom {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    width: 100% !important;
+}
+
+#allJobList .cd-job-card-bottom .cd-bottom-skills.cd-bottom-left-skills {
+    flex: 1 1 auto !important;
+    justify-content: flex-start !important;
+    min-width: 0 !important;
+}
+
+#allJobList .cd-job-card-bottom .cd-bottom-right-meta {
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    flex-shrink: 0 !important;
+    text-align: right !important;
+}
+
+@media (max-width: 1100px) {
+    #allJobList .cd-job-card-bottom .cd-bottom-skills.cd-bottom-left-skills {
+        width: 100% !important;
+        flex: 0 0 auto !important;
+    }
+    #allJobList .cd-job-card-bottom .cd-bottom-right-meta {
+        width: 100% !important;
+        margin-left: 0 !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+        white-space: normal !important;
+    }
+}
 </style>
 @endpush
 
@@ -3442,16 +3478,16 @@ $(document).on('click', '.client-hm-listing', function ()
 
                 html += '  </div>'; // End upper grid
 
-                // SUB-CARD 6: BOTTOM ACTIVITY & SKILLS STRIP (Posted Date & Requested By; SLA removed)
+                // SUB-CARD 6: BOTTOM ACTIVITY & SKILLS STRIP (Skills on Left, Posted Date & Requested By on Right; SLA removed)
                 html += '  <div class="cd-job-card-bottom">';
-                html += '    <div class="cd-bottom-left">';
+                html += '    <div class="cd-bottom-skills cd-bottom-left-skills">' + shared.skillsHtml + '</div>';
+                html += '    <div class="cd-bottom-left cd-bottom-right-meta">';
                 html += '      <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted Date: <strong>' + postedDateDisplay + '</strong></span>';
                 if (requestedByName) {
                     html += '      <span class="cd-bullet">&bull;</span>';
                     html += '      <span><i class="far fa-user text-muted me-1"></i>Requested By: <strong>' + requestedByName + requestedByRole + '</strong></span>';
                 }
                 html += '    </div>';
-                html += '    <div class="cd-bottom-skills">' + shared.skillsHtml + '</div>';
                 html += '  </div>';
 
                 html += '</div>';
@@ -3572,18 +3608,20 @@ $(document).on('click', '.client-hm-listing', function ()
 
                 html += '  </div>'; // End upper grid
 
-                // SUB-CARD 6: BOTTOM ACTIVITY STRIP
+                // SUB-CARD 6: BOTTOM ACTIVITY STRIP (Skills on Left, Posted Date & HM on Right)
                 html += '  <div class="cd-job-card-bottom">';
-                html += '    <div class="cd-bottom-left">';
+                html += '    <div class="cd-bottom-skills cd-bottom-left-skills">' + shared.skillsHtml + '</div>';
+                html += '    <div class="cd-bottom-left cd-bottom-right-meta">';
                 if (formattedDate) {
                     html += '      <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted: <strong>' + formattedDate + '</strong></span>';
                 }
                 if (shared.hiringManagerDisplay) {
-                    html += '      <span class="cd-bullet">&bull;</span>';
+                    if (formattedDate) {
+                        html += '      <span class="cd-bullet">&bull;</span>';
+                    }
                     html += '      <span><i class="far fa-user text-muted me-1"></i>HM: <strong>' + shared.hiringManagerDisplay + shared.hmRole + '</strong></span>';
                 }
                 html += '    </div>';
-                html += '    <div class="cd-bottom-skills">' + shared.skillsHtml + '</div>';
                 html += '  </div>';
 
                 html += '</div>';
