@@ -1,0 +1,2695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruiter Workspace &bull; JERO ATS</title>
+  <!-- Google Fonts: Poppins (Mandatory ATS Standard) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome 6 (No 3D / Crisp Line Icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Recruiter Workspace Master Stylesheet -->
+  <link rel="stylesheet" href="css/recruiter.css">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       AUTH SCREENS WRAPPER (LOGIN & REGISTRATION)
+       ========================================================================== -->
+  <div id="rw-auth-screens-wrapper" style="display: none; min-height: 100vh; background: var(--rw-bg-page); align-items: center; justify-content: center; padding: 24px;">
+    
+    <!-- Screen 14: Recruiter Sign In -->
+    <div id="auth-view-login" class="rw-auth-screen rw-card" style="max-width: 440px; width: 100%; border-radius: var(--rw-radius-xl); box-shadow: var(--rw-shadow-lg);">
+      <div class="rw-card-header" style="justify-content: center; flex-direction: column; gap: 8px; padding: 26px 20px 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="rw-brand-logo" style="width: 36px; height: 36px; font-size: 18px;">J</div>
+          <span style="font-size: 18px; font-weight: 700; color: var(--rw-text-primary);">JERO <span style="color: var(--rw-primary);">ATS</span></span>
+        </div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--rw-text-secondary);">Freelance Recruiter Portal</div>
+        <div style="font-size: 11px; color: var(--rw-text-muted);">Sign in to access assigned mandates & submissions</div>
+      </div>
+      <div class="rw-card-body" style="padding: 24px;">
+        <form onsubmit="event.preventDefault(); showToast('Signed in successfully! Loading recruiter workspace...'); setTimeout(() => { window.location.hash = 'dashboard'; }, 600);">
+          <div class="rw-form-group" style="margin-bottom: 14px;">
+            <label class="rw-form-label">Email Address</label>
+            <input type="email" class="rw-form-input" value="sarah.jenkins.recruiter@jero.works" required placeholder="name@domain.com">
+          </div>
+          <div class="rw-form-group" style="margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="rw-form-label">Password</label>
+              <a href="javascript:void(0)" onclick="openModal('forgotPasswordModal')" style="font-size: 11px; color: var(--rw-primary); text-decoration: none;">Forgot Password?</a>
+            </div>
+            <input type="password" class="rw-form-input" value="••••••••••••" required>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-size: 12px;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--rw-text-secondary);">
+              <input type="checkbox" checked style="accent-color: var(--rw-primary);"> Remember on this device
+            </label>
+            <span style="font-size: 11px; color: var(--rw-text-muted);"><i class="fas fa-lock text-emerald-500"></i> Single-Device Guard</span>
+          </div>
+          <button type="submit" class="rw-btn rw-btn-primary" style="width: 100%; justify-content: center; height: 38px; font-size: 13px;">
+            <i class="fas fa-sign-in-alt"></i> Sign In to Recruiter Workspace
+          </button>
+        </form>
+
+        <div style="margin-top: 16px; padding: 10px 12px; background: var(--rw-bg-subtle); border-radius: var(--rw-radius-md); border: 1px solid var(--rw-border); font-size: 11px; color: var(--rw-text-muted); display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-info-circle" style="color: var(--rw-primary);"></i>
+          <span>Sandbox Mode: Click button above for instant 1-click preview login.</span>
+        </div>
+
+        <div style="text-align: center; margin-top: 18px; font-size: 12px; color: var(--rw-text-muted);">
+          New to JERO Freelance Network? 
+          <a href="#register" style="color: var(--rw-primary); font-weight: 600; text-decoration: none;">Register Here</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 15: Recruiter Registration -->
+    <div id="auth-view-register" class="rw-auth-screen rw-card" style="max-width: 540px; width: 100%; border-radius: var(--rw-radius-xl); box-shadow: var(--rw-shadow-lg); display: none;">
+      <div class="rw-card-header" style="justify-content: center; flex-direction: column; gap: 6px; padding: 22px 20px 18px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="rw-brand-logo" style="width: 32px; height: 32px; font-size: 16px;">J</div>
+          <span style="font-size: 17px; font-weight: 700; color: var(--rw-text-primary);">JERO <span style="color: var(--rw-primary);">ATS</span></span>
+        </div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--rw-text-secondary);">Register as Freelance Recruiter</div>
+        <div style="font-size: 11px; color: var(--rw-text-muted);">Join verified recruiters sourcing for tier-1 enterprises</div>
+      </div>
+      <div class="rw-card-body" style="padding: 22px;">
+        <form onsubmit="event.preventDefault(); showToast('Registration submitted! Verification link sent to your email.'); setTimeout(() => { window.location.hash = 'login'; }, 1000);">
+          <div class="rw-form-row" style="margin-bottom: 12px;">
+            <div class="rw-form-group">
+              <label class="rw-form-label">First Name</label>
+              <input type="text" class="rw-form-input" placeholder="e.g. Sarah" required>
+            </div>
+            <div class="rw-form-group">
+              <label class="rw-form-label">Last Name</label>
+              <input type="text" class="rw-form-input" placeholder="e.g. Jenkins" required>
+            </div>
+          </div>
+          <div class="rw-form-row" style="margin-bottom: 12px;">
+            <div class="rw-form-group">
+              <label class="rw-form-label">Professional Email</label>
+              <input type="email" class="rw-form-input" placeholder="sarah@agency.com" required>
+            </div>
+            <div class="rw-form-group">
+              <label class="rw-form-label">Mobile Number</label>
+              <input type="tel" class="rw-form-input" placeholder="+91 98765 43210" required>
+            </div>
+          </div>
+          <div class="rw-form-row" style="margin-bottom: 12px;">
+            <div class="rw-form-group">
+              <label class="rw-form-label">Primary Sourcing Domain</label>
+              <select class="rw-form-select">
+                <option>Technology & Software Engineering</option>
+                <option>Data Science & AI/ML</option>
+                <option>Banking, Finance & Fintech</option>
+                <option>Product & UI/UX Design</option>
+                <option>Executive & Leadership Search</option>
+              </select>
+            </div>
+            <div class="rw-form-group">
+              <label class="rw-form-label">Recruiting Experience</label>
+              <select class="rw-form-select">
+                <option>3 - 5 Years</option>
+                <option selected>5 - 8 Years</option>
+                <option>8 - 12 Years</option>
+                <option>12+ Years</option>
+              </select>
+            </div>
+          </div>
+          <div class="rw-form-row" style="margin-bottom: 14px;">
+            <div class="rw-form-group">
+              <label class="rw-form-label">Password</label>
+              <input type="password" class="rw-form-input" placeholder="Minimum 8 characters" required>
+            </div>
+            <div class="rw-form-group">
+              <label class="rw-form-label">Confirm Password</label>
+              <input type="password" class="rw-form-input" placeholder="Repeat password" required>
+            </div>
+          </div>
+          <div style="margin-bottom: 18px; font-size: 11px; color: var(--rw-text-muted); display: flex; align-items: flex-start; gap: 8px;">
+            <input type="checkbox" required checked style="accent-color: var(--rw-primary); margin-top: 2px;">
+            <span>I agree to JERO ATS Recruiter Terms of Service, 90-Day Candidate Ownership Lock Rules, and Confidential Client Representation standards.</span>
+          </div>
+          <button type="submit" class="rw-btn rw-btn-primary" style="width: 100%; justify-content: center; height: 38px;">
+            <i class="fas fa-user-check"></i> Submit Registration & Await Approval
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 16px; font-size: 12px; color: var(--rw-text-muted);">
+          Already approved? 
+          <a href="#login" style="color: var(--rw-primary); font-weight: 600; text-decoration: none;">Sign In</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================================================
+       MAIN APP SHELL (DESKTOP / LAPTOP 15.6" CONTAINER)
+       ========================================================================== -->
+  <div class="rw-app-wrapper">
+
+    <!-- Sidebar Navigation -->
+    <aside class="rw-sidebar">
+      <div class="rw-sidebar-header">
+        <a href="#dashboard" class="rw-brand">
+          <div class="rw-brand-logo">J</div>
+          <div class="rw-brand-info">
+            <span class="rw-brand-title">JERO <span style="color: var(--rw-primary);">ATS</span></span>
+            <span class="rw-brand-badge">Recruiter Portal</span>
+          </div>
+        </a>
+        <button id="rw-sidebar-toggle" class="rw-sidebar-toggle" title="Toggle Sidebar">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+
+      <nav class="rw-sidebar-menu">
+        <div class="rw-sidebar-heading">Core Workspace</div>
+        
+        <a href="#dashboard" class="rw-nav-item active" data-screen="dashboard">
+          <i class="fas fa-chart-pie rw-nav-icon"></i>
+          <span class="rw-nav-text">Dashboard</span>
+        </a>
+
+        <a href="#jobs" class="rw-nav-item" data-screen="jobs">
+          <i class="fas fa-briefcase rw-nav-icon"></i>
+          <span class="rw-nav-text">Mandates & Jobs</span>
+          <span class="rw-nav-badge">14</span>
+        </a>
+
+        <a href="#job-requests" class="rw-nav-item" data-screen="job-requests">
+          <i class="fas fa-handshake rw-nav-icon"></i>
+          <span class="rw-nav-text">Inbound Requests</span>
+          <span class="rw-nav-badge" style="background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe;">3 New</span>
+        </a>
+
+        <a href="#candidate-submission" class="rw-nav-item" data-screen="candidate-submission">
+          <i class="fas fa-user-plus rw-nav-icon"></i>
+          <span class="rw-nav-text">Submit Candidate</span>
+          <span class="rw-nav-badge" style="background: var(--rw-primary-light); color: var(--rw-primary);">WASM</span>
+        </a>
+
+        <a href="#candidates" class="rw-nav-item" data-screen="candidates">
+          <i class="fas fa-users rw-nav-icon"></i>
+          <span class="rw-nav-text">My Talent Bank</span>
+          <span class="rw-nav-badge">24</span>
+        </a>
+
+        <a href="#applications" class="rw-nav-item" data-screen="applications">
+          <i class="fas fa-tasks rw-nav-icon"></i>
+          <span class="rw-nav-text">Pipeline & Submissions</span>
+          <span class="rw-nav-badge">38</span>
+        </a>
+
+        <a href="#interview-tracker" class="rw-nav-item" data-screen="interview-tracker">
+          <i class="fas fa-calendar-alt rw-nav-icon"></i>
+          <span class="rw-nav-text">Interview Tracker</span>
+          <span class="rw-nav-badge" style="background: var(--rw-success-light); color: var(--rw-success-text);">2 Today</span>
+        </a>
+
+        <div class="rw-sidebar-heading">Commercials</div>
+
+        <a href="#earnings" class="rw-nav-item" data-screen="earnings">
+          <i class="fas fa-wallet rw-nav-icon"></i>
+          <span class="rw-nav-text">Commission & Earnings</span>
+        </a>
+
+        <a href="#payments" class="rw-nav-item" data-screen="payments">
+          <i class="fas fa-file-invoice-dollar rw-nav-icon"></i>
+          <span class="rw-nav-text">Invoices & Payouts</span>
+        </a>
+
+        <div class="rw-sidebar-heading">System & Account</div>
+
+        <a href="#notifications" class="rw-nav-item" data-screen="notifications">
+          <i class="fas fa-bell rw-nav-icon"></i>
+          <span class="rw-nav-text">Notifications</span>
+          <span class="rw-nav-badge" style="background: var(--rw-danger); color: #ffffff;">5</span>
+        </a>
+
+        <a href="#profile" class="rw-nav-item" data-screen="profile">
+          <i class="fas fa-id-badge rw-nav-icon"></i>
+          <span class="rw-nav-text">My Recruiter Profile</span>
+        </a>
+
+        <a href="#support" class="rw-nav-item" data-screen="support">
+          <i class="fas fa-headset rw-nav-icon"></i>
+          <span class="rw-nav-text">Help Desk & Support</span>
+        </a>
+
+        <a href="#settings" class="rw-nav-item" data-screen="settings">
+          <i class="fas fa-sliders-h rw-nav-icon"></i>
+          <span class="rw-nav-text">Workspace Settings</span>
+        </a>
+      </nav>
+
+      <div class="rw-sidebar-footer">
+        <div class="rw-user-card" onclick="navigateTo('profile')">
+          <div class="rw-user-avatar">SJ</div>
+          <div class="rw-user-details">
+            <span class="rw-user-name">Sarah Jenkins</span>
+            <span class="rw-user-status">Verified Recruiter</span>
+          </div>
+          <a href="#login" title="Logout" style="color: var(--rw-text-muted); font-size: 13px; text-decoration: none;">
+            <i class="fas fa-sign-out-alt"></i>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="rw-main-wrapper">
+      
+      <!-- Topbar Header -->
+      <header class="rw-topbar">
+        <div class="rw-topbar-left">
+          <button id="rw-mobile-toggle" class="rw-btn-icon" style="display: none;" title="Toggle Menu">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="rw-breadcrumb">
+            <span id="rw-breadcrumb-parent">Overview</span>
+            <i class="fas fa-chevron-right" style="font-size: 9px; color: var(--rw-text-light);"></i>
+            <span id="rw-breadcrumb-active" class="rw-breadcrumb-active">Dashboard</span>
+          </div>
+        </div>
+        <div class="rw-topbar-right">
+          <!-- Timezone Display Guard (Rule 24 Standard) -->
+          <div class="rw-timezone-pill">
+            <i class="fas fa-globe-asia"></i>
+            <span>Asia/Kolkata (IST) &bull; 25 Nov 2026</span>
+          </div>
+
+          <button class="rw-btn-icon" onclick="navigateTo('notifications')" title="Notifications">
+            <i class="far fa-bell"></i>
+            <span class="rw-btn-badge">5</span>
+          </button>
+
+          <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('candidate-submission')">
+            <i class="fas fa-user-plus"></i> Submit Candidate
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Body Content (15 Dynamic Screens) -->
+      <main class="rw-page-body">
+
+        <!-- ==================================================================
+             SCREEN 1: RECRUITER DASHBOARD
+             ================================================================== -->
+        <div id="view-dashboard" class="rw-view-screen active">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-chart-pie" style="color: var(--rw-primary);"></i> Recruiter Overview
+              </span>
+              <span class="rw-toolbar-badge">Active Sourcing Window</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Dashboard refreshed via Elasticsearch read-plane (0ms)');">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+              <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('jobs')">
+                <i class="fas fa-search"></i> Browse 14 Mandates
+              </button>
+            </div>
+          </div>
+
+          <!-- Urgent Action Attention Strip -->
+          <div style="background: var(--rw-warning-light); border: 1px solid var(--rw-warning-border); border-left: 4px solid var(--rw-warning); border-radius: var(--rw-radius-md); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--rw-warning-text); flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-exclamation-triangle" style="font-size: 14px;"></i>
+              <span><strong>Action Required:</strong> 2 Candidate technical interviews scheduled today &bull; 1 Client offer ready for candidate confirmation.</span>
+            </div>
+            <button class="rw-btn rw-btn-sm rw-btn-secondary" onclick="navigateTo('interview-tracker')">
+              Open Schedule &rarr;
+            </button>
+          </div>
+
+          <!-- KPI Summary Grid -->
+          <div class="rw-kpi-grid">
+            <div class="rw-kpi-card">
+              <div class="rw-kpi-header">
+                <span class="rw-kpi-label">Assigned Mandates</span>
+                <div class="rw-kpi-icon"><i class="fas fa-briefcase"></i></div>
+              </div>
+              <div class="rw-kpi-number">14</div>
+              <div class="rw-kpi-footer">
+                <span class="rw-kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 3 New</span>
+                <span>Exclusive to you</span>
+              </div>
+            </div>
+
+            <div class="rw-kpi-card kpi-success">
+              <div class="rw-kpi-header">
+                <span class="rw-kpi-label">Candidates Submitted</span>
+                <div class="rw-kpi-icon"><i class="fas fa-file-upload"></i></div>
+              </div>
+              <div class="rw-kpi-number">28</div>
+              <div class="rw-kpi-footer">
+                <span class="rw-kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 82%</span>
+                <span>Shortlist acceptance rate</span>
+              </div>
+            </div>
+
+            <div class="rw-kpi-card kpi-purple">
+              <div class="rw-kpi-header">
+                <span class="rw-kpi-label">In Interview Stages</span>
+                <div class="rw-kpi-icon"><i class="fas fa-comments"></i></div>
+              </div>
+              <div class="rw-kpi-number">11</div>
+              <div class="rw-kpi-footer">
+                <span>4 Final rounds this week</span>
+              </div>
+            </div>
+
+            <div class="rw-kpi-card kpi-warning">
+              <div class="rw-kpi-header">
+                <span class="rw-kpi-label">Offers & Placed</span>
+                <div class="rw-kpi-icon"><i class="fas fa-award"></i></div>
+              </div>
+              <div class="rw-kpi-number">4</div>
+              <div class="rw-kpi-footer">
+                <span class="rw-kpi-trend trend-up"><i class="fas fa-check"></i> 100%</span>
+                <span>Joining confirmation</span>
+              </div>
+            </div>
+
+            <div class="rw-kpi-card kpi-success">
+              <div class="rw-kpi-header">
+                <span class="rw-kpi-label">Pipeline Commission</span>
+                <div class="rw-kpi-icon"><i class="fas fa-rupee-sign"></i></div>
+              </div>
+              <div class="rw-kpi-number">₹3,45,000</div>
+              <div class="rw-kpi-footer">
+                <span>₹1.8L Cleared for payout</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Mandates Highlights (Card + Sub-Card System) -->
+          <div class="rw-card">
+            <div class="rw-card-header">
+              <span class="rw-card-title">
+                <i class="fas fa-bolt" style="color: var(--rw-warning);"></i> High Priority Assigned Mandates
+              </span>
+              <a href="#jobs" style="font-size: 12px; color: var(--rw-primary); text-decoration: none; font-weight: 600;">View All 14 &rarr;</a>
+            </div>
+            <div class="rw-card-body" style="padding: 14px;">
+              <div class="rw-stream-grid">
+                
+                <!-- Mandate 1 -->
+                <div class="rw-entity-card status-active">
+                  <div class="rw-entity-card-content">
+                    <div class="rw-subcard-col">
+                      <div class="rw-subcard-title">
+                        Lead Backend Engineer (Go / Distributed Systems)
+                        <span class="rw-tag-pill rw-tag-confidential"><i class="fas fa-shield-alt"></i> Confidential Fintech</span>
+                      </div>
+                      <div class="rw-subcard-meta">
+                        <span class="rw-subcard-meta-item"><i class="fas fa-map-marker-alt"></i> Bengaluru (Hybrid)</span>
+                        <span class="rw-subcard-meta-item"><i class="fas fa-user-clock"></i> 7 - 11 Yrs Exp</span>
+                        <span class="rw-subcard-meta-item"><i class="fas fa-coins"></i> ₹38,00,000 - ₹48,00,000 CTC</span>
+                      </div>
+                    </div>
+                    <div class="rw-subcard-col">
+                      <span style="font-size: 11px; color: var(--rw-text-muted);">Commission Mandate</span>
+                      <span class="rw-tag-pill rw-tag-commission">8.33% Placement Fee (Est. ₹3.5L)</span>
+                    </div>
+                    <div class="rw-subcard-col">
+                      <span style="font-size: 11px; color: var(--rw-text-muted);">Sourcing Quota</span>
+                      <span style="font-size: 12px; font-weight: 600; color: var(--rw-text-primary);">2 of 3 Hired &bull; 1 Slot Left</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                      <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('job-details')">Details</button>
+                      <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('candidate-submission')">Submit Resume</button>
+                    </div>
+                  </div>
+                  <div class="rw-activity-strip">
+                    <div class="rw-activity-left">
+                      <span><i class="far fa-clock"></i> Mandate assigned 2 days ago</span>
+                      <span>&bull;</span>
+                      <span><i class="fas fa-lock"></i> 90-Day Candidate Lock Applicable</span>
+                    </div>
+                    <div class="rw-activity-right">
+                      <span class="rw-tag-pill" style="background: var(--rw-bg-subtle); color: var(--rw-text-muted);">18 Days Remaining</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mandate 2 -->
+                <div class="rw-entity-card status-active">
+                  <div class="rw-entity-card-content">
+                    <div class="rw-subcard-col">
+                      <div class="rw-subcard-title">
+                        Senior Full Stack Engineer (Laravel + Vue.js)
+                        <span class="rw-tag-pill rw-tag-confidential"><i class="fas fa-shield-alt"></i> SaaS Enterprise</span>
+                      </div>
+                      <div class="rw-subcard-meta">
+                        <span class="rw-subcard-meta-item"><i class="fas fa-map-marker-alt"></i> Remote (India)</span>
+                        <span class="rw-subcard-meta-item"><i class="fas fa-user-clock"></i> 5 - 9 Yrs Exp</span>
+                        <span class="rw-subcard-meta-item"><i class="fas fa-coins"></i> ₹24,00,000 - ₹32,00,000 CTC</span>
+                      </div>
+                    </div>
+                    <div class="rw-subcard-col">
+                      <span style="font-size: 11px; color: var(--rw-text-muted);">Commission Mandate</span>
+                      <span class="rw-tag-pill rw-tag-commission">8.33% Placement Fee (Est. ₹2.2L)</span>
+                    </div>
+                    <div class="rw-subcard-col">
+                      <span style="font-size: 11px; color: var(--rw-text-muted);">Sourcing Quota</span>
+                      <span style="font-size: 12px; font-weight: 600; color: var(--rw-text-primary);">0 of 2 Hired &bull; Urgent Need</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                      <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('job-details')">Details</button>
+                      <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('candidate-submission')">Submit Resume</button>
+                    </div>
+                  </div>
+                  <div class="rw-activity-strip">
+                    <div class="rw-activity-left">
+                      <span><i class="far fa-clock"></i> Mandate assigned 4 days ago</span>
+                      <span>&bull;</span>
+                      <span><i class="fas fa-user-check"></i> 4 Submissions Under Screening</span>
+                    </div>
+                    <div class="rw-activity-right">
+                      <span class="rw-tag-pill" style="background: var(--rw-bg-subtle); color: var(--rw-text-muted);">24 Days Remaining</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 2: JOBS / MANDATES LISTING
+             ================================================================== -->
+        <div id="view-jobs" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card (Rule 20 Standard) -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-briefcase" style="color: var(--rw-primary);"></i> Available & Assigned Mandates
+              </span>
+              <span class="rw-toolbar-badge">14 Roles Active</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <div class="rw-search-box">
+                <i class="fas fa-search rw-search-icon"></i>
+                <input type="text" class="rw-search-input" data-target-list="rw-jobs-container" placeholder="Search title, skills, location...">
+                <button class="rw-search-clear"><i class="fas fa-times"></i></button>
+              </div>
+              <button class="rw-btn rw-btn-secondary rw-btn-sm">
+                <i class="fas fa-filter"></i> Filters
+              </button>
+            </div>
+          </div>
+
+          <!-- Tier 2: Dedicated Sub-Tabs Card (Rule 20 Standard) -->
+          <div class="rw-subtabs-card" data-target-container="rw-jobs-container">
+            <button class="rw-tab-btn active" data-filter="all">
+              <i class="fas fa-layer-group"></i> All Mandates <span class="rw-tab-badge">14</span>
+            </button>
+            <button class="rw-tab-btn" data-filter="exclusive">
+              <i class="fas fa-award"></i> Exclusive Assigned <span class="rw-tab-badge">6</span>
+            </button>
+            <button class="rw-tab-btn" data-filter="marketplace">
+              <i class="fas fa-globe"></i> Marketplace Pool <span class="rw-tab-badge">8</span>
+            </button>
+            <button class="rw-tab-btn" data-filter="high-fee">
+              <i class="fas fa-trophy"></i> High Commission (&gt;₹3L) <span class="rw-tab-badge">4</span>
+            </button>
+          </div>
+
+          <!-- Tier 3: Primary Card Stream (Rule 20 Standard) -->
+          <div id="rw-jobs-container" class="rw-stream-grid">
+            
+            <!-- Job 1 -->
+            <div class="rw-entity-card status-active" data-category="exclusive high-fee">
+              <div class="rw-entity-card-content">
+                <div class="rw-subcard-col">
+                  <div class="rw-subcard-title">
+                    Lead Backend Engineer (Go / Distributed Systems)
+                    <span class="rw-tag-pill rw-tag-confidential"><i class="fas fa-shield-alt"></i> Confidential FinTech</span>
+                  </div>
+                  <div class="rw-subcard-meta">
+                    <span class="rw-subcard-meta-item"><i class="fas fa-map-marker-alt"></i> Bengaluru (Hybrid)</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-user-clock"></i> 7 - 11 Yrs</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-coins"></i> ₹38,00,000 - ₹48,00,000</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-code"></i> Golang, Kafka, PostgreSQL, Redis</span>
+                  </div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Payout Terms</span>
+                  <span class="rw-tag-pill rw-tag-commission">8.33% CTC (Est. ₹3.50L)</span>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Vacancy & Pipeline</span>
+                  <span style="font-size: 12px; font-weight: 600; color: var(--rw-text-primary);">1 Open Position &bull; 4 Candidates Submitted</span>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('job-details')">View Mandate</button>
+                  <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('candidate-submission')">Submit</button>
+                </div>
+              </div>
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-building"></i> Sourced for: Client #4092 (Protected Mandate)</span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-shield-alt"></i> 90-Day Ownership Window Active</span>
+                </div>
+                <div class="rw-activity-right">
+                  <span style="color: var(--rw-primary); font-weight: 600;">Direct Mandate</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Job 2 -->
+            <div class="rw-entity-card status-active" data-category="exclusive">
+              <div class="rw-entity-card-content">
+                <div class="rw-subcard-col">
+                  <div class="rw-subcard-title">
+                    Senior Full Stack Engineer (Laravel + Vue.js)
+                    <span class="rw-tag-pill rw-tag-confidential"><i class="fas fa-shield-alt"></i> SaaS Unicorn</span>
+                  </div>
+                  <div class="rw-subcard-meta">
+                    <span class="rw-subcard-meta-item"><i class="fas fa-map-marker-alt"></i> Remote (India)</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-user-clock"></i> 5 - 9 Yrs</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-coins"></i> ₹24,00,000 - ₹32,00,000</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-code"></i> PHP 8.2, Laravel, Vue 3, MySQL</span>
+                  </div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Payout Terms</span>
+                  <span class="rw-tag-pill rw-tag-commission">8.33% CTC (Est. ₹2.25L)</span>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Vacancy & Pipeline</span>
+                  <span style="font-size: 12px; font-weight: 600; color: var(--rw-text-primary);">2 Open Positions &bull; 2 In Final Round</span>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('job-details')">View Mandate</button>
+                  <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('candidate-submission')">Submit</button>
+                </div>
+              </div>
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-building"></i> Exclusive Agency Partner Pool</span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-user-clock"></i> 48-Hour Feedback SLA Guaranteed</span>
+                </div>
+                <div class="rw-activity-right">
+                  <span style="color: var(--rw-success); font-weight: 600;">Fast-Track Process</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Job 3 -->
+            <div class="rw-entity-card status-active" data-category="marketplace high-fee">
+              <div class="rw-entity-card-content">
+                <div class="rw-subcard-col">
+                  <div class="rw-subcard-title">
+                    Principal Staff AI/ML Infrastructure Architect
+                    <span class="rw-tag-pill rw-tag-confidential"><i class="fas fa-shield-alt"></i> AI Research Lab</span>
+                  </div>
+                  <div class="rw-subcard-meta">
+                    <span class="rw-subcard-meta-item"><i class="fas fa-map-marker-alt"></i> Hyderabad / Remote</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-user-clock"></i> 10+ Yrs</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-coins"></i> ₹50,00,000 - ₹70,00,000</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-code"></i> PyTorch, Triton, vLLM, CUDA, Kubernetes</span>
+                  </div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Payout Terms</span>
+                  <span class="rw-tag-pill rw-tag-commission">10.0% CTC (Est. ₹5.50L)</span>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Vacancy & Pipeline</span>
+                  <span style="font-size: 12px; font-weight: 600; color: var(--rw-text-primary);">1 Open Position &bull; High Demand</span>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('job-details')">View Mandate</button>
+                  <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('candidate-submission')">Submit</button>
+                </div>
+              </div>
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-building"></i> Marketplace Syndicated Pool</span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-bolt text-amber-500"></i> Premium Commission Multiplier</span>
+                </div>
+                <div class="rw-activity-right">
+                  <span style="color: var(--rw-purple); font-weight: 600;">Executive Search</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Job 4 -->
+            <div class="rw-entity-card status-active" data-category="marketplace">
+              <div class="rw-entity-card-content">
+                <div class="rw-subcard-col">
+                  <div class="rw-subcard-title">
+                    Senior Product Manager — Growth & Checkout
+                    <span class="rw-tag-pill rw-tag-confidential"><i class="fas fa-shield-alt"></i> E-Commerce Giant</span>
+                  </div>
+                  <div class="rw-subcard-meta">
+                    <span class="rw-subcard-meta-item"><i class="fas fa-map-marker-alt"></i> Mumbai / Gurgaon</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-user-clock"></i> 6 - 9 Yrs</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-coins"></i> ₹28,00,000 - ₹38,00,000</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-chart-line"></i> Funnel Optimization, A/B Testing, SQL</span>
+                  </div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Payout Terms</span>
+                  <span class="rw-tag-pill rw-tag-commission">8.33% CTC (Est. ₹2.60L)</span>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Vacancy & Pipeline</span>
+                  <span style="font-size: 12px; font-weight: 600; color: var(--rw-text-primary);">1 Open Position &bull; 3 Under Review</span>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('job-details')">View Mandate</button>
+                  <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('candidate-submission')">Submit</button>
+                </div>
+              </div>
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-building"></i> Marketplace Syndicated Pool</span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-lock"></i> 90-Day Ownership Guarantee</span>
+                </div>
+                <div class="rw-activity-right">
+                  <span style="color: var(--rw-primary); font-weight: 600;">Active Review</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN: INBOUND JOB REQUESTS & MANDATES (RULE 20 & JERO PARITY)
+             ================================================================== -->
+        <div id="view-job-requests" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card (Rule 20 Standard) -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="type-request" style="font-size: 13px; padding: 6px 10px;">
+                <i class="fas fa-handshake"></i>
+              </span>
+              <div>
+                <div class="rw-toolbar-title">Inbound Job Requests & Mandates</div>
+                <div style="font-size: 11.5px; color: var(--rw-text-muted);">Direct client mandate invitations awaiting your evaluation and commercial agreement.</div>
+              </div>
+            </div>
+            <div class="rw-toolbar-right">
+              <div class="rw-search-box">
+                <i class="fas fa-search rw-search-icon"></i>
+                <input type="text" class="rw-search-input" data-target-list="rw-job-requests-stream" placeholder="Search client, title, skills...">
+                <button class="rw-search-clear"><i class="fas fa-times"></i></button>
+              </div>
+              <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Feed refreshed! All inbound requests are up to date.')">
+                <i class="fas fa-sync-alt"></i> Refresh Feed
+              </button>
+            </div>
+          </div>
+
+          <!-- Tier 2: Dedicated Sub-Tabs Card with KPI Filters (Rule 20 Standard) -->
+          <div class="rw-subtabs-card" id="rw-req-subtabs">
+            <button class="rw-tab-btn" data-filter="all" onclick="filterJobRequests('all')">
+              <i class="fas fa-layer-group"></i> All Inbound <span class="rw-tab-badge">4</span>
+            </button>
+            <button class="rw-tab-btn active" data-filter="pending" onclick="filterJobRequests('pending')">
+              <i class="fas fa-clock text-amber-500"></i> Pending Action <span class="rw-tab-badge" id="rw-kpi-pending-reqs" style="background: #fef3c7; color: #92400e;">2</span>
+            </button>
+            <button class="rw-tab-btn" data-filter="accepted" onclick="filterJobRequests('accepted')">
+              <i class="fas fa-check-circle text-emerald-500"></i> Accepted & Active <span class="rw-tab-badge" id="rw-kpi-accepted-reqs" style="background: #ecfdf5; color: #059669;">1</span>
+            </button>
+            <button class="rw-tab-btn" data-filter="declined" onclick="filterJobRequests('declined')">
+              <i class="fas fa-times-circle text-rose-500"></i> Declined / Expired <span class="rw-tab-badge" id="rw-kpi-declined-reqs" style="background: #fef2f2; color: #ef4444;">1</span>
+            </button>
+          </div>
+
+          <!-- Tier 3: Primary Card Stream (Parity with request_jobs_ajax.blade.php) -->
+          <div id="rw-job-requests-stream" class="rw-stream-grid">
+            
+            <!-- Request Card 1 (Pending Review) -->
+            <div class="rw-req-card state-pending" id="rw-req-card-8042" data-category="pending">
+              <div class="rw-req-grid">
+                <!-- Subcard 1: Job Details -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Job Details</span>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      <span class="type-direct"><i class="fas fa-shield-alt"></i> Direct Client</span>
+                      <span class="type-request"><i class="fas fa-handshake"></i> Job Request</span>
+                      <span class="rw-status-badge rw-status-hold" style="font-size: 10px; padding: 2px 6px;">Pending</span>
+                    </div>
+                  </div>
+                  <div class="rw-req-details-box">
+                    <div class="rw-req-logo">A</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <a href="javascript:void(0);" class="rw-req-title-link" onclick="openJobSpecDrawer(8042)">
+                        Senior Staff Cloud Architect (AWS &amp; Kubernetes)
+                      </a>
+                      <div class="rw-req-meta-line">
+                        <span style="font-weight: 600; color: #009ef7;">#JOB-8042</span>
+                        <span>&bull;</span>
+                        <span title="Cloud Infrastructure &amp; DevOps">Cloud Infrastructure</span>
+                      </div>
+                      <div class="rw-req-meta-line" style="margin-top: 2px;">
+                        <span style="font-weight: 600; color: var(--rw-text-primary);">Apex Global Technologies</span>
+                        <span>&bull;</span>
+                        <span><i class="fas fa-briefcase text-primary me-1"></i>Full-Time</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Subcard 2: Compensation & Experience -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Compensation &amp; Exp</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--rw-text-primary);">$165,000 - $190,000 <span style="font-size: 11px; font-weight: normal; color: var(--rw-text-muted);">/Annum</span></div>
+                    <div style="font-size: 11.5px; color: var(--rw-text-secondary);"><i class="far fa-clock text-muted me-1"></i>8 - 12 Yrs Experience</div>
+                    <div style="font-size: 11.5px; color: var(--rw-text-secondary);"><i class="fas fa-map-marker-alt text-muted me-1"></i>San Francisco, CA &bull; <strong style="color: #059669;">Remote</strong></div>
+                  </div>
+                </div>
+
+                <!-- Subcard 3: Hiring Manager / SPOC -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>Client SPOC</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: var(--rw-text-primary);">Marcus Vance</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">VP of Cloud Infrastructure</div>
+                    <a href="javascript:void(0);" onclick="openHmDrawer('marcus-vance')" style="font-size: 11px; color: var(--rw-primary); text-decoration: none; font-weight: 600; margin-top: 4px;">
+                      + View HM Details
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Subcard 4: Positions & Terms -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label"><i class="fa fa-file-contract me-1 text-muted"></i>Terms &amp; Vacancy</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--rw-text-primary);">2 Open Positions</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Fee: <strong>12.00% CTC</strong> (Est. $21,000 / hire)</div>
+                    <button class="rw-btn rw-btn-secondary rw-btn-sm" style="font-size: 11px; padding: 2px 8px; height: 24px; align-self: flex-start; margin-top: 2px;" onclick="openAcceptTermsModal(8042, 'Senior Staff Cloud Architect', 'Apex Global Technologies', '12.00% of Fixed Gross CTC (~$21,000 est.)', '90-Day Free Replacement SLA')">
+                      <i class="fas fa-file-contract me-1"></i> View Terms
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Subcard 5: Request Status / Action -->
+                <div class="rw-req-subcard rw-req-action-col" style="justify-content: center;">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Mandate Action</span>
+                  </div>
+                  <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+                    <button type="button" class="rw-btn rw-btn-success rw-btn-sm" style="flex: 1;" onclick="openAcceptTermsModal(8042, 'Senior Staff Cloud Architect', 'Apex Global Technologies', '12.00% of Fixed Gross CTC (~$21,000 est.)', '90-Day Free Replacement SLA')">
+                      <i class="fas fa-check me-1"></i> Accept
+                    </button>
+                    <button type="button" class="rw-btn rw-btn-secondary rw-btn-sm" style="color: #ef4444; border-color: #fca5a5;" onclick="openDeclineModal(8042, 'Senior Staff Cloud Architect', 'Apex Global Technologies')">
+                      <i class="fas fa-times me-1"></i> Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Activity Strip -->
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-calendar-alt text-muted me-1"></i>Requested: <strong>24 Nov 26, 11:30 AM IST</strong></span>
+                  <span>&bull;</span>
+                  <span><i class="far fa-clock text-amber-500 me-1"></i>Validity: <strong>Expires in 6 days</strong> (JIT Evaluation)</span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-lock text-muted me-1"></i>6-Month Candidate Exclusivity</span>
+                </div>
+                <div class="rw-activity-right" style="display: flex; gap: 5px;">
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">AWS EKS</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">Terraform</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">Go</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">gRPC</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Request Card 2 (Pending Review) -->
+            <div class="rw-req-card state-pending" id="rw-req-card-7981" data-category="pending">
+              <div class="rw-req-grid">
+                <!-- Subcard 1: Job Details -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Job Details</span>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      <span class="type-direct"><i class="fas fa-shield-alt"></i> Direct Client</span>
+                      <span class="type-request"><i class="fas fa-handshake"></i> Job Request</span>
+                      <span class="rw-status-badge rw-status-hold" style="font-size: 10px; padding: 2px 6px;">Pending</span>
+                    </div>
+                  </div>
+                  <div class="rw-req-details-box">
+                    <div class="rw-req-logo" style="color: #10b981;">F</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <a href="javascript:void(0);" class="rw-req-title-link" onclick="openJobSpecDrawer(7981)">
+                        Lead Full-Stack React / Laravel Engineer
+                      </a>
+                      <div class="rw-req-meta-line">
+                        <span style="font-weight: 600; color: #009ef7;">#JOB-7981</span>
+                        <span>&bull;</span>
+                        <span title="Engineering &amp; Product">FinTech Products</span>
+                      </div>
+                      <div class="rw-req-meta-line" style="margin-top: 2px;">
+                        <span style="font-weight: 600; color: var(--rw-text-primary);">FinFlow Capital Corp</span>
+                        <span>&bull;</span>
+                        <span><i class="fas fa-briefcase text-primary me-1"></i>Full-Time</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Subcard 2: Compensation & Experience -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Compensation &amp; Exp</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--rw-text-primary);">$130,000 - $150,000 <span style="font-size: 11px; font-weight: normal; color: var(--rw-text-muted);">/Annum</span></div>
+                    <div style="font-size: 11.5px; color: var(--rw-text-secondary);"><i class="far fa-clock text-muted me-1"></i>5 - 9 Yrs Experience</div>
+                    <div style="font-size: 11.5px; color: var(--rw-text-secondary);"><i class="fas fa-map-marker-alt text-muted me-1"></i>New York, NY &bull; <strong>Hybrid</strong></div>
+                  </div>
+                </div>
+
+                <!-- Subcard 3: Hiring Manager / SPOC -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>Client SPOC</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: var(--rw-text-primary);">Elena Rostova</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Director of Software Engineering</div>
+                    <a href="javascript:void(0);" onclick="openHmDrawer('elena-rostova')" style="font-size: 11px; color: var(--rw-primary); text-decoration: none; font-weight: 600; margin-top: 4px;">
+                      + View HM Details
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Subcard 4: Positions & Terms -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label"><i class="fa fa-file-contract me-1 text-muted"></i>Terms &amp; Vacancy</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--rw-text-primary);">1 Open Position</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Fee: <strong>10.00% CTC</strong> (Est. $14,000 / hire)</div>
+                    <button class="rw-btn rw-btn-secondary rw-btn-sm" style="font-size: 11px; padding: 2px 8px; height: 24px; align-self: flex-start; margin-top: 2px;" onclick="openAcceptTermsModal(7981, 'Lead Full-Stack React / Laravel Engineer', 'FinFlow Capital Corp', '10.00% of Fixed Gross CTC (~$14,000 est.)', '90-Day Free Replacement SLA')">
+                      <i class="fas fa-file-contract me-1"></i> View Terms
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Subcard 5: Request Status / Action -->
+                <div class="rw-req-subcard rw-req-action-col" style="justify-content: center;">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Mandate Action</span>
+                  </div>
+                  <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+                    <button type="button" class="rw-btn rw-btn-success rw-btn-sm" style="flex: 1;" onclick="openAcceptTermsModal(7981, 'Lead Full-Stack React / Laravel Engineer', 'FinFlow Capital Corp', '10.00% of Fixed Gross CTC (~$14,000 est.)', '90-Day Free Replacement SLA')">
+                      <i class="fas fa-check me-1"></i> Accept
+                    </button>
+                    <button type="button" class="rw-btn rw-btn-secondary rw-btn-sm" style="color: #ef4444; border-color: #fca5a5;" onclick="openDeclineModal(7981, 'Lead Full-Stack React / Laravel Engineer', 'FinFlow Capital Corp')">
+                      <i class="fas fa-times me-1"></i> Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Activity Strip -->
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-calendar-alt text-muted me-1"></i>Requested: <strong>23 Nov 26, 04:15 PM IST</strong></span>
+                  <span>&bull;</span>
+                  <span><i class="far fa-clock text-amber-500 me-1"></i>Validity: <strong>Expires in 5 days</strong></span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-lock text-muted me-1"></i>Exclusive Agency Allocation</span>
+                </div>
+                <div class="rw-activity-right" style="display: flex; gap: 5px;">
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">React 19</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">Laravel 11</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">PostgreSQL</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">TailwindCSS</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Request Card 3 (Accepted & Active) -->
+            <div class="rw-req-card state-accepted" id="rw-req-card-7712" data-category="accepted">
+              <div class="rw-req-grid">
+                <!-- Subcard 1: Job Details -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Job Details</span>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      <span class="type-direct"><i class="fas fa-shield-alt"></i> Direct Client</span>
+                      <span class="type-request"><i class="fas fa-handshake"></i> Job Request</span>
+                      <span class="rw-status-badge rw-status-hiring" style="font-size: 10px; padding: 2px 6px;">Active Mandate</span>
+                    </div>
+                  </div>
+                  <div class="rw-req-details-box">
+                    <div class="rw-req-logo" style="color: #7c3aed;">N</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <a href="javascript:void(0);" class="rw-req-title-link" onclick="openJobSpecDrawer(7712)">
+                        Principal AI / ML Research Engineer (LLMs)
+                      </a>
+                      <div class="rw-req-meta-line">
+                        <span style="font-weight: 600; color: #009ef7;">#JOB-7712</span>
+                        <span>&bull;</span>
+                        <span>AI Research Lab</span>
+                      </div>
+                      <div class="rw-req-meta-line" style="margin-top: 2px;">
+                        <span style="font-weight: 600; color: var(--rw-text-primary);">NeuralEdge Systems</span>
+                        <span>&bull;</span>
+                        <span><i class="fas fa-briefcase text-primary me-1"></i>Full-Time</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Subcard 2: Compensation & Experience -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Compensation &amp; Exp</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--rw-text-primary);">$210,000 - $245,000 <span style="font-size: 11px; font-weight: normal; color: var(--rw-text-muted);">/Annum</span></div>
+                    <div style="font-size: 11.5px; color: var(--rw-text-secondary);"><i class="far fa-clock text-muted me-1"></i>7 - 12 Yrs Experience</div>
+                    <div style="font-size: 11.5px; color: var(--rw-text-secondary);"><i class="fas fa-map-marker-alt text-muted me-1"></i>Boston, MA &bull; <strong>Hybrid</strong></div>
+                  </div>
+                </div>
+
+                <!-- Subcard 3: Hiring Manager / SPOC -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>Client SPOC</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: var(--rw-text-primary);">Dr. Jonathan Weiss</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Chief AI Scientist</div>
+                    <a href="javascript:void(0);" onclick="openHmDrawer('dr-jonathan-weiss')" style="font-size: 11px; color: var(--rw-primary); text-decoration: none; font-weight: 600; margin-top: 4px;">
+                      + View HM Details
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Subcard 4: Positions & Terms -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label"><i class="fa fa-file-contract me-1 text-muted"></i>Terms &amp; Vacancy</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--rw-text-primary);">1 Open Position</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Fee: <strong>15.00% CTC</strong> (Est. $34,000 / hire)</div>
+                    <span style="font-size: 11px; color: #059669; font-weight: 600;">Agreed on 21 Nov 2026</span>
+                  </div>
+                </div>
+
+                <!-- Subcard 5: Request Status / Action -->
+                <div class="rw-req-subcard rw-req-action-col" style="justify-content: center;">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Mandate Status</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <span class="type-direct" style="background:#ecfdf5; color:#059669; font-weight:700; padding:5px 10px; font-size:11.5px; border-radius:6px; text-align:center;">
+                      <i class="fas fa-check-circle me-1"></i> Accepted &amp; Active
+                    </span>
+                    <button class="rw-btn rw-btn-primary rw-btn-sm" style="font-size:11px; padding:4px 10px;" onclick="navigateTo('candidate-submission')">
+                      <i class="fas fa-user-plus me-1"></i> Submit Candidate
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Activity Strip -->
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-calendar-alt text-muted me-1"></i>Accepted on: <strong>21 Nov 26, 02:40 PM IST</strong></span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-user-check text-success me-1"></i>Active Sourcing: 2 Candidates Submitted</span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-shield-alt text-primary me-1"></i>90-Day Ownership Lock</span>
+                </div>
+                <div class="rw-activity-right" style="display: flex; gap: 5px;">
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">PyTorch</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">LLMs</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">CUDA</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">Python</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Request Card 4 (Declined) -->
+            <div class="rw-req-card state-declined" id="rw-req-card-7550" data-category="declined">
+              <div class="rw-req-grid">
+                <!-- Subcard 1: Job Details -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Job Details</span>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      <span class="type-direct"><i class="fas fa-shield-alt"></i> Direct Client</span>
+                      <span class="rw-status-badge rw-status-closed" style="font-size: 10px; padding: 2px 6px;">Declined</span>
+                    </div>
+                  </div>
+                  <div class="rw-req-details-box">
+                    <div class="rw-req-logo" style="color: #ef4444;">C</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <span class="rw-req-title-link" style="color: var(--rw-text-secondary);">
+                        Senior Site Reliability Engineer (SRE)
+                      </span>
+                      <div class="rw-req-meta-line">
+                        <span style="font-weight: 600; color: #009ef7;">#JOB-7550</span>
+                        <span>&bull;</span>
+                        <span>Infrastructure Operations</span>
+                      </div>
+                      <div class="rw-req-meta-line" style="margin-top: 2px;">
+                        <span style="font-weight: 600; color: var(--rw-text-primary);">CyberScale Networks</span>
+                        <span>&bull;</span>
+                        <span><i class="fas fa-briefcase text-primary me-1"></i>Contract (6 Mos)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Subcard 2: Compensation & Experience -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Compensation &amp; Exp</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--rw-text-primary);">$110,000 - $125,000 <span style="font-size: 11px; font-weight: normal; color: var(--rw-text-muted);">/Annum</span></div>
+                    <div style="font-size: 11.5px; color: var(--rw-text-secondary);"><i class="far fa-clock text-muted me-1"></i>6 - 9 Yrs Experience</div>
+                    <div style="font-size: 11.5px; color: var(--rw-text-secondary);"><i class="fas fa-map-marker-alt text-muted me-1"></i>Austin, TX &bull; On-Site</div>
+                  </div>
+                </div>
+
+                <!-- Subcard 3: Hiring Manager / SPOC -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>Client SPOC</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: var(--rw-text-primary);">Rajesh Kulkarni</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">VP of Engineering Ops</div>
+                  </div>
+                </div>
+
+                <!-- Subcard 4: Positions & Terms -->
+                <div class="rw-req-subcard">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label"><i class="fa fa-file-contract me-1 text-muted"></i>Offered Fee</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--rw-text-primary);">1 Position</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Offered: <strong>8.00% CTC</strong> (Below threshold)</div>
+                  </div>
+                </div>
+
+                <!-- Subcard 5: Request Status / Action -->
+                <div class="rw-req-subcard rw-req-action-col" style="justify-content: center;">
+                  <div class="rw-req-subcard-header">
+                    <span class="rw-req-subcard-label">Mandate Status</span>
+                  </div>
+                  <span style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; font-weight:600; padding:5px 8px; font-size:11px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                    <i class="fas fa-times-circle"></i> Declined
+                  </span>
+                  <span style="font-size:10px; color:var(--rw-text-muted); margin-top:4px;">Fee rate below minimum threshold</span>
+                </div>
+              </div>
+
+              <!-- Bottom Activity Strip -->
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-calendar-alt text-muted me-1"></i>Declined on: <strong>18 Nov 26, 10:10 AM IST</strong></span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-info-circle text-muted me-1"></i>Closed &bull; Candidate representation not initiated</span>
+                </div>
+                <div class="rw-activity-right" style="display: flex; gap: 5px;">
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">Linux SRE</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">Ansible</span>
+                  <span class="rw-tag-pill" style="background: #f1f5f9; color: #475569;">Prometheus</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 3: JOB DETAILS & MANDATE SPECIFICATION
+             ================================================================== -->
+        <div id="view-job-details" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('jobs')">
+                <i class="fas fa-arrow-left"></i> Back to Mandates
+              </button>
+              <span class="rw-toolbar-title" style="font-size: 16px;">
+                Lead Backend Engineer (Go / Distributed Systems)
+              </span>
+              <span class="rw-tag-pill rw-tag-confidential">Mandate #MND-8091</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Mandate spec sheet downloaded');">
+                <i class="fas fa-file-pdf"></i> Download JD
+              </button>
+              <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('candidate-submission')">
+                <i class="fas fa-user-plus"></i> Submit Candidate to Role
+              </button>
+            </div>
+          </div>
+
+          <!-- 2-Column Detail View -->
+          <div style="display: grid; grid-template-columns: 2.2fr 1fr; gap: 20px;">
+            
+            <!-- Left Column: JD & Specs -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+              <div class="rw-card">
+                <div class="rw-card-header">
+                  <span class="rw-card-title"><i class="fas fa-file-alt" style="color: var(--rw-primary);"></i> Role Overview & Responsibilities</span>
+                </div>
+                <div class="rw-card-body" style="font-size: 13px; line-height: 1.7; color: var(--rw-text-secondary); display: flex; flex-direction: column; gap: 14px;">
+                  <p>Our client is a tier-1 fintech unicorn processing over \$2B in monthly gross transaction volume. They are seeking an exceptional Lead Backend Engineer to design, architect, and scale their real-time transaction processing engine.</p>
+                  
+                  <h4 style="font-size: 13px; color: var(--rw-text-primary); font-weight: 700;">Key Responsibilities:</h4>
+                  <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+                    <li>Architect, build, and maintain high-throughput, low-latency microservices using Go and gRPC.</li>
+                    <li>Design resilient event-driven architectures with Apache Kafka handling 50k+ events per second.</li>
+                    <li>Collaborate directly with Principal Architects to ensure strict data consistency and zero-loss financial transactions.</li>
+                    <li>Mentor a squad of 6 senior and mid-level software engineers.</li>
+                  </ul>
+
+                  <h4 style="font-size: 13px; color: var(--rw-text-primary); font-weight: 700;">Required Technical Stack:</h4>
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Go (Golang)</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Distributed Systems</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Apache Kafka</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">PostgreSQL / CockroachDB</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Docker & Kubernetes</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">gRPC / Protobuf</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Redis Caching</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Interview Stages -->
+              <div class="rw-card">
+                <div class="rw-card-header">
+                  <span class="rw-card-title"><i class="fas fa-route" style="color: var(--rw-primary);"></i> Candidate Interview Progression Steps</span>
+                </div>
+                <div class="rw-card-body">
+                  <div class="rw-stepper">
+                    <div class="rw-step-item completed">
+                      <div class="rw-step-circle"><i class="fas fa-check"></i></div>
+                      <span class="rw-step-label">Resume Screening</span>
+                    </div>
+                    <div class="rw-step-item active">
+                      <div class="rw-step-circle">2</div>
+                      <span class="rw-step-label">Live System Coding</span>
+                    </div>
+                    <div class="rw-step-item">
+                      <div class="rw-step-circle">3</div>
+                      <span class="rw-step-label">Architecture Design</span>
+                    </div>
+                    <div class="rw-step-item">
+                      <div class="rw-step-circle">4</div>
+                      <span class="rw-step-label">Leadership & Culture</span>
+                    </div>
+                    <div class="rw-step-item">
+                      <div class="rw-step-circle">5</div>
+                      <span class="rw-step-label">Offer & Joining</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Commercials & Representation Rules -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+              <div class="rw-card" style="border-top: 4px solid var(--rw-success);">
+                <div class="rw-card-header">
+                  <span class="rw-card-title"><i class="fas fa-hand-holding-usd" style="color: var(--rw-success);"></i> Commercial Terms</span>
+                </div>
+                <div class="rw-card-body" style="display: flex; flex-direction: column; gap: 14px;">
+                  <div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Placement Commission</div>
+                    <div style="font-size: 20px; font-weight: 700; color: var(--rw-success); font-variant-numeric: tabular-nums;">8.33% of Annual CTC</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Estimated Payout: ₹3,16,000 - ₹3,99,000</div>
+                  </div>
+                  <div style="border-top: 1px solid var(--rw-border); padding-top: 10px;">
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Probation Period</div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--rw-text-primary);">90 Days Candidate Guarantee</div>
+                  </div>
+                  <div style="border-top: 1px solid var(--rw-border); padding-top: 10px;">
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Attribution Lock Window</div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--rw-text-primary);">90 Days Exclusive Representation</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">No other agency can claim this candidate during lock.</div>
+                  </div>
+                  <button class="rw-btn rw-btn-primary" style="width: 100%; justify-content: center;" onclick="navigateTo('candidate-submission')">
+                    <i class="fas fa-user-plus"></i> Submit Resume Now
+                  </button>
+                </div>
+              </div>
+
+              <!-- Confidential Anonymity Notice -->
+              <div class="rw-card" style="background: var(--rw-purple-light); border-color: var(--rw-purple-border);">
+                <div class="rw-card-header" style="background: transparent; border-bottom-color: var(--rw-purple-border);">
+                  <span class="rw-card-title" style="color: var(--rw-purple-text);"><i class="fas fa-user-secret"></i> Confidential Client NDA</span>
+                </div>
+                <div class="rw-card-body" style="font-size: 12px; color: var(--rw-purple-text); line-height: 1.6;">
+                  This mandate is released under strict confidential representation. The client company identity is released to the candidate only upon clearing Round 1 screening. Disclosing company details publicly is prohibited.
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 4: CANDIDATE SUBMISSION (CLIENT-FIRST PARSER SIMULATION)
+             ================================================================== -->
+        <div id="view-candidate-submission" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-user-plus" style="color: var(--rw-primary);"></i> Candidate Intake & Representation
+              </span>
+              <span class="rw-toolbar-badge">JeroIdentityEngine (Browser WASM)</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('jobs')">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </div>
+          </div>
+
+          <div style="max-width: 900px; margin: 0 auto; width: 100%;">
+            <form onsubmit="submitCandidateForm(event)">
+              <div class="rw-card">
+                <div class="rw-card-header">
+                  <span class="rw-card-title"><i class="fas fa-file-invoice" style="color: var(--rw-primary);"></i> Step 1: Target Mandate & Resume Upload</span>
+                </div>
+                <div class="rw-card-body" style="display: flex; flex-direction: column; gap: 16px;">
+                  
+                  <div class="rw-form-group">
+                    <label class="rw-form-label">Selected Job Mandate</label>
+                    <select class="rw-form-select">
+                      <option selected>Lead Backend Engineer (Go / Distributed Systems) &bull; 8.33% CTC &bull; Confidential Fintech</option>
+                      <option>Senior Full Stack Engineer (Laravel + Vue.js) &bull; 8.33% CTC &bull; SaaS Enterprise</option>
+                      <option>Principal Staff AI/ML Infrastructure Architect &bull; 10% CTC &bull; AI Research Lab</option>
+                      <option>Senior Product Manager — Growth & Checkout &bull; 8.33% CTC &bull; E-Commerce Giant</option>
+                    </select>
+                  </div>
+
+                  <!-- Resume Drag and Drop Box with Simulated Client-First Parser -->
+                  <div class="rw-upload-dropzone" onclick="simulateResumeUpload()">
+                    <i class="fas fa-cloud-upload-alt rw-upload-icon"></i>
+                    <div id="rw-upload-status">
+                      <div style="font-size: 14px; font-weight: 600; color: var(--rw-text-primary);">Click or Drag & Drop Candidate Resume (PDF / DOCX)</div>
+                      <div style="font-size: 11px; color: var(--rw-text-muted);">Parsed 100% in Browser RAM using WASM &bull; Zero Server Read Strain &bull; Sub-50ms</div>
+                    </div>
+                  </div>
+
+                  <!-- Auto-Extracted Preview Container (Rule 23 Parity) -->
+                  <div id="rw-parsed-fields-container" style="display: none; border-top: 1px solid var(--rw-border); padding-top: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                      <span style="font-size: 13px; font-weight: 700; color: var(--rw-text-primary);">
+                        <i class="fas fa-magic" style="color: var(--rw-primary);"></i> Auto-Extracted ATS Profile
+                      </span>
+                      <span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check-circle"></i> Deduplication Check: Unique Candidate</span>
+                    </div>
+
+                    <div class="rw-form-row" style="margin-bottom: 12px;">
+                      <div class="rw-form-group">
+                        <label class="rw-form-label">Candidate Full Name</label>
+                        <input id="sub-candidate-name" type="text" class="rw-form-input" required>
+                      </div>
+                      <div class="rw-form-group">
+                        <label class="rw-form-label">Candidate Email</label>
+                        <input id="sub-candidate-email" type="email" class="rw-form-input" required>
+                      </div>
+                    </div>
+
+                    <div class="rw-form-row" style="margin-bottom: 12px;">
+                      <div class="rw-form-group">
+                        <label class="rw-form-label">Mobile Number</label>
+                        <input id="sub-candidate-phone" type="tel" class="rw-form-input" required>
+                      </div>
+                      <div class="rw-form-group">
+                        <label class="rw-form-label">Total Experience</label>
+                        <input id="sub-candidate-exp" type="text" class="rw-form-input">
+                      </div>
+                    </div>
+
+                    <div class="rw-form-row" style="margin-bottom: 12px;">
+                      <div class="rw-form-group">
+                        <label class="rw-form-label">Current Organization</label>
+                        <input id="sub-candidate-company" type="text" class="rw-form-input">
+                      </div>
+                      <div class="rw-form-group">
+                        <label class="rw-form-label">Notice Period</label>
+                        <input id="sub-candidate-np" type="text" class="rw-form-input">
+                      </div>
+                    </div>
+
+                    <div class="rw-form-row" style="margin-bottom: 14px;">
+                      <div class="rw-form-group">
+                        <label class="rw-form-label">Current CTC (Per Annum)</label>
+                        <input id="sub-candidate-ctc" type="text" class="rw-form-input">
+                      </div>
+                      <div class="rw-form-group">
+                        <label class="rw-form-label">Expected CTC (Per Annum)</label>
+                        <input id="sub-candidate-ectc" type="text" class="rw-form-input">
+                      </div>
+                    </div>
+
+                    <div class="rw-form-group" style="margin-bottom: 16px;">
+                      <label class="rw-form-label">Recruiter Endorsement & Screening Notes</label>
+                      <textarea class="rw-form-textarea" rows="3" placeholder="Highlight why this candidate matches the Go / Distributed Systems architecture requirements...">Candidate has 8.5 years of strong backend experience at CRED and Swiggy. Architected low-latency checkout pipelines. Immediate availability for interviews, notice period negotiable to 15 days.</textarea>
+                    </div>
+
+                    <div style="background: var(--rw-bg-header); border: 1px solid var(--rw-border); border-radius: var(--rw-radius-md); padding: 12px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: var(--rw-text-secondary);">
+                      <input type="checkbox" required checked style="accent-color: var(--rw-primary); margin-top: 2px;">
+                      <div>
+                        <strong>Representation Warrant:</strong> I confirm this candidate has granted explicit consent to be represented for this specific mandate. I understand that duplicate submissions within 90 days are subject to automatic platform disqualification.
+                      </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                      <button type="button" class="rw-btn rw-btn-secondary" onclick="navigateTo('jobs')">Cancel</button>
+                      <button type="submit" class="rw-btn rw-btn-success">
+                        <i class="fas fa-check-circle"></i> Confirm & Lock 90-Day Ownership
+                      </button>
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 5: CANDIDATES (MY TALENT BANK)
+             ================================================================== -->
+        <div id="view-candidates" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-users" style="color: var(--rw-primary);"></i> My Candidate Talent Bank
+              </span>
+              <span class="rw-toolbar-badge">24 Profiles</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <div class="rw-search-box">
+                <i class="fas fa-search rw-search-icon"></i>
+                <input type="text" class="rw-search-input" data-target-list="rw-candidates-table" placeholder="Search candidate, skill, company...">
+                <button class="rw-search-clear"><i class="fas fa-times"></i></button>
+              </div>
+              <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('candidate-submission')">
+                <i class="fas fa-user-plus"></i> Add Candidate
+              </button>
+            </div>
+          </div>
+
+          <!-- Tier 2: Sub-Tabs Card -->
+          <div class="rw-subtabs-card" data-target-container="rw-candidates-table">
+            <button class="rw-tab-btn active" data-filter="all">All Talent <span class="rw-tab-badge">24</span></button>
+            <button class="rw-tab-btn" data-filter="active">Actively Interviewing <span class="rw-tab-badge">11</span></button>
+            <button class="rw-tab-btn" data-filter="immediate">Immediate Joiners <span class="rw-tab-badge">7</span></button>
+            <button class="rw-tab-btn" data-filter="placed">Placed Alumni <span class="rw-tab-badge">4</span></button>
+          </div>
+
+          <!-- Data Table with Anchored Header -->
+          <div class="rw-table-container">
+            <table id="rw-candidates-table" class="rw-table">
+              <thead>
+                <tr>
+                  <th>Candidate Name</th>
+                  <th>Current Role & Organization</th>
+                  <th>Total Experience</th>
+                  <th>Key Skill Vectors</th>
+                  <th>Notice Period</th>
+                  <th>Ownership Lock Status</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-category="active immediate">
+                  <td>
+                    <div style="font-weight: 600; color: var(--rw-text-primary);">Vikram Aditya</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">vikram.aditya.tech@gmail.com</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 500;">Lead Backend Engineer</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">CRED (Dreamplug Technologies)</div>
+                  </td>
+                  <td>8.5 Years</td>
+                  <td>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Go</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Kafka</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Postgres</span>
+                  </td>
+                  <td><span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);">15 Days</span></td>
+                  <td><span class="rw-tag-pill rw-tag-commission">Locked (72 Days Left)</span></td>
+                  <td style="text-align: right;">
+                    <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Profile drawer opened for Vikram Aditya');">Profile</button>
+                  </td>
+                </tr>
+
+                <tr data-category="active">
+                  <td>
+                    <div style="font-weight: 600; color: var(--rw-text-primary);">Ananya Sharma</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">ananya.s.design@gmail.com</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 500;">Senior Product Designer</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Zomato India</div>
+                  </td>
+                  <td>6.0 Years</td>
+                  <td>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Figma</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Design Systems</span>
+                  </td>
+                  <td>30 Days</td>
+                  <td><span class="rw-tag-pill rw-tag-commission">Locked (58 Days Left)</span></td>
+                  <td style="text-align: right;">
+                    <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Profile drawer opened for Ananya Sharma');">Profile</button>
+                  </td>
+                </tr>
+
+                <tr data-category="immediate">
+                  <td>
+                    <div style="font-weight: 600; color: var(--rw-text-primary);">Rohan Mehta</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">rohan.mehta.fullstack@outlook.com</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 500;">Full Stack Developer</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Freshworks</div>
+                  </td>
+                  <td>5.2 Years</td>
+                  <td>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Laravel</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Vue.js</span>
+                  </td>
+                  <td><span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);">Immediate</span></td>
+                  <td><span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Ready to Pitch</span></td>
+                  <td style="text-align: right;">
+                    <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('candidate-submission');">Map to Job</button>
+                  </td>
+                </tr>
+
+                <tr data-category="placed">
+                  <td>
+                    <div style="font-weight: 600; color: var(--rw-text-primary);">Pooja Kulkarni</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">pooja.kulkarni@gmail.com</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 500;">Staff Data Engineer</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Placed at FinTech Unicorn</div>
+                  </td>
+                  <td>9.0 Years</td>
+                  <td>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Spark</span>
+                    <span class="rw-tag-pill" style="background: var(--rw-bg-subtle);">Snowflake</span>
+                  </td>
+                  <td>Joined (12 Oct)</td>
+                  <td><span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check"></i> Placed &bull; Probation Active</span></td>
+                  <td style="text-align: right;">
+                    <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('earnings')">Payout</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 6: APPLICATIONS & PIPELINE TRACKER
+             ================================================================== -->
+        <div id="view-applications" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-tasks" style="color: var(--rw-primary);"></i> Candidate Pipeline & Submissions
+              </span>
+              <span class="rw-toolbar-badge">38 Active Submissions</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <div class="rw-search-box">
+                <i class="fas fa-search rw-search-icon"></i>
+                <input type="text" class="rw-search-input" data-target-list="rw-applications-stream" placeholder="Search candidate or mandate...">
+                <button class="rw-search-clear"><i class="fas fa-times"></i></button>
+              </div>
+              <button class="rw-btn rw-btn-secondary rw-btn-sm">
+                <i class="fas fa-download"></i> Export CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Tier 2: Pipeline Sub-Tabs -->
+          <div class="rw-subtabs-card" data-target-container="rw-applications-stream">
+            <button class="rw-tab-btn active" data-filter="all">All Submissions <span class="rw-tab-badge">38</span></button>
+            <button class="rw-tab-btn" data-filter="review">Under Review <span class="rw-tab-badge">12</span></button>
+            <button class="rw-tab-btn" data-filter="interview">In Interview <span class="rw-tab-badge">11</span></button>
+            <button class="rw-tab-btn" data-filter="offered">Offered <span class="rw-tab-badge">3</span></button>
+            <button class="rw-tab-btn" data-filter="joined">Joined <span class="rw-tab-badge">4</span></button>
+          </div>
+
+          <!-- Tier 3: Primary Submissions Stream -->
+          <div id="rw-applications-stream" class="rw-stream-grid">
+            
+            <!-- App 1 -->
+            <div class="rw-entity-card status-active" data-category="interview">
+              <div class="rw-entity-card-content">
+                <div class="rw-subcard-col">
+                  <div class="rw-subcard-title">
+                    Vikram Aditya
+                    <span class="rw-tag-pill rw-tag-stage">Round 2: System Architecture</span>
+                  </div>
+                  <div class="rw-subcard-meta">
+                    <span class="rw-subcard-meta-item"><i class="fas fa-briefcase"></i> Lead Backend Engineer</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-shield-alt"></i> Confidential Fintech</span>
+                    <span class="rw-subcard-meta-item"><i class="far fa-calendar"></i> Submitted: 18 Nov 2026</span>
+                  </div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Current Sanitized Stage</span>
+                  <div style="font-size: 12px; font-weight: 600; color: var(--rw-primary);">
+                    <i class="fas fa-check-circle text-emerald-500"></i> Technical Round 1 Cleared
+                  </div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Fee Potential</span>
+                  <span class="rw-tag-pill rw-tag-commission">Est. ₹3,50,000</span>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('interview-tracker')">View Round</button>
+                </div>
+              </div>
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-bell"></i> Interview scheduled for Today at 04:30 PM IST</span>
+                  <span>&bull;</span>
+                  <span><i class="fas fa-shield-alt"></i> Protected Ownership: 72 Days Left</span>
+                </div>
+                <div class="rw-activity-right">
+                  <span style="color: var(--rw-success); font-weight: 600;">Active Progress</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- App 2 -->
+            <div class="rw-entity-card status-review" data-category="review">
+              <div class="rw-entity-card-content">
+                <div class="rw-subcard-col">
+                  <div class="rw-subcard-title">
+                    Siddharth Nair
+                    <span class="rw-tag-pill" style="background: var(--rw-warning-light); color: var(--rw-warning-text);">Hiring Manager Review</span>
+                  </div>
+                  <div class="rw-subcard-meta">
+                    <span class="rw-subcard-meta-item"><i class="fas fa-briefcase"></i> Senior Full Stack Engineer</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-shield-alt"></i> SaaS Enterprise</span>
+                    <span class="rw-subcard-meta-item"><i class="far fa-calendar"></i> Submitted: 23 Nov 2026</span>
+                  </div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Current Sanitized Stage</span>
+                  <div style="font-size: 12px; font-weight: 600; color: var(--rw-warning);">
+                    Under Initial Profile Assessment
+                  </div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Fee Potential</span>
+                  <span class="rw-tag-pill rw-tag-commission">Est. ₹2,25,000</span>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Candidate notes: Profile submitted to engineering head');">Notes</button>
+                </div>
+              </div>
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="far fa-clock"></i> SLA: Feedback expected within 24 hours</span>
+                </div>
+                <div class="rw-activity-right">
+                  <span style="color: var(--rw-text-muted);">Review Pending</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- App 3 -->
+            <div class="rw-entity-card status-active" data-category="offered">
+              <div class="rw-entity-card-content">
+                <div class="rw-subcard-col">
+                  <div class="rw-subcard-title">
+                    Neha Reddy
+                    <span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-certificate"></i> Offer Letter Released</span>
+                  </div>
+                  <div class="rw-subcard-meta">
+                    <span class="rw-subcard-meta-item"><i class="fas fa-briefcase"></i> Senior Product Manager</span>
+                    <span class="rw-subcard-meta-item"><i class="fas fa-shield-alt"></i> E-Commerce Giant</span>
+                    <span class="rw-subcard-meta-item"><i class="far fa-calendar"></i> Offered: 24 Nov 2026</span>
+                  </div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Offer Value</span>
+                  <div style="font-size: 13px; font-weight: 700; color: var(--rw-text-primary);">₹34,00,000 CTC Fixed</div>
+                </div>
+                <div class="rw-subcard-col">
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">Commission Locked</span>
+                  <span class="rw-tag-pill rw-tag-commission">₹2,83,220 Payout</span>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button class="rw-btn rw-btn-success rw-btn-sm" onclick="navigateTo('earnings')">View Payout</button>
+                </div>
+              </div>
+              <div class="rw-activity-strip">
+                <div class="rw-activity-left">
+                  <span><i class="fas fa-file-signature"></i> Offer accepted &bull; Joining scheduled for 15 Dec 2026</span>
+                </div>
+                <div class="rw-activity-right">
+                  <span style="color: var(--rw-success); font-weight: 600;">Joining Confirmed</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 7: INTERVIEW TRACKER
+             ================================================================== -->
+        <div id="view-interview-tracker" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-calendar-alt" style="color: var(--rw-primary);"></i> Recruiter Interview Tracker
+              </span>
+              <span class="rw-toolbar-badge" style="background: var(--rw-success-light); color: var(--rw-success-text);">2 Interviews Scheduled Today</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Calendar synced with Google Calendar');">
+                <i class="fas fa-calendar-check"></i> Sync Calendar
+              </button>
+            </div>
+          </div>
+
+          <!-- Schedule Grid -->
+          <div class="rw-card">
+            <div class="rw-card-header">
+              <span class="rw-card-title"><i class="fas fa-video" style="color: var(--rw-primary);"></i> Today's Scheduled Interview Sessions (IST)</span>
+            </div>
+            <div class="rw-card-body" style="padding: 16px;">
+              <div class="rw-stream-grid">
+                
+                <!-- Interview 1 -->
+                <div class="rw-entity-card status-active">
+                  <div class="rw-entity-card-content">
+                    <div class="rw-subcard-col">
+                      <div class="rw-subcard-title">
+                        Vikram Aditya &bull; Round 2 (System Architecture)
+                      </div>
+                      <div class="rw-subcard-meta">
+                        <span class="rw-subcard-meta-item"><i class="fas fa-clock"></i> Today, 04:30 PM - 05:30 PM IST</span>
+                        <span class="rw-subcard-meta-item"><i class="fas fa-building"></i> Confidential Fintech</span>
+                        <span class="rw-subcard-meta-item"><i class="fas fa-user-tie"></i> Interviewer: VP Engineering</span>
+                      </div>
+                    </div>
+                    <div class="rw-subcard-col">
+                      <span style="font-size: 11px; color: var(--rw-text-muted);">Preparation Briefing</span>
+                      <span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check"></i> Candidate Briefed</span>
+                    </div>
+                    <div class="rw-subcard-col">
+                      <span style="font-size: 11px; color: var(--rw-text-muted);">Meeting Room</span>
+                      <span style="font-size: 12px; font-weight: 500;"><i class="fab fa-google text-primary"></i> Google Meet</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                      <a href="https://meet.google.com" target="_blank" class="rw-btn rw-btn-primary rw-btn-sm">
+                        <i class="fas fa-video"></i> Join Link
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Interview 2 -->
+                <div class="rw-entity-card status-active">
+                  <div class="rw-entity-card-content">
+                    <div class="rw-subcard-col">
+                      <div class="rw-subcard-title">
+                        Ananya Sharma &bull; Culture & Design Leadership
+                      </div>
+                      <div class="rw-subcard-meta">
+                        <span class="rw-subcard-meta-item"><i class="fas fa-clock"></i> Today, 06:00 PM - 06:45 PM IST</span>
+                        <span class="rw-subcard-meta-item"><i class="fas fa-building"></i> Zomato India Mandate</span>
+                        <span class="rw-subcard-meta-item"><i class="fas fa-user-tie"></i> Interviewer: Head of Product Design</span>
+                      </div>
+                    </div>
+                    <div class="rw-subcard-col">
+                      <span style="font-size: 11px; color: var(--rw-text-muted);">Preparation Briefing</span>
+                      <span class="rw-tag-pill" style="background: var(--rw-warning-light); color: var(--rw-warning-text);"><i class="fas fa-phone"></i> Pending Call</span>
+                    </div>
+                    <div class="rw-subcard-col">
+                      <span style="font-size: 11px; color: var(--rw-text-muted);">Meeting Room</span>
+                      <span style="font-size: 12px; font-weight: 500;"><i class="fas fa-video text-primary"></i> Zoom Meeting</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                      <a href="https://zoom.us" target="_blank" class="rw-btn rw-btn-primary rw-btn-sm">
+                        <i class="fas fa-video"></i> Join Link
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 8: EARNINGS & PLACEMENT ANALYTICS
+             ================================================================== -->
+        <div id="view-earnings" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-wallet" style="color: var(--rw-primary);"></i> Recruiter Commission Ledger
+              </span>
+              <span class="rw-toolbar-badge">Fiscal Year 2026-27</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Tax deduction summary generated');">
+                <i class="fas fa-file-invoice"></i> TDS Summary
+              </button>
+              <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('payments')">
+                <i class="fas fa-hand-holding-usd"></i> View Bank Settlements
+              </button>
+            </div>
+          </div>
+
+          <!-- Earnings Summary KPI -->
+          <div class="rw-kpi-grid">
+            <div class="rw-kpi-card kpi-success">
+              <div class="rw-kpi-header">
+                <span class="rw-kpi-label">Total Realized Payouts</span>
+                <div class="rw-kpi-icon"><i class="fas fa-check-double"></i></div>
+              </div>
+              <div class="rw-kpi-number">₹8,50,000</div>
+              <div class="rw-kpi-footer"><span>Settled into Bank Account</span></div>
+            </div>
+
+            <div class="rw-kpi-card kpi-warning">
+              <div class="rw-kpi-header">
+                <span class="rw-kpi-label">Under 90-Day Probation</span>
+                <div class="rw-kpi-icon"><i class="fas fa-hourglass-half"></i></div>
+              </div>
+              <div class="rw-kpi-number">₹3,25,000</div>
+              <div class="rw-kpi-footer"><span>Clears on 12 Jan 2027</span></div>
+            </div>
+
+            <div class="rw-kpi-card kpi-purple">
+              <div class="rw-kpi-header">
+                <span class="rw-kpi-label">Projected From Offers</span>
+                <div class="rw-kpi-icon"><i class="fas fa-calculator"></i></div>
+              </div>
+              <div class="rw-kpi-number">₹2,83,220</div>
+              <div class="rw-kpi-footer"><span>Neha Reddy (Joined Dec)</span></div>
+            </div>
+          </div>
+
+          <!-- Attribution Breakdown Table -->
+          <div class="rw-card">
+            <div class="rw-card-header">
+              <span class="rw-card-title"><i class="fas fa-list-alt" style="color: var(--rw-primary);"></i> Candidate Placement & Fee Attribution Ledger</span>
+            </div>
+            <div class="rw-table-container">
+              <table class="rw-table">
+                <thead>
+                  <tr>
+                    <th>Candidate</th>
+                    <th>Mandate Title</th>
+                    <th>Joined Date</th>
+                    <th>Candidate CTC</th>
+                    <th>Fee %</th>
+                    <th>Gross Commission</th>
+                    <th>Guarantee Release Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Pooja Kulkarni</strong></td>
+                    <td>Staff Data Engineer</td>
+                    <td>12 Oct 2026</td>
+                    <td>₹39,00,000</td>
+                    <td>8.33%</td>
+                    <td style="font-weight: 700; color: var(--rw-success);">₹3,24,870</td>
+                    <td>10 Jan 2027</td>
+                    <td><span class="rw-tag-pill" style="background: var(--rw-warning-light); color: var(--rw-warning-text);"><i class="fas fa-shield-alt"></i> In 90-Day Escrow</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Amitesh Roy</strong></td>
+                    <td>Lead DevOps Engineer</td>
+                    <td>15 Aug 2026</td>
+                    <td>₹32,00,000</td>
+                    <td>8.33%</td>
+                    <td style="font-weight: 700; color: var(--rw-success);">₹2,66,560</td>
+                    <td>14 Nov 2026</td>
+                    <td><span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check-circle"></i> Paid Out</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Deepak Verma</strong></td>
+                    <td>Senior iOS Developer</td>
+                    <td>01 Jul 2026</td>
+                    <td>₹28,00,000</td>
+                    <td>8.33%</td>
+                    <td style="font-weight: 700; color: var(--rw-success);">₹2,33,240</td>
+                    <td>30 Sep 2026</td>
+                    <td><span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check-circle"></i> Paid Out</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 9: PAYMENTS & INVOICES
+             ================================================================== -->
+        <div id="view-payments" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-file-invoice-dollar" style="color: var(--rw-primary);"></i> Invoices & Bank Settlements
+              </span>
+              <span class="rw-toolbar-badge">Direct Bank Transfer</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="openModal('payoutDetailsModal')">
+                <i class="fas fa-university"></i> Update Bank Account
+              </button>
+            </div>
+          </div>
+
+          <!-- Bank Account Info Banner -->
+          <div style="background: #ffffff; border: 1px solid var(--rw-border); border-radius: var(--rw-radius-lg); padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--rw-shadow-sm); flex-wrap: wrap; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="width: 44px; height: 44px; border-radius: var(--rw-radius-md); background: var(--rw-primary-light); color: var(--rw-primary); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                <i class="fas fa-university"></i>
+              </div>
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--rw-text-primary);">HDFC Bank &bull; A/C Ending in **4921</div>
+                <div style="font-size: 11px; color: var(--rw-text-muted);">IFSC: HDFC0001824 &bull; Account Holder: Sarah Jenkins &bull; PAN: ABCPJ4921K</div>
+              </div>
+            </div>
+            <span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text); padding: 4px 10px;">
+              <i class="fas fa-check-circle"></i> Verified & Active for Automated NEFT/RTGS
+            </span>
+          </div>
+
+          <!-- Invoices Table -->
+          <div class="rw-card">
+            <div class="rw-card-header">
+              <span class="rw-card-title"><i class="fas fa-receipt" style="color: var(--rw-primary);"></i> Settlement History</span>
+            </div>
+            <div class="rw-table-container">
+              <table class="rw-table">
+                <thead>
+                  <tr>
+                    <th>Invoice Number</th>
+                    <th>Placement Mandate</th>
+                    <th>Settlement Date</th>
+                    <th>Gross Amount</th>
+                    <th>TDS (10%)</th>
+                    <th>Net Dispatched</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Download</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>INV-2026-0941</strong></td>
+                    <td>Lead DevOps Engineer (Amitesh Roy)</td>
+                    <td>16 Nov 2026</td>
+                    <td>₹2,66,560</td>
+                    <td>₹26,656</td>
+                    <td style="font-weight: 700; color: var(--rw-text-primary);">₹2,39,904</td>
+                    <td><span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check-circle"></i> Settled via NEFT</span></td>
+                    <td style="text-align: right;">
+                      <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Downloading INV-2026-0941.pdf');"><i class="fas fa-download"></i></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>INV-2026-0812</strong></td>
+                    <td>Senior iOS Developer (Deepak Verma)</td>
+                    <td>04 Oct 2026</td>
+                    <td>₹2,33,240</td>
+                    <td>₹23,324</td>
+                    <td style="font-weight: 700; color: var(--rw-text-primary);">₹2,09,916</td>
+                    <td><span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check-circle"></i> Settled via NEFT</span></td>
+                    <td style="text-align: right;">
+                      <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('Downloading INV-2026-0812.pdf');"><i class="fas fa-download"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 10: NOTIFICATIONS & ALERTS
+             ================================================================== -->
+        <div id="view-notifications" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-bell" style="color: var(--rw-primary);"></i> Notification & Activity Center
+              </span>
+              <span class="rw-toolbar-badge">5 Unread Alerts</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="showToast('All notifications marked as read');">
+                <i class="fas fa-check-double"></i> Mark All as Read
+              </button>
+            </div>
+          </div>
+
+          <!-- Notifications List -->
+          <div class="rw-card">
+            <div class="rw-card-body" style="padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+              
+              <div style="padding: 12px 16px; border-radius: var(--rw-radius-md); background: var(--rw-primary-light); display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--rw-primary-border);">
+                <i class="fas fa-calendar-alt text-primary" style="font-size: 16px; margin-top: 2px;"></i>
+                <div style="flex: 1;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--rw-text-primary);">Interview Scheduled: Vikram Aditya</div>
+                  <div style="font-size: 12px; color: var(--rw-text-secondary);">Round 2 (System Architecture) scheduled for Today at 04:30 PM IST with VP Engineering.</div>
+                  <div style="font-size: 11px; color: var(--rw-text-muted); margin-top: 4px;">2 hours ago &bull; Mandate: Lead Backend Engineer</div>
+                </div>
+                <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="navigateTo('interview-tracker')">View</button>
+              </div>
+
+              <div style="padding: 12px 16px; border-radius: var(--rw-radius-md); background: #ffffff; display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--rw-border);">
+                <i class="fas fa-award text-amber-500" style="font-size: 16px; margin-top: 2px;"></i>
+                <div style="flex: 1;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--rw-text-primary);">Offer Letter Released: Neha Reddy</div>
+                  <div style="font-size: 12px; color: var(--rw-text-secondary);">Candidate received offer for Senior Product Manager at ₹34,00,000 CTC. Commission locked.</div>
+                  <div style="font-size: 11px; color: var(--rw-text-muted); margin-top: 4px;">Yesterday &bull; Mandate: E-Commerce Growth</div>
+                </div>
+                <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('applications')">Review</button>
+              </div>
+
+              <div style="padding: 12px 16px; border-radius: var(--rw-radius-md); background: #ffffff; display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--rw-border);">
+                <i class="fas fa-briefcase text-primary" style="font-size: 16px; margin-top: 2px;"></i>
+                <div style="flex: 1;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--rw-text-primary);">New Exclusive Mandate Assigned</div>
+                  <div style="font-size: 12px; color: var(--rw-text-secondary);">You have been assigned: Senior Full Stack Engineer (Laravel + Vue.js) with 8.33% fee.</div>
+                  <div style="font-size: 11px; color: var(--rw-text-muted); margin-top: 4px;">2 days ago &bull; Direct Mandate</div>
+                </div>
+                <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="navigateTo('job-details')">Details</button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 11: RECRUITER PROFILE & KYC
+             ================================================================== -->
+        <div id="view-profile" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-id-badge" style="color: var(--rw-primary);"></i> Recruiter Profile & Verification
+              </span>
+              <span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check-circle"></i> Verified Talent Partner</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="openModal('editProfileModal')">
+                <i class="fas fa-user-edit"></i> Edit Profile
+              </button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+            
+            <!-- Left: Identity & Badges -->
+            <div class="rw-card" style="text-align: center; padding: 26px 20px;">
+              <div style="width: 80px; height: 80px; border-radius: 50%; background: #bfdbfe; color: #1e40af; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; border: 3px solid #ffffff; box-shadow: var(--rw-shadow-md);">
+                SJ
+              </div>
+              <h3 style="font-size: 17px; font-weight: 700; color: var(--rw-text-primary);">Sarah Jenkins</h3>
+              <div style="font-size: 12px; color: var(--rw-text-muted); margin-bottom: 12px;">Senior Technical Recruiter &bull; FinTech Specialist</div>
+              
+              <div style="display: flex; justify-content: center; gap: 6px; margin-bottom: 20px;">
+                <span class="rw-tag-pill rw-tag-stage">Tier-1 Verified</span>
+                <span class="rw-tag-pill rw-tag-commission">Top 5% Recruiter</span>
+              </div>
+
+              <div style="border-top: 1px solid var(--rw-border); padding-top: 14px; text-align: left; font-size: 12px; display: flex; flex-direction: column; gap: 10px;">
+                <div><i class="fas fa-envelope" style="color: var(--rw-text-light); width: 20px;"></i> sarah.jenkins.recruiter@jero.works</div>
+                <div><i class="fas fa-phone" style="color: var(--rw-text-light); width: 20px;"></i> +91 98765 43210</div>
+                <div><i class="fas fa-map-marker-alt" style="color: var(--rw-text-light); width: 20px;"></i> Bengaluru, India</div>
+                <div><i class="fas fa-clock" style="color: var(--rw-text-light); width: 20px;"></i> Asia/Kolkata (IST)</div>
+              </div>
+            </div>
+
+            <!-- Right: Performance & Sourcing Portfolio -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+              <div class="rw-card">
+                <div class="rw-card-header">
+                  <span class="rw-card-title"><i class="fas fa-medal" style="color: var(--rw-primary);"></i> Verified Recruiter Metrics</span>
+                </div>
+                <div class="rw-card-body" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center;">
+                  <div style="background: var(--rw-bg-subtle); padding: 14px; border-radius: var(--rw-radius-md);">
+                    <div style="font-size: 20px; font-weight: 700; color: var(--rw-text-primary);">98.4%</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Interview Attendance Rate</div>
+                  </div>
+                  <div style="background: var(--rw-bg-subtle); padding: 14px; border-radius: var(--rw-radius-md);">
+                    <div style="font-size: 20px; font-weight: 700; color: var(--rw-text-primary);">4.9 / 5.0</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Hiring Manager Rating</div>
+                  </div>
+                  <div style="background: var(--rw-bg-subtle); padding: 14px; border-radius: var(--rw-radius-md);">
+                    <div style="font-size: 20px; font-weight: 700; color: var(--rw-text-primary);">19 Days</div>
+                    <div style="font-size: 11px; color: var(--rw-text-muted);">Average Time-to-Offer</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- KYC & Compliance Card -->
+              <div class="rw-card">
+                <div class="rw-card-header">
+                  <span class="rw-card-title"><i class="fas fa-shield-alt" style="color: var(--rw-success);"></i> KYC & Regulatory Documents</span>
+                </div>
+                <div class="rw-card-body" style="font-size: 12px; display: flex; flex-direction: column; gap: 10px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--rw-bg-page); border-radius: var(--rw-radius-sm);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-id-card text-emerald-500"></i>
+                      <span>Government Identification (Aadhaar / Passport)</span>
+                    </div>
+                    <span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check"></i> Verified</span>
+                  </div>
+
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--rw-bg-page); border-radius: var(--rw-radius-sm);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-file-invoice text-emerald-500"></i>
+                      <span>Taxpayer Identification (PAN Card Verified)</span>
+                    </div>
+                    <span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);"><i class="fas fa-check"></i> Verified</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 12: SUPPORT & HELP DESK
+             ================================================================== -->
+        <div id="view-support" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-headset" style="color: var(--rw-primary);"></i> Help Desk & Recruiter Support
+              </span>
+              <span class="rw-toolbar-badge">SLA: 4 Hours Response</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="openModal('supportTicketModal')">
+                <i class="fas fa-plus"></i> Raise a Support Ticket
+              </button>
+            </div>
+          </div>
+
+          <!-- FAQ & Help Accordion -->
+          <div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 20px;">
+            <div class="rw-card">
+              <div class="rw-card-header">
+                <span class="rw-card-title"><i class="fas fa-question-circle" style="color: var(--rw-primary);"></i> Frequently Asked Questions</span>
+              </div>
+              <div class="rw-card-body" style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="border-bottom: 1px solid var(--rw-border); padding-bottom: 12px;">
+                  <div style="font-weight: 600; font-size: 13px; color: var(--rw-text-primary); margin-bottom: 4px;">How does the 90-Day Candidate Ownership Lock work?</div>
+                  <div style="font-size: 12px; color: var(--rw-text-secondary); line-height: 1.6;">When you submit a candidate to an active mandate, an exclusive 90-day ownership lock is granted. No other recruiter can claim attribution or submit that candidate to the same company during this period.</div>
+                </div>
+                <div style="border-bottom: 1px solid var(--rw-border); padding-bottom: 12px;">
+                  <div style="font-weight: 600; font-size: 13px; color: var(--rw-text-primary); margin-bottom: 4px;">When are placement commission payouts released?</div>
+                  <div style="font-size: 12px; color: var(--rw-text-secondary); line-height: 1.6;">Commission is cleared once the candidate successfully joins and completes the mandatory 90-day probation guarantee period agreed upon with the client.</div>
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 13px; color: var(--rw-text-primary); margin-bottom: 4px;">What happens if the client already has my candidate in their database?</div>
+                  <div style="font-size: 12px; color: var(--rw-text-secondary); line-height: 1.6;">If the candidate was inactive or dormant for over 180 days, representation credit belongs to you for the new mandate. If actively engaged within 90 days, the submission is politely blocked.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Tickets -->
+            <div class="rw-card">
+              <div class="rw-card-header">
+                <span class="rw-card-title"><i class="fas fa-ticket-alt" style="color: var(--rw-primary);"></i> Your Support Inquiries</span>
+              </div>
+              <div class="rw-card-body" style="font-size: 12px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="padding: 10px; background: var(--rw-bg-page); border-radius: var(--rw-radius-md); border: 1px solid var(--rw-border);">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <strong>#TICK-8021</strong>
+                    <span class="rw-tag-pill" style="background: var(--rw-success-light); color: var(--rw-success-text);">Resolved</span>
+                  </div>
+                  <div style="color: var(--rw-text-secondary);">Query regarding bank payout IFSC update</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SCREEN 13: SETTINGS & PREFERENCES
+             ================================================================== -->
+        <div id="view-settings" class="rw-view-screen">
+          
+          <!-- Tier 1: Toolbar Header Card -->
+          <div class="rw-toolbar-card">
+            <div class="rw-toolbar-left">
+              <span class="rw-toolbar-title">
+                <i class="fas fa-sliders-h" style="color: var(--rw-primary);"></i> Workspace Settings & Security
+              </span>
+              <span class="rw-toolbar-badge">Account ID #REC-1049</span>
+            </div>
+            <div class="rw-toolbar-right">
+              <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="showToast('Settings successfully saved!');">
+                <i class="fas fa-save"></i> Save Changes
+              </button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            
+            <!-- Account & Security Settings -->
+            <div class="rw-card">
+              <div class="rw-card-header">
+                <span class="rw-card-title"><i class="fas fa-lock" style="color: var(--rw-primary);"></i> Security & Authentication</span>
+              </div>
+              <div class="rw-card-body" style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="rw-form-group">
+                  <label class="rw-form-label">Change Password</label>
+                  <input type="password" class="rw-form-input" placeholder="Current Password">
+                </div>
+                <div class="rw-form-group">
+                  <input type="password" class="rw-form-input" placeholder="New Password (min 8 characters)">
+                </div>
+                
+                <div style="border-top: 1px solid var(--rw-border); padding-top: 14px;">
+                  <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <div>
+                      <div style="font-weight: 600; font-size: 13px; color: var(--rw-text-primary);">Single-Device Session Lock</div>
+                      <div style="font-size: 11px; color: var(--rw-text-muted);">Terminates previous active device session on new login</div>
+                    </div>
+                    <input type="checkbox" checked style="accent-color: var(--rw-primary); width: 18px; height: 18px;">
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Localization & Timezone Standard (Rule 24) -->
+            <div class="rw-card">
+              <div class="rw-card-header">
+                <span class="rw-card-title"><i class="fas fa-globe" style="color: var(--rw-primary);"></i> Timezone & Display Standards (Rule 24)</span>
+              </div>
+              <div class="rw-card-body" style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="rw-form-group">
+                  <label class="rw-form-label">Workspace Default Timezone</label>
+                  <select class="rw-form-select">
+                    <option selected>Asia/Kolkata (IST - UTC+05:30)</option>
+                    <option>Europe/London (GMT/BST - UTC+00:00)</option>
+                    <option>America/New_York (EST - UTC-05:00)</option>
+                    <option>America/Los_Angeles (PST - UTC-08:00)</option>
+                    <option>Asia/Dubai (GST - UTC+04:00)</option>
+                    <option>Asia/Singapore (SGT - UTC+08:00)</option>
+                  </select>
+                  <span style="font-size: 11px; color: var(--rw-text-muted);">All interview dates, submission timestamps and payouts automatically convert to this timezone.</span>
+                </div>
+
+                <div class="rw-form-group">
+                  <label class="rw-form-label">Email Notification Triggers</label>
+                  <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                      <input type="checkbox" checked style="accent-color: var(--rw-primary);"> When candidate clears an interview stage
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                      <input type="checkbox" checked style="accent-color: var(--rw-primary);"> When a new exclusive mandate is assigned to me
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                      <input type="checkbox" checked style="accent-color: var(--rw-primary);"> When a placement commission invoice is paid out
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- ==========================================================================
+       INTERACTIVE MODALS
+       ========================================================================== -->
+
+  <!-- Modal 1: Raise Support Ticket -->
+  <div id="supportTicketModal" class="rw-modal-backdrop">
+    <div class="rw-modal-box">
+      <div class="rw-modal-header">
+        <span class="rw-modal-title"><i class="fas fa-headset text-primary"></i> Raise Recruiter Support Ticket</span>
+        <button class="rw-modal-close" onclick="closeModal('supportTicketModal')">&times;</button>
+      </div>
+      <form onsubmit="event.preventDefault(); closeModal('supportTicketModal'); showToast('Support ticket #TICK-8022 created! Our operations team will respond within 4 hours.');">
+        <div class="rw-modal-body">
+          <div class="rw-form-group">
+            <label class="rw-form-label">Issue Category</label>
+            <select class="rw-form-select">
+              <option>Candidate Ownership / Deduplication Lock</option>
+              <option>Interview Schedule / Link Issue</option>
+              <option>Commission Calculation or Payout Delay</option>
+              <option>Mandate Specification Clarification</option>
+              <option>Other Operational Inquiry</option>
+            </select>
+          </div>
+          <div class="rw-form-group">
+            <label class="rw-form-label">Subject</label>
+            <input type="text" class="rw-form-input" placeholder="Brief summary of inquiry" required>
+          </div>
+          <div class="rw-form-group">
+            <label class="rw-form-label">Detailed Explanation</label>
+            <textarea class="rw-form-textarea" rows="4" placeholder="Provide full details, candidate name, or mandate reference..." required></textarea>
+          </div>
+        </div>
+        <div class="rw-modal-footer">
+          <button type="button" class="rw-btn rw-btn-secondary rw-btn-sm" onclick="closeModal('supportTicketModal')">Cancel</button>
+          <button type="submit" class="rw-btn rw-btn-primary rw-btn-sm">Submit Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Edit Payout Details -->
+  <div id="payoutDetailsModal" class="rw-modal-backdrop">
+    <div class="rw-modal-box">
+      <div class="rw-modal-header">
+        <span class="rw-modal-title"><i class="fas fa-university text-primary"></i> Update Bank Payout Details</span>
+        <button class="rw-modal-close" onclick="closeModal('payoutDetailsModal')">&times;</button>
+      </div>
+      <form onsubmit="event.preventDefault(); closeModal('payoutDetailsModal'); showToast('Bank payout credentials updated!');">
+        <div class="rw-modal-body">
+          <div class="rw-form-group">
+            <label class="rw-form-label">Beneficiary Full Name</label>
+            <input type="text" class="rw-form-input" value="Sarah Jenkins" required>
+          </div>
+          <div class="rw-form-row">
+            <div class="rw-form-group">
+              <label class="rw-form-label">Bank Name</label>
+              <input type="text" class="rw-form-input" value="HDFC Bank" required>
+            </div>
+            <div class="rw-form-group">
+              <label class="rw-form-label">Account Number</label>
+              <input type="text" class="rw-form-input" value="50100492194821" required>
+            </div>
+          </div>
+          <div class="rw-form-row">
+            <div class="rw-form-group">
+              <label class="rw-form-label">IFSC / SWIFT Code</label>
+              <input type="text" class="rw-form-input" value="HDFC0001824" required>
+            </div>
+            <div class="rw-form-group">
+              <label class="rw-form-label">Tax / PAN ID</label>
+              <input type="text" class="rw-form-input" value="ABCPJ4921K" required>
+            </div>
+          </div>
+        </div>
+        <div class="rw-modal-footer">
+          <button type="button" class="rw-btn rw-btn-secondary rw-btn-sm" onclick="closeModal('payoutDetailsModal')">Cancel</button>
+          <button type="submit" class="rw-btn rw-btn-primary rw-btn-sm">Save Bank Information</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Forgot Password -->
+  <div id="forgotPasswordModal" class="rw-modal-backdrop">
+    <div class="rw-modal-box" style="max-width: 400px;">
+      <div class="rw-modal-header">
+        <span class="rw-modal-title"><i class="fas fa-key text-primary"></i> Password Recovery</span>
+        <button class="rw-modal-close" onclick="closeModal('forgotPasswordModal')">&times;</button>
+      </div>
+      <form onsubmit="event.preventDefault(); closeModal('forgotPasswordModal'); showToast('Reset instructions sent to your email.');">
+        <div class="rw-modal-body">
+          <p style="font-size: 12px; color: var(--rw-text-muted);">Enter your registered freelance recruiter email to receive a secure password recovery link.</p>
+          <div class="rw-form-group">
+            <label class="rw-form-label">Email Address</label>
+            <input type="email" class="rw-form-input" required placeholder="sarah@agency.com">
+          </div>
+        </div>
+        <div class="rw-modal-footer">
+          <button type="button" class="rw-btn rw-btn-secondary rw-btn-sm" onclick="closeModal('forgotPasswordModal')">Cancel</button>
+          <button type="submit" class="rw-btn rw-btn-primary rw-btn-sm">Send Reset Link</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: Edit Profile -->
+  <div id="editProfileModal" class="rw-modal-backdrop">
+    <div class="rw-modal-box">
+      <div class="rw-modal-header">
+        <span class="rw-modal-title"><i class="fas fa-user-edit text-primary"></i> Edit Recruiter Profile</span>
+        <button class="rw-modal-close" onclick="closeModal('editProfileModal')">&times;</button>
+      </div>
+      <form onsubmit="event.preventDefault(); closeModal('editProfileModal'); showToast('Profile details updated!');">
+        <div class="rw-modal-body">
+          <div class="rw-form-row">
+            <div class="rw-form-group">
+              <label class="rw-form-label">First Name</label>
+              <input type="text" class="rw-form-input" value="Sarah">
+            </div>
+            <div class="rw-form-group">
+              <label class="rw-form-label">Last Name</label>
+              <input type="text" class="rw-form-input" value="Jenkins">
+            </div>
+          </div>
+          <div class="rw-form-group">
+            <label class="rw-form-label">Professional Headline</label>
+            <input type="text" class="rw-form-input" value="Senior Technical Recruiter &bull; FinTech Specialist">
+          </div>
+          <div class="rw-form-group">
+            <label class="rw-form-label">Bio & Sourcing Expertise</label>
+            <textarea class="rw-form-textarea" rows="3">Experienced recruiter with 8+ years specializing in distributed systems, backend engineering, and leadership sourcing for tier-1 venture-backed tech startups.</textarea>
+          </div>
+        </div>
+        <div class="rw-modal-footer">
+          <button type="button" class="rw-btn rw-btn-secondary rw-btn-sm" onclick="closeModal('editProfileModal')">Cancel</button>
+          <button type="submit" class="rw-btn rw-btn-primary rw-btn-sm">Save Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 5: Accept Mandate Terms Agreement (JERO ATS Parity) -->
+  <div id="acceptMandateModal" class="rw-modal-backdrop">
+    <div class="rw-modal-box" style="max-width: 650px;">
+      <div class="rw-modal-header">
+        <span class="rw-modal-title">
+          <i class="fas fa-file-signature text-success me-1"></i> Accept Client Mandate &amp; Commercial SLA
+        </span>
+        <button class="rw-modal-close" onclick="closeModal('acceptMandateModal')">&times;</button>
+      </div>
+      <div class="rw-modal-body">
+        <!-- Mandate Summary -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md); padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--rw-text-primary);" id="rw-accept-job-title">Senior Staff Cloud Architect</div>
+              <div style="font-size: 12px; color: var(--rw-text-muted); margin-top: 2px;">Mandate Offered by: <strong id="rw-accept-client-name" style="color: var(--rw-text-primary);">Apex Global Technologies</strong></div>
+            </div>
+            <span class="type-direct"><i class="fas fa-shield-alt"></i> Direct Client</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
+            <div>
+              <span style="font-size: 10.5px; text-transform: uppercase; font-weight: 700; color: var(--rw-text-muted);">Offered Fee</span>
+              <div style="font-size: 12px; font-weight: 700; color: #059669; margin-top: 2px;" id="rw-accept-fee">12.00% of Fixed CTC</div>
+            </div>
+            <div>
+              <span style="font-size: 10.5px; text-transform: uppercase; font-weight: 700; color: var(--rw-text-muted);">Replacement SLA</span>
+              <div style="font-size: 12px; font-weight: 700; color: var(--rw-text-primary); margin-top: 2px;" id="rw-accept-guarantee">90-Day Free Replacement</div>
+            </div>
+            <div>
+              <span style="font-size: 10.5px; text-transform: uppercase; font-weight: 700; color: var(--rw-text-muted);">Payout Schedule</span>
+              <div style="font-size: 12px; font-weight: 700; color: var(--rw-text-primary); margin-top: 2px;">30 Days Net Joining</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Binding Agreement Text (Exact parity with JERO ServiceCompanyJobsController accepterms) -->
+        <div>
+          <label class="rw-form-label" style="display: flex; justify-content: space-between;">
+            <span>Legal Mandate Terms &amp; Conditions</span>
+            <span style="font-weight: normal; color: var(--rw-text-muted); font-size: 11px;">Standard B2B Master Mandate Clause</span>
+          </label>
+          <div class="rw-terms-box">
+            <p style="margin: 0 0 8px;"><strong>1. Recruiter Representation &amp; Scope:</strong> By clicking the accept button, Sarah Jenkins (Recruiter) accepts the rates, terms, and conditions outlined below for the job requirements of the client company. The recruiter agrees to act with highest professional diligence in screening, evaluating, and submitting qualified candidates.</p>
+            <p style="margin: 0 0 8px;"><strong>2. Ownership Exclusivity:</strong> Candidate profiles submitted under this mandate remain exclusive to the recruiter for a period of 180 days (6 months) from the date of submission. The client agrees not to engage or hire the candidate through other agencies or direct channels during this tenure without honoring the agreed commission.</p>
+            <p style="margin: 0 0 8px;"><strong>3. Replacement Guarantee:</strong> If a hired candidate voluntarily resigns or is terminated for cause within 90 days from the joining date, the recruiter warrants to furnish up to two (2) qualified replacement candidates at zero additional recruitment fees.</p>
+            <p style="margin: 0;"><strong>4. Payout Settlement:</strong> Commission invoices shall be approved by the client within 15 days of onboarding, and disbursed to the recruiter's registered bank payout account within 30 days of invoice generation.</p>
+          </div>
+        </div>
+
+        <!-- Mandatory Acknowledgement Checkbox -->
+        <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: var(--rw-text-primary); cursor: pointer; background: #fffbeb; border: 1px solid #fde68a; padding: 10px 14px; border-radius: var(--rw-radius-md);">
+          <input type="checkbox" id="rw-accept-terms-check" style="margin-top: 2px; accent-color: var(--rw-primary); width: 15px; height: 15px;">
+          <span>I have reviewed the requisition specifications, and I agree to the client's commercial rates, replacement SLA, and candidate exclusivity terms.</span>
+        </label>
+      </div>
+      <div class="rw-modal-footer">
+        <button type="button" class="rw-btn rw-btn-secondary rw-btn-sm" onclick="closeModal('acceptMandateModal')">Review Later</button>
+        <button type="button" class="rw-btn rw-btn-success rw-btn-sm" onclick="confirmAcceptMandate()">
+          <i class="fas fa-check-circle me-1"></i> Confirm &amp; Accept Mandate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Decline Job Request -->
+  <div id="declineMandateModal" class="rw-modal-backdrop">
+    <div class="rw-modal-box" style="max-width: 480px;">
+      <div class="rw-modal-header">
+        <span class="rw-modal-title"><i class="fas fa-ban text-danger me-1"></i> Decline Mandate Request</span>
+        <button class="rw-modal-close" onclick="closeModal('declineMandateModal')">&times;</button>
+      </div>
+      <div class="rw-modal-body">
+        <p style="font-size: 12.5px; color: var(--rw-text-secondary); margin: 0;">
+          Are you sure you want to decline the mandate for <strong id="rw-decline-job-title">Senior Staff Cloud Architect</strong> from <strong id="rw-decline-client-name">Apex Global Technologies</strong>?
+        </p>
+        <div class="rw-form-group">
+          <label class="rw-form-label">Reason for Declining</label>
+          <select class="rw-form-select" id="rw-decline-reason">
+            <option value="Fee rate below minimum threshold">Commission fee is below my agency/freelancer standard</option>
+            <option value="Current recruiter capacity full">Candidate talent pool currently constrained / at capacity</option>
+            <option value="Outside primary domain specialization">Outside my primary domain / tech stack specialization</option>
+            <option value="Salary range or experience bar unrealistic">Salary range or experience bar unrealistic for market</option>
+            <option value="Client SLA too restrictive">Client SLA or interview timeline too restrictive</option>
+          </select>
+        </div>
+        <div class="rw-form-group">
+          <label class="rw-form-label">Optional Note to Client (Polite Feedback)</label>
+          <textarea class="rw-form-textarea" rows="2" placeholder="e.g. Open to sourcing if commission fee can be adjusted to 12%..."></textarea>
+        </div>
+      </div>
+      <div class="rw-modal-footer">
+        <button type="button" class="rw-btn rw-btn-secondary rw-btn-sm" onclick="closeModal('declineMandateModal')">Cancel</button>
+        <button type="button" class="rw-btn rw-btn-secondary rw-btn-sm" style="color: #ef4444; border-color: #fca5a5;" onclick="confirmDeclineMandate()">
+          <i class="fas fa-times me-1"></i> Decline Request
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       SLIDE-OUT DRAWERS (METRONIC / JERO PARITY)
+       ========================================================================== -->
+
+  <!-- Drawer 1: Requisition Full Specification (#kt_activitiesClientjob style) -->
+  <div id="jobSpecDrawer" class="rw-drawer-backdrop" onclick="if(event.target===this) closeDrawer('jobSpecDrawer')">
+    <div class="rw-drawer-panel">
+      <div class="rw-drawer-header">
+        <div class="rw-drawer-title">
+          <i class="fas fa-briefcase text-primary"></i> Direct Client Requisition
+        </div>
+        <button class="rw-modal-close" onclick="closeDrawer('jobSpecDrawer')">&times;</button>
+      </div>
+      <div class="rw-drawer-body">
+        <!-- Requisition Overview Card -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md); padding: 16px;">
+          <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+            <span class="type-direct"><i class="fas fa-shield-alt"></i> Direct Client</span>
+            <span class="type-request"><i class="fas fa-handshake"></i> Job Request</span>
+            <span class="rw-status-badge rw-status-hiring">Active Hiring</span>
+          </div>
+          <h3 style="font-size: 16px; font-weight: 700; color: var(--rw-text-primary); margin: 0 0 6px;">Senior Staff Cloud Architect</h3>
+          <div style="font-size: 12.5px; color: var(--rw-text-secondary); line-height: 1.5;">
+            <strong>Apex Global Technologies</strong> &bull; Cloud Infrastructure &amp; DevOps Unit<br>
+            <i class="fas fa-map-marker-alt text-muted me-1"></i> San Francisco, CA &bull; <strong style="color: #059669;">Remote (US/Global)</strong> &bull; Full-Time
+          </div>
+        </div>
+
+        <!-- Compensation & Vacancy -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md); padding: 12px;">
+            <div style="font-size: 11px; color: var(--rw-text-muted); font-weight: 600;">COMPENSATION</div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--rw-text-primary); margin-top: 4px;">$165K - $190K</div>
+            <div style="font-size: 11px; color: var(--rw-text-muted);">Annual Fixed CTC</div>
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md); padding: 12px;">
+            <div style="font-size: 11px; color: var(--rw-text-muted); font-weight: 600;">EXPERIENCE</div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--rw-text-primary); margin-top: 4px;">8 - 12 Yrs</div>
+            <div style="font-size: 11px; color: var(--rw-text-muted);">Architect Level</div>
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md); padding: 12px;">
+            <div style="font-size: 11px; color: var(--rw-text-muted); font-weight: 600;">COMMISSION</div>
+            <div style="font-size: 14px; font-weight: 700; color: #059669; margin-top: 4px;">12.00% CTC</div>
+            <div style="font-size: 11px; color: var(--rw-text-muted);">~$21,000 / Hire</div>
+          </div>
+        </div>
+
+        <!-- Role Overview -->
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: var(--rw-text-primary); margin-bottom: 8px;">Role Overview &amp; Mandate Focus</div>
+          <p style="font-size: 12.5px; color: var(--rw-text-secondary); line-height: 1.6; margin: 0;">
+            Apex Global Technologies is expanding its core infrastructure backbone to power multi-region distributed transactions. As Senior Staff Cloud Architect, the candidate will lead Kubernetes multi-cluster federation, infrastructure-as-code automation across AWS and hybrid clouds, and mentor senior DevOps engineers.
+          </p>
+        </div>
+
+        <!-- Key Technical Must-Haves -->
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: var(--rw-text-primary); margin-bottom: 8px;">Mandatory Technical Requirements</div>
+          <ul style="font-size: 12.5px; color: var(--rw-text-secondary); line-height: 1.6; margin: 0; padding-left: 20px;">
+            <li>8+ years of production experience architecting high-scale cloud systems (AWS preferred).</li>
+            <li>Deep mastery of Kubernetes cluster administration (EKS, Helm, Cilium, Istio service mesh).</li>
+            <li>Production proficiency with Terraform / OpenTofu for immutable multi-environment deployments.</li>
+            <li>Hands-on programming experience in Go, Python, or Rust for internal cloud tooling.</li>
+            <li>Experience implementing zero-trust security and SOC2 / ISO-27001 compliance standards.</li>
+          </ul>
+        </div>
+
+        <!-- Interview Pipeline Steps -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md); padding: 14px;">
+          <div style="font-size: 12.5px; font-weight: 700; color: var(--rw-text-primary); margin-bottom: 8px;">Hiring Process (2-Week Fast Track)</div>
+          <div style="display: flex; gap: 8px; flex-direction: column; font-size: 12px; color: var(--rw-text-secondary);">
+            <div><strong>Round 1:</strong> Recruiter Screening &amp; Profile Representation (48h SLA)</div>
+            <div><strong>Round 2:</strong> Technical Architecture Deep-Dive with Marcus Vance (VP)</div>
+            <div><strong>Round 3:</strong> Systems Coding &amp; Kubernetes Troubleshooting Live Session</div>
+            <div><strong>Round 4:</strong> Executive Alignment &amp; Compensation Offer</div>
+          </div>
+        </div>
+      </div>
+      <div class="rw-drawer-footer">
+        <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="closeDrawer('jobSpecDrawer')">Close</button>
+        <button class="rw-btn rw-btn-primary rw-btn-sm" onclick="closeDrawer('jobSpecDrawer'); openAcceptTermsModal(8042, 'Senior Staff Cloud Architect', 'Apex Global Technologies', '12.00% of Fixed Gross CTC (~$21,000 est.)', '90-Day Free Replacement SLA')">
+          <i class="fas fa-check me-1"></i> Accept This Mandate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer 2: Hiring Manager / Client SPOC (#kt_activitiesHMClient style) -->
+  <div id="hmDetailsDrawer" class="rw-drawer-backdrop" onclick="if(event.target===this) closeDrawer('hmDetailsDrawer')">
+    <div class="rw-drawer-panel" style="max-width: 520px;">
+      <div class="rw-drawer-header">
+        <div class="rw-drawer-title">
+          <i class="fa fa-user-tie text-primary"></i> Direct Client Contact Person
+        </div>
+        <button class="rw-modal-close" onclick="closeDrawer('hmDetailsDrawer')">&times;</button>
+      </div>
+      <div class="rw-drawer-body">
+        <!-- SPOC Profile Card -->
+        <div style="text-align: center; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md);">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: #009ef7; color: #ffffff; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; box-shadow: 0 2px 8px rgba(0, 158, 247, 0.3);">
+            MV
+          </div>
+          <h3 style="font-size: 16px; font-weight: 700; color: var(--rw-text-primary); margin: 0;">Marcus Vance</h3>
+          <div style="font-size: 12.5px; color: var(--rw-text-muted); margin-top: 3px;">Vice President of Cloud Infrastructure</div>
+          <div style="font-size: 12px; font-weight: 600; color: #009ef7; margin-top: 2px;">Apex Global Technologies</div>
+          <div style="display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 11px; background: #ecfdf5; color: #059669; padding: 3px 10px; border-radius: 20px; border: 1px solid #a7f3d0;">
+            <i class="fas fa-check-circle"></i> Direct Client SPOC Verified
+          </div>
+        </div>
+
+        <!-- Contact & SLAs -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md); font-size: 12.5px;">
+            <span style="color: var(--rw-text-muted);"><i class="fas fa-envelope me-2"></i>Official Email</span>
+            <span style="font-weight: 600; color: var(--rw-text-primary);">m.vance@apexglobal.com</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md); font-size: 12.5px;">
+            <span style="color: var(--rw-text-muted);"><i class="fas fa-stopwatch me-2"></i>Average CV Feedback SLA</span>
+            <span style="font-weight: 700; color: #059669;">&lt; 24 Hours</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--rw-radius-md); font-size: 12.5px;">
+            <span style="color: var(--rw-text-muted);"><i class="fas fa-clock me-2"></i>Working Timezone</span>
+            <span style="font-weight: 600; color: var(--rw-text-primary);">America/Los_Angeles (PST)</span>
+          </div>
+        </div>
+
+        <!-- Sourcing Guidelines Note -->
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--rw-radius-md); padding: 14px; font-size: 12px; color: #1e40af; line-height: 1.5;">
+          <strong><i class="fas fa-info-circle me-1"></i> SPOC Note for Recruiters:</strong>
+          Marcus values candidates with clear architectural diagrams and production battle-scars over theoretical buzzwords. Candidates with experience resolving live multi-region AWS outages get immediate interview fast-tracking.
+        </div>
+      </div>
+      <div class="rw-drawer-footer">
+        <button class="rw-btn rw-btn-secondary rw-btn-sm" onclick="closeDrawer('hmDetailsDrawer')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Master JavaScript Router & UI Engine -->
+  <script src="js/recruiter.js"></script>
+
+</body>
+</html>

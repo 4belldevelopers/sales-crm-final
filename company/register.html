@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Registration &bull; JERO ATS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/company.css">
+</head>
+<body style="min-height: 100vh; background: var(--jw-bg-page); display: flex; align-items: center; justify-content: center; padding: 24px;">
+
+  <div class="cw-card" style="max-width: 560px; width: 100%; border-radius: var(--jw-radius-xl); box-shadow: var(--jw-shadow-lg);">
+    <div class="cw-card-header" style="justify-content: center; flex-direction: column; gap: 6px; padding: 22px 20px 18px; background: var(--jw-navy); color: #ffffff;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="cw-brand-logo" style="width: 32px; height: 32px; font-size: 16px;">J</div>
+        <span style="font-size: 17px; font-weight: 700; color: #ffffff;">JERO <span style="color: #60a5fa;">ATS</span></span>
+      </div>
+      <div style="font-size: 13px; font-weight: 600; color: #93c5fd;">Register Your Organization</div>
+      <div style="font-size: 11px; color: #cbd5e1;">Start sourcing talent through in-house teams, agencies & freelancers</div>
+    </div>
+    <div class="cw-card-body" style="padding: 22px;">
+      <form onsubmit="event.preventDefault(); alert('Organization registered! Check email to verify corporate domain.'); window.location.href = 'login.html';">
+        <div class="cw-form-row" style="margin-bottom: 12px;">
+          <div class="cw-form-group">
+            <label class="cw-form-label">Company Legal Name</label>
+            <input type="text" class="cw-form-input" placeholder="e.g. Apex Global Technologies" required>
+          </div>
+          <div class="cw-form-group">
+            <label class="cw-form-label">Company Website / Domain</label>
+            <input type="text" class="cw-form-input" placeholder="e.g. apexglobal.com" required>
+          </div>
+        </div>
+        <div class="cw-form-row" style="margin-bottom: 12px;">
+          <div class="cw-form-group">
+            <label class="cw-form-label">Official Work Email</label>
+            <input type="email" class="cw-form-input" placeholder="director@apexglobal.com" required>
+          </div>
+          <div class="cw-form-group">
+            <label class="cw-form-label">Contact Number</label>
+            <input type="tel" class="cw-form-input" placeholder="+91 98765 00000" required>
+          </div>
+        </div>
+        <div class="cw-form-row" style="margin-bottom: 12px;">
+          <div class="cw-form-group">
+            <label class="cw-form-label">Industry Classification</label>
+            <select class="cw-form-select">
+              <option>Information Technology & Services</option>
+              <option>Financial Services & Banking</option>
+              <option>Healthcare & Life Sciences</option>
+              <option>E-Commerce & Retail</option>
+              <option>Manufacturing & Engineering</option>
+            </select>
+          </div>
+          <div class="cw-form-group">
+            <label class="cw-form-label">Company Size</label>
+            <select class="cw-form-select">
+              <option>10 - 50 Employees</option>
+              <option selected>50 - 250 Employees</option>
+              <option>250 - 1,000 Employees</option>
+              <option>1,000+ Employees</option>
+            </select>
+          </div>
+        </div>
+        <div class="cw-form-row" style="margin-bottom: 14px;">
+          <div class="cw-form-group">
+            <label class="cw-form-label">Account Password</label>
+            <input type="password" class="cw-form-input" placeholder="Minimum 8 characters" required>
+          </div>
+          <div class="cw-form-group">
+            <label class="cw-form-label">Confirm Password</label>
+            <input type="password" class="cw-form-input" placeholder="Repeat password" required>
+          </div>
+        </div>
+        <div style="margin-bottom: 18px; font-size: 11px; color: var(--jw-text-muted); display: flex; align-items: flex-start; gap: 8px;">
+          <input type="checkbox" required checked style="accent-color: var(--jw-blue); margin-top: 2px;">
+          <span>I confirm I am authorized to register this organization on JERO ATS and agree to the Employer Terms & Data Privacy Policy.</span>
+        </div>
+        <button type="submit" class="cw-btn cw-btn-primary" style="width: 100%; justify-content: center; height: 38px;">
+          <i class="fas fa-building"></i> Complete Company Setup & Launch
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 16px; font-size: 12px; color: var(--jw-text-muted);">
+        Already registered? 
+        <a href="login.html" style="color: var(--jw-blue); font-weight: 600; text-decoration: none;">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

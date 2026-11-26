@@ -991,6 +991,24 @@
     border-color: #67e8f9 !important;
 }
 
+#allJobList .cd-track-badge.s-hld,
+.cd-subcard-pipeline .cd-track-badge.s-hld {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+#allJobList .cd-track-badge.s-hld:hover,
+.cd-subcard-pipeline .cd-track-badge.s-hld:hover {
+    background: #e2e8f0 !important;
+    color: #334155 !important;
+    border-color: #94a3b8 !important;
+}
+
+.cd-subcard-pipeline .cd-pipeline-track {
+    gap: 1.5px !important;
+}
+
 .pipeline-legend-card .legend-item:nth-child(3) .legend-dot {
     background: #0891b2 !important;
 }
@@ -1612,7 +1630,45 @@
             <div id="allJobList" class="cd-jobs-stream"></div>
             <div id="pagination" class="mt-4"></div>
             <div class="pipeline-legend-card mt-4">
-              @include('sections.service_company.pipeline')
+              <div class="pipeline-legend">
+                <span class="legend-label">Lifecycle Pipeline:</span>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #eab308"></div>
+                  LED – Lead
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #0891b2"></div>
+                  QUA – Qualification
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #a855f7"></div>
+                  CON – Contact
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #009ef7"></div>
+                  ENG – Engagement
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #ec4899"></div>
+                  NEG – Negotiation
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #f97316"></div>
+                  CLO – Closing
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #10b981"></div>
+                  WON – Won
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #ef4444"></div>
+                  LOS – Lost
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #64748b"></div>
+                  HLD – On Hold
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -3537,19 +3593,20 @@ $(document).on('click', '.client-hm-listing', function ()
                     : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/all";
 
                 var stageLabels = [
-                    { id: 1, key: 's-sou', label: 'SOU', title: 'Sourcing' },
-                    { id: 2, key: 's-scr', label: 'SCR', title: 'Screening' },
-                    { id: 3, key: 's-eva', label: 'EVA', title: 'Evaluation' },
+                    { id: 1, key: 's-sou', label: 'QUA', title: 'Qualification' },
+                    { id: 2, key: 's-scr', label: 'CON', title: 'Contact' },
+                    { id: 3, key: 's-eva', label: 'ENG', title: 'Engagement' },
                     { id: 4, key: 's-neg', label: 'NEG', title: 'Negotiation' },
-                    { id: 5, key: 's-off', label: 'OFF', title: 'Offer' },
-                    { id: 6, key: 's-joi', label: 'JOI', title: 'Joining' },
-                    { id: 7, key: 's-rej', label: 'REJ', title: 'Rejected' }
+                    { id: 5, key: 's-off', label: 'CLO', title: 'Closing' },
+                    { id: 6, key: 's-joi', label: 'WON', title: 'Won' },
+                    { id: 7, key: 's-rej', label: 'LOS', title: 'Lost' },
+                    { id: 8, key: 's-hld', label: 'HLD', title: 'On Hold' }
                 ];
 
-                var pipelineTrackHtml = '<div class="cd-track-stage" title="INW - In Review"><span class="cd-track-label">INW</span><a href="' + allAppUrl + '" class="cd-track-badge s-inw text-decoration-none">' + (job.inreview_counter || 0) + '</a></div>';
+                var pipelineTrackHtml = '<div class="cd-track-stage" title="LED - Lead"><span class="cd-track-label">LED</span><a href="' + allAppUrl + '" class="cd-track-badge s-inw text-decoration-none">' + (job.inreview_counter || 0) + '</a></div>';
                 stageLabels.forEach(function(stg) {
                     var count = (job.stage_counts && job.stage_counts[stg.id]) ? job.stage_counts[stg.id] : 0;
-                    var stgUrl = apptrackerBase + stg.id;
+                    var stgUrl = stg.id === 8 ? allAppUrl : (apptrackerBase + stg.id);
                     pipelineTrackHtml += '<div class="cd-track-stage" title="' + stg.label + ' - ' + stg.title + '"><span class="cd-track-label">' + stg.label + '</span><a href="' + stgUrl + '" class="cd-track-badge ' + stg.key + ' text-decoration-none">' + count + '</a></div>';
                 });
 
@@ -3591,10 +3648,10 @@ $(document).on('click', '.client-hm-listing', function ()
                 html += '      </div>';
                 html += '    </div>';
 
-                // SUB-CARD 5: HIRING PIPELINE
+                // SUB-CARD 5: LIFECYCLE PIPELINE
                 html += '    <div class="cd-job-subcard cd-subcard-pipeline js-goto-candidates" data-apptracker-url="' + allAppUrl + '" title="Click to view all candidates">';
                 html += '      <div class="cd-subcard-header">';
-                html += '        <span class="cd-subcard-label">Hiring Pipeline</span>';
+                html += '        <span class="cd-subcard-label">Lifecycle Pipeline</span>';
                 html += '      </div>';
                 html += '      <div class="cd-subcard-body">';
                 html += '        <div class="cd-pipeline-track">' + pipelineTrackHtml + '</div>';
