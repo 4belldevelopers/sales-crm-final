@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Http\Middleware\EnsureOneDeviceLogin;
-use App\Models\CrmOffering;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -147,5 +146,55 @@ class CrmOfferingTest extends TestCase
             'description' => '<p>Test</p>',
         ]);
         $crossEdit->assertStatus(404);
+
+        // 6. Edit view renders hydrated offering + Update saves service scope_of_work & deliverables
+        $svcId = (int) $svcRes->json('offering.id');
+        $editView = $this->actingAs($userA)->get(route('service_company.crm.offerings.edit', $svcId));
+        $editView->assertStatus(200)
+            ->assertSee('Edit Product / Service')
+            ->assertSee('24/7 Cloud Operations');
+
+        $updRes = $this->actingAs($userA)->postJson(route('service_company.crm.offerings.postUpdate', $svcId), [
+            'offering_class' => 'service',
+            'offering_type' => 'Managed Service',
+            'name' => '24/7 Cloud Operations Pro',
+            'crm_category' => 'IT & Cloud',
+            'is_unlimited_capacity' => true,
+            'status' => 'active',
+            'pricing_visibility' => 'confidential',
+            'currency_code' => 'USD',
+            'pricing_model' => 'Subscription',
+            'pricing_frequency' => 'Monthly',
+            'delivery_model' => 'Remote',
+            'service_availability' => '24 x 7',
+            'scope_of_work' => 'Full Kubernetes & DB monitoring',
+            'deliverables' => 'Monthly SLA & incident report',
+            'description' => '<p>Updated managed cloud ops</p>',
+            'qualification_questions' => [
+                ['question' => 'Do you need SOC2?', 'answer_type' => 'yesno', 'is_required' => true],
+            ],
+        ]);
+        $updRes->assertStatus(200)
+            ->assertJsonPath('offering.scope_of_work', 'Full Kubernetes & DB monitoring')
+            ->assertJsonPath('offering.deliverables', 'Monthly SLA & incident report')
+            ->assertJsonPath('offering.questions.0.is_required', true);
+
+        // 7. SKU check, readiness gate, and active catalog feed (tenant-scoped)
+        $this->actingAs($userA)->getJson(route('service_company.crm.offerings.checkSku', ['sku' => 'JERO-ENT-01']))
+            ->assertOk()->assertJsonPath('available', false);
+        $this->actingAs($userA)->getJson(route('service_company.crm.offerings.checkSku', ['sku' => 'JERO-ENT-01', 'exclude_id' => $offeringId]))
+            ->assertOk()->assertJsonPath('available', true);
+        $this->actingAs($userB)->getJson(route('service_company.crm.offerings.checkSku', ['sku' => 'JERO-ENT-01']))
+            ->assertOk()->assertJsonPath('available', true);
+
+        $this->actingAs($userA)->getJson(route('service_company.crm.offerings.checkReady', $offeringId))
+            ->assertOk()->assertJsonPath('ready', true);
+        $this->actingAs($userB)->getJson(route('service_company.crm.offerings.checkReady', $offeringId))
+            ->assertOk()->assertJsonPath('ready', false);
+
+        $this->actingAs($userA)->getJson(route('service_company.crm.offerings.activeCatalog'))
+            ->assertOk()->assertJsonCount(2, 'data');
+        $this->actingAs($userB)->getJson(route('service_company.crm.offerings.activeCatalog'))
+            ->assertOk()->assertJsonCount(0, 'data');
     }
 }

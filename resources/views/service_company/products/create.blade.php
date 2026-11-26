@@ -8,18 +8,18 @@
     <style>
         /* ===== Design Tokens (Aligned with Service Company Form & Rule 20/26/27) ===== */
         :root {
-            --prod-primary: #2563eb;
-            --prod-primary-hover: #1d4ed8;
-            --prod-primary-light: #eff6ff;
-            --prod-primary-border: #bfdbfe;
+            --prod-primary: #9a6500;
+            --prod-primary-hover: #7a5000;
+            --prod-primary-light: #fff9df;
+            --prod-primary-border: #e6af00;
             --prod-bg: #f8fafc;
-            --prod-header-bg: #f8fafc;
+            --prod-header-bg: linear-gradient(180deg, #fffdf7 0%, #fff9df 100%);
             --prod-card-bg: #ffffff;
-            --prod-border: #e2e8f0;
-            --prod-border-focus: #2563eb;
-            --prod-text: #0f172a;
+            --prod-border: #ebd99f;
+            --prod-border-focus: #e6af00;
+            --prod-text: #10143b;
             --prod-text-secondary: #475569;
-            --prod-text-muted: #64748b;
+            --prod-text-muted: #687795;
             --prod-danger: #dc2626;
             --prod-danger-bg: #fef2f2;
             --prod-danger-border: #fecaca;
@@ -209,9 +209,9 @@
             width: 30px;
             height: 30px;
             border-radius: 7px;
-            background: #ffffff;
-            border: 1px solid var(--prod-border);
-            color: var(--prod-primary);
+            background: #ffe394;
+            border: 1px solid #ebd99f;
+            color: #9a6500;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1250,7 +1250,7 @@
                         <span class="required"></span> Indicates required fields
                     </div>
                     <div class="prod-footer-actions">
-                        <a href="{{ url('service_company/jobs') }}" class="btn-prod-secondary">
+                        <a href="{{ route('service_company.products.index') }}" class="btn-prod-secondary">
                             <i class="fas fa-arrow-left"></i> Cancel
                         </a>
                         <button type="button" class="btn-prod-secondary" id="btnSaveDraft">

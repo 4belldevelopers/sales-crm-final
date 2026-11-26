@@ -58,7 +58,12 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
             ? CurrencyService::getTenantCurrency($companyId)
             : GeneralMethod::defaultCurrency();
         $this->tenantTimezone = GeneralMethod::defaultTimeZone($companyId ?: null) ?: config('app.timezone', 'UTC');
+        $this->tenantTimezoneAbbr = Carbon::now($this->tenantTimezone)->format('T');
         $this->clients = Client::where('company_id', $companyId)->orderBy('name')->get(['id', 'name', 'self_company']);
+        $this->clientAddresses = DB::table('client_location')
+            ->where('company_id', $companyId)
+            ->orderBy('id')
+            ->get(['id', 'client_id', 'city', 'address', 'postcode']);
         $this->industries = IndustryTaxonomyService::getGlobalManifest();
         $this->teamRoster = app(RelationshipManagerService::class)->getTeamRoster($companyId);
         $this->offering = null;
@@ -122,7 +127,12 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
         $this->currency = GeneralMethod::currency();
         $this->currency_code = CurrencyService::getTenantCurrency($companyId);
         $this->tenantTimezone = GeneralMethod::defaultTimeZone($companyId) ?: config('app.timezone', 'UTC');
+        $this->tenantTimezoneAbbr = Carbon::now($this->tenantTimezone)->format('T');
         $this->clients = Client::where('company_id', $companyId)->orderBy('name')->get(['id', 'name', 'self_company']);
+        $this->clientAddresses = DB::table('client_location')
+            ->where('company_id', $companyId)
+            ->orderBy('id')
+            ->get(['id', 'client_id', 'city', 'address', 'postcode']);
         $this->industries = IndustryTaxonomyService::getGlobalManifest();
         $this->teamRoster = app(RelationshipManagerService::class)->getTeamRoster($companyId);
         $this->offering = $offering;
