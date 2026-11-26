@@ -14,6 +14,7 @@ use App\Http\Controllers\ServiceCompany\ServiceCompanyApplicationOfferController
 use App\Http\Controllers\ServiceCompany\ServiceCompanyAppTrackerController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyBenchCandidatesController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyClientController;
+use App\Http\Controllers\ServiceCompany\ServiceCompanyCrmOfferingController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyCompanyController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyConsultancyController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyCustomreportController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\ServiceCompany\ServiceCompanyJobOnboardController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyJobsController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyJobTrackerController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyLinkedInSettingsController;
+use App\Http\Controllers\ServiceCompany\ServiceCompanyProductController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyProfileController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyProfileV2ApiController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyReportController;
@@ -226,6 +228,19 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('demo/view-demo', [ServiceCompanyJobsController::class, 'demoView'])->name('jobs.demo');
                 Route::get('/get-job-suggestions', [ServiceCompanyJobsController::class, 'getJobSuggestions'])->name('jobs.getJobSuggestions');
                 Route::post('/jdDetails', [ServiceCompanyJobsController::class, 'jdDetails'])->name('jobs.jdDetails');
+                // END
+                // #############       	START JEROCRM PRODUCT / SERVICES WIZARD
+                Route::get('crm/products-services/check-sku', [ServiceCompanyCrmOfferingController::class, 'checkSku'])->name('crm.offerings.checkSku');
+                Route::get('crm/products-services/check-ready/{id}', [ServiceCompanyCrmOfferingController::class, 'checkReady'])->name('crm.offerings.checkReady');
+                Route::get('crm/products-services/active-catalog', [ServiceCompanyCrmOfferingController::class, 'activeCatalog'])->name('crm.offerings.activeCatalog');
+                Route::post('crm/products-services/update/{id}', [ServiceCompanyCrmOfferingController::class, 'update'])->name('crm.offerings.postUpdate');
+                Route::resource('crm/products-services', ServiceCompanyCrmOfferingController::class)->names('crm.offerings');
+                // END
+                Route::get('products/check-sku', [ServiceCompanyProductController::class, 'checkSku'])->name('products.checkSku');
+                Route::get('products/subcategories/{categoryId}', [ServiceCompanyProductController::class, 'subcategories'])->name('products.subcategories');
+                Route::get('products/active-catalog', [ServiceCompanyProductController::class, 'activeCatalog'])->name('products.activeCatalog');
+                Route::post('products/update/{id}', [ServiceCompanyProductController::class, 'update'])->name('products.postUpdate');
+                Route::resource('products', ServiceCompanyProductController::class);
                 // END
                 // #############       	START JOB APPLICATION MANAGEMENT
                 Route::resource('job-applications', ServiceCompanyJobApplicationController::class);

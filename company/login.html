@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Sign In &bull; JERO ATS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/company.css">
+</head>
+<body style="min-height: 100vh; background: var(--jw-bg-page); display: flex; align-items: center; justify-content: center; padding: 24px;">
+
+  <div class="cw-card" style="max-width: 450px; width: 100%; border-radius: var(--jw-radius-xl); box-shadow: var(--jw-shadow-lg);">
+    <div class="cw-card-header" style="justify-content: center; flex-direction: column; gap: 8px; padding: 26px 20px 20px; background: var(--jw-navy); color: #ffffff;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="cw-brand-logo" style="width: 36px; height: 36px; font-size: 18px;">J</div>
+        <span style="font-size: 18px; font-weight: 700; color: #ffffff;">JERO <span style="color: #60a5fa;">ATS</span></span>
+      </div>
+      <div style="font-size: 13px; font-weight: 600; color: #93c5fd;">Enterprise Employer Portal</div>
+      <div style="font-size: 11px; color: #cbd5e1;">Sign in to manage requisitions, agencies & talent pipelines</div>
+    </div>
+    <div class="cw-card-body" style="padding: 24px;">
+      <form onsubmit="event.preventDefault(); window.location.href = 'index.html#dashboard';">
+        <div class="cw-form-group" style="margin-bottom: 14px;">
+          <label class="cw-form-label">Work Email</label>
+          <input type="email" class="cw-form-input" value="hiring.director@apexglobal.com" required placeholder="name@company.com">
+        </div>
+        <div class="cw-form-group" style="margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="cw-form-label">Password</label>
+            <a href="javascript:void(0)" onclick="alert('Password reset link sent to your corporate email.')" style="font-size: 11px; color: var(--jw-blue); text-decoration: none;">Forgot Password?</a>
+          </div>
+          <input type="password" class="cw-form-input" value="••••••••••••" required>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-size: 12px;">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--jw-text-secondary);">
+            <input type="checkbox" checked style="accent-color: var(--jw-blue);"> Remember this organization
+          </label>
+          <span style="font-size: 11px; color: var(--jw-text-muted);"><i class="fas fa-shield-alt text-blue-500"></i> SSO / SAML Enabled</span>
+        </div>
+        <button type="submit" class="cw-btn cw-btn-primary" style="width: 100%; justify-content: center; height: 38px; font-size: 13px;">
+          <i class="fas fa-sign-in-alt"></i> Sign In to Employer Hub
+        </button>
+      </form>
+
+      <div style="margin-top: 16px; padding: 10px 12px; background: var(--jw-bg-subtle); border-radius: var(--jw-radius-md); border: 1px solid var(--jw-border); font-size: 11px; color: var(--jw-text-muted); display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-info-circle" style="color: var(--jw-blue);"></i>
+        <span>1-Click Demo: Click the button above to enter the Company Workspace directly.</span>
+      </div>
+
+      <div style="text-align: center; margin-top: 18px; font-size: 12px; color: var(--jw-text-muted);">
+        Looking to onboard your company? 
+        <a href="register.html" style="color: var(--jw-blue); font-weight: 600; text-decoration: none;">Register Company</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

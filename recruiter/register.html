@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruiter Registration &bull; JERO ATS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/recruiter.css">
+</head>
+<body style="min-height: 100vh; background: var(--rw-bg-page); display: flex; align-items: center; justify-content: center; padding: 24px;">
+
+  <div class="rw-card" style="max-width: 540px; width: 100%; border-radius: var(--rw-radius-xl); box-shadow: var(--rw-shadow-lg);">
+    <div class="rw-card-header" style="justify-content: center; flex-direction: column; gap: 6px; padding: 22px 20px 18px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="rw-brand-logo" style="width: 32px; height: 32px; font-size: 16px;">J</div>
+        <span style="font-size: 17px; font-weight: 700; color: var(--rw-text-primary);">JERO <span style="color: var(--rw-primary);">ATS</span></span>
+      </div>
+      <div style="font-size: 13px; font-weight: 600; color: var(--rw-text-secondary);">Register as Freelance Recruiter</div>
+      <div style="font-size: 11px; color: var(--rw-text-muted);">Join verified recruiters sourcing for tier-1 enterprises</div>
+    </div>
+    <div class="rw-card-body" style="padding: 22px;">
+      <form onsubmit="event.preventDefault(); alert('Registration submitted! Verification link sent to your email.'); window.location.href = 'login.html';">
+        <div class="rw-form-row" style="margin-bottom: 12px;">
+          <div class="rw-form-group">
+            <label class="rw-form-label">First Name</label>
+            <input type="text" class="rw-form-input" placeholder="e.g. Sarah" required>
+          </div>
+          <div class="rw-form-group">
+            <label class="rw-form-label">Last Name</label>
+            <input type="text" class="rw-form-input" placeholder="e.g. Jenkins" required>
+          </div>
+        </div>
+        <div class="rw-form-row" style="margin-bottom: 12px;">
+          <div class="rw-form-group">
+            <label class="rw-form-label">Professional Email</label>
+            <input type="email" class="rw-form-input" placeholder="sarah@agency.com" required>
+          </div>
+          <div class="rw-form-group">
+            <label class="rw-form-label">Mobile Number</label>
+            <input type="tel" class="rw-form-input" placeholder="+91 98765 43210" required>
+          </div>
+        </div>
+        <div class="rw-form-row" style="margin-bottom: 12px;">
+          <div class="rw-form-group">
+            <label class="rw-form-label">Primary Sourcing Domain</label>
+            <select class="rw-form-select">
+              <option>Technology & Software Engineering</option>
+              <option>Data Science & AI/ML</option>
+              <option>Banking, Finance & Fintech</option>
+              <option>Product & UI/UX Design</option>
+              <option>Executive & Leadership Search</option>
+            </select>
+          </div>
+          <div class="rw-form-group">
+            <label class="rw-form-label">Recruiting Experience</label>
+            <select class="rw-form-select">
+              <option>3 - 5 Years</option>
+              <option selected>5 - 8 Years</option>
+              <option>8 - 12 Years</option>
+              <option>12+ Years</option>
+            </select>
+          </div>
+        </div>
+        <div class="rw-form-row" style="margin-bottom: 14px;">
+          <div class="rw-form-group">
+            <label class="rw-form-label">Password</label>
+            <input type="password" class="rw-form-input" placeholder="Minimum 8 characters" required>
+          </div>
+          <div class="rw-form-group">
+            <label class="rw-form-label">Confirm Password</label>
+            <input type="password" class="rw-form-input" placeholder="Repeat password" required>
+          </div>
+        </div>
+        <div style="margin-bottom: 18px; font-size: 11px; color: var(--rw-text-muted); display: flex; align-items: flex-start; gap: 8px;">
+          <input type="checkbox" required checked style="accent-color: var(--rw-primary); margin-top: 2px;">
+          <span>I agree to JERO ATS Recruiter Terms of Service, 90-Day Candidate Ownership Lock Rules, and Confidential Client Representation standards.</span>
+        </div>
+        <button type="submit" class="rw-btn rw-btn-primary" style="width: 100%; justify-content: center; height: 38px;">
+          <i class="fas fa-user-check"></i> Submit Registration & Await Approval
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 16px; font-size: 12px; color: var(--rw-text-muted);">
+        Already approved? 
+        <a href="login.html" style="color: var(--rw-primary); font-weight: 600; text-decoration: none;">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

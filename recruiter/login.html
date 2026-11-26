@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruiter Sign In &bull; JERO ATS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/recruiter.css">
+</head>
+<body style="min-height: 100vh; background: var(--rw-bg-page); display: flex; align-items: center; justify-content: center; padding: 24px;">
+
+  <div class="rw-card" style="max-width: 440px; width: 100%; border-radius: var(--rw-radius-xl); box-shadow: var(--rw-shadow-lg);">
+    <div class="rw-card-header" style="justify-content: center; flex-direction: column; gap: 8px; padding: 26px 20px 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="rw-brand-logo" style="width: 36px; height: 36px; font-size: 18px;">J</div>
+        <span style="font-size: 18px; font-weight: 700; color: var(--rw-text-primary);">JERO <span style="color: var(--rw-primary);">ATS</span></span>
+      </div>
+      <div style="font-size: 13px; font-weight: 600; color: var(--rw-text-secondary);">Freelance Recruiter Portal</div>
+      <div style="font-size: 11px; color: var(--rw-text-muted);">Sign in to access assigned mandates & submissions</div>
+    </div>
+    <div class="rw-card-body" style="padding: 24px;">
+      <form onsubmit="event.preventDefault(); window.location.href = 'index.html#dashboard';">
+        <div class="rw-form-group" style="margin-bottom: 14px;">
+          <label class="rw-form-label">Email Address</label>
+          <input type="email" class="rw-form-input" value="sarah.jenkins.recruiter@jero.works" required placeholder="name@domain.com">
+        </div>
+        <div class="rw-form-group" style="margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="rw-form-label">Password</label>
+            <a href="javascript:void(0)" onclick="alert('Password reset link simulated: Sent to your email.')" style="font-size: 11px; color: var(--rw-primary); text-decoration: none;">Forgot Password?</a>
+          </div>
+          <input type="password" class="rw-form-input" value="••••••••••••" required>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-size: 12px;">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--rw-text-secondary);">
+            <input type="checkbox" checked style="accent-color: var(--rw-primary);"> Remember on this device
+          </label>
+          <span style="font-size: 11px; color: var(--rw-text-muted);"><i class="fas fa-lock text-emerald-500"></i> Single-Device Guard</span>
+        </div>
+        <button type="submit" class="rw-btn rw-btn-primary" style="width: 100%; justify-content: center; height: 38px; font-size: 13px;">
+          <i class="fas fa-sign-in-alt"></i> Sign In to Recruiter Workspace
+        </button>
+      </form>
+
+      <div style="margin-top: 16px; padding: 10px 12px; background: var(--rw-bg-subtle); border-radius: var(--rw-radius-md); border: 1px solid var(--rw-border); font-size: 11px; color: var(--rw-text-muted); display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-info-circle" style="color: var(--rw-primary);"></i>
+        <span>Sandbox Mode: Click button above for instant 1-click preview login.</span>
+      </div>
+
+      <div style="text-align: center; margin-top: 18px; font-size: 12px; color: var(--rw-text-muted);">
+        New to JERO Freelance Network? 
+        <a href="register.html" style="color: var(--rw-primary); font-weight: 600; text-decoration: none;">Register Here</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
