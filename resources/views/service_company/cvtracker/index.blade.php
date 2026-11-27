@@ -1467,15 +1467,15 @@
                         </div>
                         <div>
                             <div class="cl-header-title-row">
-                                <h1 class="cl-header-title">All Candidates Tracker</h1>
-                                <span class="cl-verified-badge" title="Verified ATS Talent Pipeline">
+                                <h1 class="cl-header-title">All Leads Tracker</h1>
+                                <span class="cl-verified-badge" title="Verified CRM Lead Pipeline">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                                         <polyline points="22 4 12 14.01 9 11.01"/>
                                     </svg>
                                 </span>
                             </div>
-                            <div class="cl-header-subtitle">Track and manage all talent pipeline candidates across jobs and organizations</div>
+                            <div class="cl-header-subtitle">Track and manage all service pipeline leads across services and organizations</div>
                         </div>
                     </div>
                     <div class="cl-header-actions">
@@ -1487,7 +1487,7 @@
 
                 <!-- ── 9 INTERACTIVE STATUS KPI CARDS (Client Tracker KPI Design System) ── -->
                 <div class="cv-kpi-grid mb-4">
-                    {{-- 1. All Candidates --}}
+                    {{-- 1. All Leads --}}
                     <div class="cl-card cv-kpi-card active" data-tab="all" onclick="setCvKpiTab('all', this)">
                         <div class="cl-card-top">
                             <div class="cl-card-icon blue">
@@ -1500,16 +1500,16 @@
                             </div>
                             <div class="cl-card-meta">
                                 <div class="cl-card-num" id="kpi_all">{{ number_format($candidateStats['tabs']['all'] ?? $candidateStats['total'] ?? $applicationCounter ?? 0) }}</div>
-                                <div class="cl-card-lbl">All Candidates</div>
+                                <div class="cl-card-lbl">All Leads</div>
                             </div>
                         </div>
                         <div class="cl-card-sub blue">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-                            <span>Total talent pool</span>
+                            <span>Total lead pool</span>
                         </div>
                     </div>
 
-                    {{-- 2. In Review --}}
+                    {{-- 2. Lead --}}
                     <div class="cl-card cv-kpi-card" data-tab="8" onclick="setCvKpiTab('8', this)">
                         <div class="cl-card-top">
                             <div class="cl-card-icon yellow">
@@ -1519,16 +1519,16 @@
                             </div>
                             <div class="cl-card-meta">
                                 <div class="cl-card-num" id="kpi_inreview">{{ number_format($candidateStats['tabs']['inreview'] ?? 0) }}</div>
-                                <div class="cl-card-lbl">In Review</div>
+                                <div class="cl-card-lbl">Lead</div>
                             </div>
                         </div>
                         <div class="cl-card-sub yellow">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M12 2v20"/></svg>
-                            <span>Under review</span>
+                            <span>New leads</span>
                         </div>
                     </div>
 
-                    {{-- 3. Sourcing --}}
+                    {{-- 3. Qualified --}}
                     <div class="cl-card cv-kpi-card" data-tab="1" onclick="setCvKpiTab('1', this)">
                         <div class="cl-card-top">
                             <div class="cl-card-icon gray">
@@ -1538,36 +1538,17 @@
                             </div>
                             <div class="cl-card-meta">
                                 <div class="cl-card-num" id="kpi_sourcing">{{ number_format($candidateStats['tabs']['sourcing'] ?? 0) }}</div>
-                                <div class="cl-card-lbl">Sourcing</div>
+                                <div class="cl-card-lbl">Qualified</div>
                             </div>
                         </div>
                         <div class="cl-card-sub gray">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            <span>Active sourcing</span>
+                            <span>Qualified leads</span>
                         </div>
                     </div>
 
-                    {{-- 4. Screening --}}
-                    <div class="cl-card cv-kpi-card" data-tab="2" onclick="setCvKpiTab('2', this)">
-                        <div class="cl-card-top">
-                            <div class="cl-card-icon purple">
-                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
-                                </svg>
-                            </div>
-                            <div class="cl-card-meta">
-                                <div class="cl-card-num" id="kpi_screening">{{ number_format($candidateStats['tabs']['screening'] ?? 0) }}</div>
-                                <div class="cl-card-lbl">Screening</div>
-                            </div>
-                        </div>
-                        <div class="cl-card-sub purple">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                            <span>Technical screen</span>
-                        </div>
-                    </div>
-
-                    {{-- 5. Evaluation --}}
-                    <div class="cl-card cv-kpi-card" data-tab="3" onclick="setCvKpiTab('3', this)">
+                    {{-- 4. Engagement --}}
+                    <div class="cl-card cv-kpi-card" data-tab="2,3" onclick="setCvKpiTab('2,3', this)">
                         <div class="cl-card-top">
                             <div class="cl-card-icon sky">
                                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1575,17 +1556,17 @@
                                 </svg>
                             </div>
                             <div class="cl-card-meta">
-                                <div class="cl-card-num" id="kpi_evaluation">{{ number_format($candidateStats['tabs']['evaluation'] ?? 0) }}</div>
-                                <div class="cl-card-lbl">Evaluation</div>
+                                <div class="cl-card-num" id="kpi_evaluation">{{ number_format(($candidateStats['tabs']['screening'] ?? 0) + ($candidateStats['tabs']['evaluation'] ?? 0)) }}</div>
+                                <div class="cl-card-lbl">Engagement</div>
                             </div>
                         </div>
                         <div class="cl-card-sub sky">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                            <span>Evaluations</span>
+                            <span>Engagements</span>
                         </div>
                     </div>
 
-                    {{-- 6. Negotiation --}}
+                    {{-- 5. Negotiation --}}
                     <div class="cl-card cv-kpi-card" data-tab="4" onclick="setCvKpiTab('4', this)">
                         <div class="cl-card-top">
                             <div class="cl-card-icon pink">
@@ -1600,11 +1581,11 @@
                         </div>
                         <div class="cl-card-sub pink">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                            <span>Comp & terms</span>
+                            <span>Pricing &amp; terms</span>
                         </div>
                     </div>
 
-                    {{-- 7. Offer --}}
+                    {{-- 6. Closing --}}
                     <div class="cl-card cv-kpi-card" data-tab="5" onclick="setCvKpiTab('5', this)">
                         <div class="cl-card-top">
                             <div class="cl-card-icon orange">
@@ -1614,16 +1595,16 @@
                             </div>
                             <div class="cl-card-meta">
                                 <div class="cl-card-num" id="kpi_offered">{{ number_format($candidateStats['tabs']['offered'] ?? 0) }}</div>
-                                <div class="cl-card-lbl">Offer</div>
+                                <div class="cl-card-lbl">Closing</div>
                             </div>
                         </div>
                         <div class="cl-card-sub orange">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-                            <span>Offer stage</span>
+                            <span>Closing stage</span>
                         </div>
                     </div>
 
-                    {{-- 8. Joined --}}
+                    {{-- 7. Won --}}
                     <div class="cl-card cv-kpi-card" data-tab="6" onclick="setCvKpiTab('6', this)">
                         <div class="cl-card-top">
                             <div class="cl-card-icon green">
@@ -1633,16 +1614,16 @@
                             </div>
                             <div class="cl-card-meta">
                                 <div class="cl-card-num" id="kpi_joined">{{ number_format($candidateStats['tabs']['joined'] ?? 0) }}</div>
-                                <div class="cl-card-lbl">Joined</div>
+                                <div class="cl-card-lbl">Won</div>
                             </div>
                         </div>
                         <div class="cl-card-sub green">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
-                            <span>Onboarded</span>
+                            <span>Won deals</span>
                         </div>
                     </div>
 
-                    {{-- 9. Rejected --}}
+                    {{-- 8. Lost --}}
                     <div class="cl-card cv-kpi-card" data-tab="7,9" onclick="setCvKpiTab('7,9', this)">
                         <div class="cl-card-top">
                             <div class="cl-card-icon red">
@@ -1652,12 +1633,31 @@
                             </div>
                             <div class="cl-card-meta">
                                 <div class="cl-card-num" id="kpi_rejected">{{ number_format($candidateStats['tabs']['rejected'] ?? 0) }}</div>
-                                <div class="cl-card-lbl">Rejected</div>
+                                <div class="cl-card-lbl">Lost</div>
                             </div>
                         </div>
                         <div class="cl-card-sub red">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                             <span>Archived</span>
+                        </div>
+                    </div>
+
+                    {{-- 9. On Hold --}}
+                    <div class="cl-card cv-kpi-card" data-tab="10" onclick="setCvKpiTab('10', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon gray">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/><line x1="10" y1="9" x2="10" y2="15"/><line x1="14" y1="9" x2="14" y2="15"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_onhold">{{ number_format($candidateStats['tabs']['onhold'] ?? 0) }}</div>
+                                <div class="cl-card-lbl">On Hold</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub gray">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="9" x2="10" y2="15"/><line x1="14" y1="9" x2="14" y2="15"/></svg>
+                            <span>Paused leads</span>
                         </div>
                     </div>
                 </div>
@@ -2446,7 +2446,7 @@
           <div class="sd-topbar-left">
             <span class="sd-topbar-ico"><i class="fa fa-random"></i></span>
             <div>
-              <div class="sd-topbar-title">Change Candidate Stage</div>
+              <div class="sd-topbar-title">Change Lead Stage</div>
               <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
             </div>
           </div>
@@ -3972,8 +3972,7 @@
                 if (stats.tabs.all != null) $('#kpi_all').text(Number(stats.tabs.all).toLocaleString());
                 if (stats.tabs.inreview != null) $('#kpi_inreview').text(Number(stats.tabs.inreview).toLocaleString());
                 if (stats.tabs.sourcing != null) $('#kpi_sourcing').text(Number(stats.tabs.sourcing).toLocaleString());
-                if (stats.tabs.screening != null) $('#kpi_screening').text(Number(stats.tabs.screening).toLocaleString());
-                if (stats.tabs.evaluation != null) $('#kpi_evaluation').text(Number(stats.tabs.evaluation).toLocaleString());
+                if (stats.tabs.screening != null || stats.tabs.evaluation != null) $('#kpi_evaluation').text((Number(stats.tabs.screening || 0) + Number(stats.tabs.evaluation || 0)).toLocaleString());
                 if (stats.tabs.negotiation != null) $('#kpi_negotiation').text(Number(stats.tabs.negotiation).toLocaleString());
                 if (stats.tabs.offered != null) $('#kpi_offered').text(Number(stats.tabs.offered).toLocaleString());
                 if (stats.tabs.joined != null) $('#kpi_joined').text(Number(stats.tabs.joined).toLocaleString());

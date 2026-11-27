@@ -279,7 +279,19 @@
             $masterStatusId = (int) ($row->job_master_status_id ?? 8);
             $stageAccentColor = $stageRailColors[$masterStatusId] ?? '#009ef7';
             $stagePillTheme = $stageBadgeThemes[$masterStatusId] ?? 'background:#eff6ff;color:#009ef7;border-color:#bfdbfe;';
-            $masterStageLabel = trim((string) (@$row->name ?? @$row->master_status_name ?? 'InReview'));
+            $crmStageNameMap = [
+                8 => 'Lead',
+                1 => 'Qualified',
+                2 => 'Engagement',
+                3 => 'Engagement',
+                4 => 'Negotiation',
+                5 => 'Closing',
+                6 => 'Won',
+                7 => 'Lost',
+                9 => 'Lost',
+                10 => 'On Hold',
+            ];
+            $masterStageLabel = $crmStageNameMap[$masterStatusId] ?? trim((string) (@$row->name ?? @$row->master_status_name ?? 'Lead'));
 
             $subStageName = '';
             if (!empty($row->child_status_name)) {
@@ -347,7 +359,7 @@
                                    data-skills="{{ e($rawSkillsStr) }}"
                                    data-cname="{{ e($displayFullName) }}"
                                    style="width:15px; height:15px; margin:0; flex-shrink:0;" />
-                            <span class="simf-subcard-label aptk-subcard-label">Candidate Info</span>
+                            <span class="simf-subcard-label aptk-subcard-label">Lead Info</span>
                         </label>
                         <div class="d-inline-flex align-items-center gap-1">
                             @if ($isBench)
@@ -472,7 +484,7 @@
                 <!-- SUB-CARD 4: JOB DETAILS (Neutral Subcard, Dynamic Badge Highlight Only) -->
                 <div class="simf-cand-subcard aptk-cand-subcard simf-cand-subcard--target">
                     <div class="simf-subcard-head aptk-subcard-hdr d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
-                        <span class="simf-subcard-label aptk-subcard-label text-uppercase text-truncate" title="Job Details">Job Details</span>
+                        <span class="simf-subcard-label aptk-subcard-label text-uppercase text-truncate" title="Service Details">Service Details</span>
                         <span class="simf-target-type-badge aptk-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; text-transform:uppercase; white-space:nowrap !important; flex-shrink:0; {{ $targetTypeStyle }}">
                             <i class="{{ $targetTypeIcon }} me-1"></i>{{ $targetTypeLabel }}
                         </span>
@@ -557,8 +569,8 @@
                                     data-job-id="{{ $rowJobId }}"
                                     data-cname="{{ e($displayFullName) }}"
                                     data-skills="{{ e($rawSkillsStr) }}"
-                                    title="Copy candidate to another job">
-                                Add to Other Job
+                                    title="Copy lead to another service">
+                                Add to Other Service
                             </button>
                         </div>
                     </div>

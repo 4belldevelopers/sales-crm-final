@@ -298,6 +298,7 @@
             $crmStageNameMap = [
                 8 => 'Lead',
                 1 => 'Qualified',
+                2 => 'Engagement',
                 3 => 'Engagement',
                 4 => 'Negotiation',
                 5 => 'Closing',
