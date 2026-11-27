@@ -266,6 +266,7 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
             'owner_client_id' => $request->filled('owner_client_id') ? (int) $request->input('owner_client_id') : null,
             'address_id' => $request->filled('address_id') ? (int) $request->input('address_id') : null,
             'name' => trim((string) $request->input('name')),
+            'product_url' => $request->input('product_url'),
             'crm_category' => $request->input('crm_category'),
             'industry_id' => $request->filled('industry_id') ? (int) $request->input('industry_id') : null,
 

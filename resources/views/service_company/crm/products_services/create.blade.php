@@ -161,8 +161,8 @@
             <div class="ij-header">
                 <div class="ij-heading">
                     <div>
-                        <h1>{{ $isEdit ? 'Edit Product' : 'Add Product' }}</h1>
-                        <p>Enter product details and publish</p>
+                        <h1>{{ $isEdit ? 'Edit Product / Service' : 'Add Product / Service' }}</h1>
+                        <p>Enter product / service details and publish</p>
                     </div>
                 </div>
 
@@ -173,7 +173,7 @@
                     </div>
                     <div class="step-v2 pending" data-step="2" onclick="crmGoToStep(2)">
                         <div class="step-v2-icon">2</div>
-                        <div class="step-v2-info"><div class="step-v2-label">Product Description</div></div>
+                        <div class="step-v2-info"><div class="step-v2-label">Product / Service Description</div></div>
                     </div>
                     <div class="step-v2 pending" data-step="3" onclick="crmGoToStep(3)">
                         <div class="step-v2-icon">3</div>
@@ -190,7 +190,7 @@
                         <i class="fas fa-save"></i> Save Draft
                     </button>
                     <button type="button" class="btn btn-primary" id="btnTopPublish" style="padding:6px 14px; font-size:12px;">
-                        <i class="fas fa-paper-plane"></i> {{ $isEdit ? 'Update Product' : 'Publish Product' }}
+                        <span>Next Page</span> <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
             </div>
@@ -198,7 +198,6 @@
             <form id="crmOfferingForm" method="POST" action="javascript:void(0);" enctype="multipart/form-data" novalidate>
                 @csrf
                 <input type="hidden" name="operation_id" id="operation_id" value="{{ $offering->operation_id ?? \Illuminate\Support\Str::uuid()->toString() }}">
-                <input type="hidden" name="offering_class" id="offering_class" value="product">
 
                 {{-- ================= STEP 1: BASIC DETAILS ================= --}}
                 <div class="step-content active" id="step1">
@@ -209,30 +208,46 @@
                                 <div class="ij-card-head-icon"><i class="fas fa-box-open"></i></div>
                                 <div>
                                     <div class="ij-card-head-title">Basic Information</div>
-                                    <div class="ij-card-head-sub">Enter the basic details for this product.</div>
+                                    <div class="ij-card-head-sub">Enter the basic details for this product / service.</div>
                                 </div>
                             </div>
                         </div>
                         <div class="ij-card-inner">
                             <div class="form-grid">
+                                <div class="form-group-cus" data-field="offering_class">
+                                    <label class="form-label required" for="offering_class">Select Offering (Product / Service)</label>
+                                    <select class="form-select" id="offering_class" name="offering_class" required>
+                                        <option value="product" {{ ($offering->offering_class ?? 'product') === 'product' ? 'selected' : '' }}>Product</option>
+                                        <option value="service" {{ ($offering->offering_class ?? 'product') === 'service' ? 'selected' : '' }}>Service</option>
+                                    </select>
+                                    <span class="form-hint">*Choose whether you are adding a Product or a Service.</span>
+                                </div>
+
+                                <div class="form-group-cus" data-field="product_url">
+                                    <label class="form-label" for="product_url">Product / Service URL</label>
+                                    <input type="url" class="form-input" id="product_url" name="product_url" maxlength="500" value="{{ $offering->product_url ?? '' }}" placeholder="https://example.com/product-or-service">
+                                    <span class="form-hint">Optional public landing page or product brochure URL.</span>
+                                    <span class="form-error">Please enter a valid URL (e.g. https://...).</span>
+                                </div>
+
                                 <div class="form-group-cus" data-field="name">
-                                    <label class="form-label required" for="offering_name">Product Name</label>
-                                    <input type="text" class="form-input" id="offering_name" name="name" maxlength="255" value="{{ $offering->name ?? '' }}" placeholder="Enter product name" required>
-                                    <span class="form-hint">*Enter the full name of this product.</span>
-                                    <span class="form-error">Product Name is required.</span>
+                                    <label class="form-label required" for="offering_name">Product / Service Name</label>
+                                    <input type="text" class="form-input" id="offering_name" name="name" maxlength="255" value="{{ $offering->name ?? '' }}" placeholder="Enter product or service name" required>
+                                    <span class="form-hint">*Enter the full name of this product / service.</span>
+                                    <span class="form-error">Product / Service Name is required.</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="sku">
-                                    <label class="form-label required" for="sku">Product SKU / Code</label>
-                                    <input type="text" class="form-input" id="sku" name="sku" value="{{ $offering->sku ?? '' }}" placeholder="Enter product SKU / code (e.g. PRD-001)" style="text-transform: uppercase;">
-                                    <span class="form-hint">*Unique product code within your company catalog.</span>
+                                    <label class="form-label required" for="sku">Product / Service SKU / Code</label>
+                                    <input type="text" class="form-input" id="sku" name="sku" value="{{ $offering->sku ?? '' }}" placeholder="Enter SKU / code (e.g. PRD-001)" style="text-transform: uppercase;">
+                                    <span class="form-hint">*Unique code within your company catalog.</span>
                                     <span class="form-error" id="skuError">SKU already exists in your company catalog.</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="crm_category">
-                                    <label class="form-label required" for="crm_category">Product Category</label>
+                                    <label class="form-label required" for="crm_category">Product / Service Category</label>
                                     <select class="form-select" id="crm_category" name="crm_category" required>
-                                        <option value="">Select Product Category</option>
+                                        <option value="">Select Category</option>
                                         <optgroup label="CRM Categories">
                                             <option value="IT & Cloud">IT &amp; Cloud</option>
                                             <option value="Software / SaaS">Software / SaaS</option>
@@ -256,7 +271,7 @@
                                 </div>
 
                                 <div class="form-group-cus" data-field="offering_type">
-                                    <label class="form-label required" for="offering_type">Product Type</label>
+                                    <label class="form-label required" for="offering_type">Product / Service Type</label>
                                     <select class="form-select" id="offering_type" name="offering_type">
                                         <option value="Physical Product">Physical Product</option>
                                         <option value="Digital Product">Digital Product</option>
@@ -264,7 +279,7 @@
                                         <option value="Subscription">Subscription</option>
                                         <option value="Professional Service">Service</option>
                                     </select>
-                                    <span class="form-hint">Select whether this is a Physical, Digital, or Service product.</span>
+                                    <span class="form-hint">Select whether this is a Physical, Digital, or Service offering.</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="owner_client_id">
@@ -333,7 +348,7 @@
                                 </div>
 
                                 <div class="form-group-cus" data-field="status">
-                                    <label class="form-label required" for="offering_status">Product Status</label>
+                                    <label class="form-label required" for="offering_status">Product / Service Status</label>
                                     <select class="form-select" id="offering_status" name="status">
                                         <option value="active" selected>Active</option>
                                         <option value="draft">Draft</option>
@@ -584,8 +599,8 @@
                             <div class="ij-card-head-left">
                                 <div class="ij-card-head-icon"><i class="fas fa-align-left"></i></div>
                                 <div>
-                                    <div class="ij-card-head-title">Product Description <span style="color:#ef4444;">*</span></div>
-                                    <div class="ij-card-head-sub">Describe product features, specifications, and customer benefits.</div>
+                                    <div class="ij-card-head-title">Product / Service Description <span style="color:#ef4444;">*</span></div>
+                                    <div class="ij-card-head-sub">Describe product / service features, specifications, and customer benefits.</div>
                                 </div>
                             </div>
                         </div>
@@ -720,7 +735,57 @@
             const EDIT_ID = @json($isEdit ? (int) $offering->id : 0);
             const CSRF_TOKEN = @json(csrf_token());
 
+            let currentStep = 1;
+            const topActionBtn = document.getElementById('btnTopPublish');
+            const isEditMode = @json($isEdit);
+
+            function updateTopActionBtn(stepNum) {
+                if (stepNum < 4) {
+                    topActionBtn.innerHTML = '<span>Next Page</span> <i class="fas fa-arrow-right"></i>';
+                } else {
+                    topActionBtn.innerHTML = '<i class="fas fa-paper-plane"></i> <span>' + (isEditMode ? 'Update Product / Service' : 'Publish Product / Service') + '</span>';
+                }
+            }
+
+            function validateCrmStep(stepNum) {
+                let ok = true;
+                document.querySelectorAll('#step' + stepNum + ' .form-group-cus').forEach(function (g) { g.classList.remove('has-error'); });
+
+                if (stepNum === 1) {
+                    const nameEl = document.getElementById('offering_name');
+                    const catEl = document.getElementById('crm_category');
+                    const skuEl = document.getElementById('sku');
+                    const minPriceEl = document.getElementById('min_price');
+                    const isConf = document.getElementById('pricing_visibility').value === 'confidential';
+
+                    if (!nameEl.value.trim()) { nameEl.closest('.form-group-cus').classList.add('has-error'); ok = false; }
+                    if (!skuEl.value.trim()) { skuEl.closest('.form-group-cus').classList.add('has-error'); document.getElementById('skuError').textContent = 'Product / Service SKU / Code is required.'; ok = false; }
+                    if (!catEl.value) { catEl.closest('.form-group-cus').classList.add('has-error'); ok = false; }
+                    if (!isConf && (minPriceEl.value === '' || parseFloat(minPriceEl.value) < 0)) {
+                        minPriceEl.closest('.form-group-cus').classList.add('has-error');
+                        ok = false;
+                    }
+                } else if (stepNum === 2) {
+                    const descTxt = (document.getElementById('crmDescriptionEditor').textContent || '').trim();
+                    if (!descTxt) {
+                        if (typeof toastr !== 'undefined') toastr.error('Please enter Product / Service Description.');
+                        else alert('Please enter Product / Service Description.');
+                        ok = false;
+                    }
+                }
+
+                if (!ok) {
+                    const firstErr = document.querySelector('#step' + stepNum + ' .has-error');
+                    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return ok;
+            }
+
             window.crmGoToStep = function (stepNum) {
+                if (stepNum > currentStep && !validateCrmStep(currentStep)) {
+                    return;
+                }
+                currentStep = stepNum;
                 document.querySelectorAll('#jrwrap .step-content').forEach(function (el) { el.classList.remove('active'); });
                 document.getElementById('step' + stepNum).classList.add('active');
                 document.querySelectorAll('#stepper .step-v2').forEach(function (el) {
@@ -730,9 +795,14 @@
                     else if (s < stepNum) el.classList.add('completed');
                     else el.classList.add('pending');
                 });
+                updateTopActionBtn(stepNum);
                 if (stepNum === 4) populateReview();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
+
+            document.getElementById('offering_type').addEventListener('change', function () {
+                document.getElementById('offering_class').value = (this.value === 'Professional Service') ? 'service' : 'product';
+            });
 
             function bindChoiceCards(containerId, hiddenId, onChange) {
                 const container = document.getElementById(containerId);
@@ -905,6 +975,29 @@
                             window.location.href = @json(url('service_company/crm/products-services')) + '/' + data.offering.id + '/edit';
                         }
                     } else {
+                        if (data.errors) {
+                            let firstFieldEl = null;
+                            Object.keys(data.errors).forEach(function (k) {
+                                const grp = document.querySelector('.form-group-cus[data-field="' + k + '"]');
+                                if (grp) {
+                                    grp.classList.add('has-error');
+                                    if (!firstFieldEl) firstFieldEl = grp;
+                                }
+                            });
+                            if (firstFieldEl) {
+                                const stepEl = firstFieldEl.closest('.step-content');
+                                if (stepEl) {
+                                    const sNum = parseInt(stepEl.id.replace('step', ''), 10);
+                                    if (sNum && sNum !== currentStep) {
+                                        currentStep = sNum;
+                                        document.querySelectorAll('#jrwrap .step-content').forEach(function (el) { el.classList.remove('active'); });
+                                        stepEl.classList.add('active');
+                                        updateTopActionBtn(sNum);
+                                    }
+                                }
+                                firstFieldEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }
                         const msg = data.message || 'Validation failed. Please check required fields.';
                         if (typeof toastr !== 'undefined') toastr.error(msg);
                         else alert(msg);
@@ -915,7 +1008,13 @@
 
             document.getElementById('btnTopSaveDraft').addEventListener('click', function () { submitOffering(true); });
             document.getElementById('btnBottomSaveDraft').addEventListener('click', function () { submitOffering(true); });
-            document.getElementById('btnTopPublish').addEventListener('click', function () { submitOffering(false); });
+            document.getElementById('btnTopPublish').addEventListener('click', function () {
+                if (currentStep < 4) {
+                    crmGoToStep(currentStep + 1);
+                } else {
+                    submitOffering(false);
+                }
+            });
             document.getElementById('btnBottomPublish').addEventListener('click', function () { submitOffering(false); });
         })();
     </script>
