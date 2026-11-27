@@ -161,8 +161,8 @@
             <div class="ij-header">
                 <div class="ij-heading">
                     <div>
-                        <h1>{{ $isEdit ? 'Edit Product / Service' : 'Add Product / Service' }}</h1>
-                        <p>Enter product / service details and publish</p>
+                        <h1>{{ $isEdit ? 'Edit Service' : 'Add Service' }}</h1>
+                        <p>Enter service details and publish</p>
                     </div>
                 </div>
 
@@ -173,7 +173,7 @@
                     </div>
                     <div class="step-v2 pending" data-step="2" onclick="crmGoToStep(2)">
                         <div class="step-v2-icon">2</div>
-                        <div class="step-v2-info"><div class="step-v2-label">Product / Service Description</div></div>
+                        <div class="step-v2-info"><div class="step-v2-label">Service Description</div></div>
                     </div>
                     <div class="step-v2 pending" data-step="3" onclick="crmGoToStep(3)">
                         <div class="step-v2-icon">3</div>
@@ -208,52 +208,52 @@
                                 <div class="ij-card-head-icon"><i class="fas fa-box-open"></i></div>
                                 <div>
                                     <div class="ij-card-head-title">Basic Information</div>
-                                    <div class="ij-card-head-sub">Enter the basic details for this product / service.</div>
+                                    <div class="ij-card-head-sub">Enter the basic details for this service.</div>
                                 </div>
                             </div>
                         </div>
                         <div class="ij-card-inner">
                             <div class="form-grid">
                                 <div class="form-group-cus" data-field="offering_class">
-                                    <label class="form-label required" for="offering_class">Select Offering (Product / Service)</label>
+                                    <label class="form-label required" for="offering_class">Select Offering (Service / Product)</label>
                                     <select class="form-select" id="offering_class" name="offering_class" required>
-                                        <option value="product" {{ ($offering->offering_class ?? 'product') === 'product' ? 'selected' : '' }}>Product</option>
-                                        <option value="service" {{ ($offering->offering_class ?? 'product') === 'service' ? 'selected' : '' }}>Service</option>
+                                        <option value="service" {{ ($offering->offering_class ?? 'service') === 'service' ? 'selected' : '' }}>Service</option>
+                                        <option value="product" {{ ($offering->offering_class ?? 'service') === 'product' ? 'selected' : '' }}>Product</option>
                                     </select>
-                                    <span class="form-hint">*Choose whether you are adding a Product or a Service.</span>
+                                    <span class="form-hint">*Choose whether you are adding a Service or a Product.</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="product_url">
-                                    <label class="form-label" for="product_url">Product / Service URL</label>
-                                    <input type="url" class="form-input" id="product_url" name="product_url" maxlength="500" value="{{ $offering->product_url ?? '' }}" placeholder="https://example.com/product-or-service">
-                                    <span class="form-hint">Optional public landing page or product brochure URL.</span>
+                                    <label class="form-label" for="product_url">Service URL</label>
+                                    <input type="url" class="form-input" id="product_url" name="product_url" maxlength="500" value="{{ $offering->product_url ?? '' }}" placeholder="https://example.com/service">
+                                    <span class="form-hint">Optional public landing page or service brochure URL.</span>
                                     <span class="form-error">Please enter a valid URL (e.g. https://...).</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="name">
-                                    <label class="form-label required" for="offering_name">Product / Service Name</label>
-                                    <input type="text" class="form-input" id="offering_name" name="name" maxlength="255" value="{{ $offering->name ?? '' }}" placeholder="Enter product or service name" required>
-                                    <span class="form-hint">*Enter the full name of this product / service.</span>
-                                    <span class="form-error">Product / Service Name is required.</span>
+                                    <label class="form-label required" for="offering_name">Service Name</label>
+                                    <input type="text" class="form-input" id="offering_name" name="name" maxlength="255" value="{{ $offering->name ?? '' }}" placeholder="Enter service name" required>
+                                    <span class="form-hint">*Enter the full name of this service.</span>
+                                    <span class="form-error">Service Name is required.</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="sku">
-                                    <label class="form-label required" for="sku">Product / Service SKU / Code</label>
-                                    <input type="text" class="form-input" id="sku" name="sku" value="{{ $offering->sku ?? '' }}" placeholder="Enter SKU / code (e.g. PRD-001)" style="text-transform: uppercase;">
-                                    <span class="form-hint">*Unique code within your company catalog.</span>
-                                    <span class="form-error" id="skuError">SKU already exists in your company catalog.</span>
+                                    <label class="form-label required" for="sku">Service Code / SKU</label>
+                                    <input type="text" class="form-input" id="sku" name="sku" value="{{ $offering->sku ?? '' }}" placeholder="Enter service code (e.g. SRV-001)" style="text-transform: uppercase;">
+                                    <span class="form-hint">*Unique service code within your company catalog.</span>
+                                    <span class="form-error" id="skuError">Service code already exists in your company catalog.</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="crm_category">
-                                    <label class="form-label required" for="crm_category">Product / Service Category</label>
+                                    <label class="form-label required" for="crm_category">Service Category</label>
                                     <select class="form-select" id="crm_category" name="crm_category" required>
                                         <option value="">Select Category</option>
-                                        <optgroup label="CRM Categories">
+                                        <optgroup label="Service Categories">
                                             <option value="IT & Cloud">IT &amp; Cloud</option>
                                             <option value="Software / SaaS">Software / SaaS</option>
                                             <option value="AI & Automation">AI &amp; Automation</option>
-                                            <option value="Hardware & Equipment">Hardware &amp; Equipment</option>
                                             <option value="Consulting & Advisory">Consulting &amp; Advisory</option>
+                                            <option value="Managed Services">Managed Services</option>
                                         </optgroup>
                                         @if(!empty($industries))
                                             <optgroup label="Industries">
@@ -266,20 +266,23 @@
                                         @endif
                                     </select>
                                     <input type="hidden" name="industry_id" id="industry_id" value="">
-                                    <span class="form-hint">*Please select the category for this product.</span>
-                                    <span class="form-error">Product Category is required.</span>
+                                    <span class="form-hint">*Please select the category for this service.</span>
+                                    <span class="form-error">Service Category is required.</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="offering_type">
-                                    <label class="form-label required" for="offering_type">Product / Service Type</label>
+                                    <label class="form-label required" for="offering_type">Service Type</label>
                                     <select class="form-select" id="offering_type" name="offering_type">
-                                        <option value="Physical Product">Physical Product</option>
-                                        <option value="Digital Product">Digital Product</option>
+                                        <option value="Professional Service" selected>Professional Service</option>
+                                        <option value="Consulting">Consulting</option>
+                                        <option value="Managed Service">Managed Service</option>
+                                        <option value="Staffing / Recruitment Service">Staffing / Recruitment Service</option>
                                         <option value="Software / SaaS">Software / SaaS</option>
                                         <option value="Subscription">Subscription</option>
-                                        <option value="Professional Service">Service</option>
+                                        <option value="Digital Product">Digital Product</option>
+                                        <option value="Physical Product">Physical Product</option>
                                     </select>
-                                    <span class="form-hint">Select whether this is a Physical, Digital, or Service offering.</span>
+                                    <span class="form-hint">Select the service or product delivery type.</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="owner_client_id">
@@ -299,12 +302,15 @@
                                     <select class="form-select" id="address_id" name="address_id">
                                         <option value="">Select Address (Optional for Digital)</option>
                                         @foreach(($clientAddresses ?? collect()) as $addr)
-                                            <option value="{{ $addr->id }}">
-                                                {{ trim(($addr->address ?? '') . ($addr->city ? ', ' . $addr->city : ''), ', ') }}
+                                            <option value="{{ $addr->id }}"
+                                                    data-client-id="{{ $addr->client_id }}"
+                                                    data-city="{{ $addr->city }}"
+                                                    {{ (int) ($offering->address_id ?? 0) === (int) $addr->id ? 'selected' : '' }}>
+                                                {{ trim(($addr->address ?? '') . ($addr->city ? ', ' . $addr->city : '') . ($addr->postcode ? ' - ' . $addr->postcode : ''), ', ') }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    <span class="form-hint">Select the dispatch or office address for this product.</span>
+                                    <span class="form-hint">Filtered automatically by the selected Organization / Brand Owner.</span>
                                 </div>
                             </div>
                         </div>
@@ -348,7 +354,7 @@
                                 </div>
 
                                 <div class="form-group-cus" data-field="status">
-                                    <label class="form-label required" for="offering_status">Product / Service Status</label>
+                                    <label class="form-label required" for="offering_status">Service Status</label>
                                     <select class="form-select" id="offering_status" name="status">
                                         <option value="active" selected>Active</option>
                                         <option value="draft">Draft</option>
@@ -599,8 +605,8 @@
                             <div class="ij-card-head-left">
                                 <div class="ij-card-head-icon"><i class="fas fa-align-left"></i></div>
                                 <div>
-                                    <div class="ij-card-head-title">Product / Service Description <span style="color:#ef4444;">*</span></div>
-                                    <div class="ij-card-head-sub">Describe product / service features, specifications, and customer benefits.</div>
+                                    <div class="ij-card-head-title">Service Description <span style="color:#ef4444;">*</span></div>
+                                    <div class="ij-card-head-sub">Describe service scope, deliverables, SLA, and customer benefits.</div>
                                 </div>
                             </div>
                         </div>
@@ -622,8 +628,8 @@
                             <div class="ij-card-head-left">
                                 <div class="ij-card-head-icon"><i class="fas fa-tags"></i></div>
                                 <div>
-                                    <div class="ij-card-head-title">Product Features &amp; Tags</div>
-                                    <div class="ij-card-head-sub">Add tags to help sales reps filter products in Quotations &amp; Deals.</div>
+                                    <div class="ij-card-head-title">Service Features &amp; Tags</div>
+                                    <div class="ij-card-head-sub">Add tags to help sales reps filter services in Quotations &amp; Deals.</div>
                                 </div>
                             </div>
                         </div>
@@ -716,7 +722,7 @@
                         <button type="button" class="btn btn-secondary" onclick="crmGoToStep(3)"><i class="fas fa-arrow-left"></i> Back</button>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-secondary" id="btnBottomSaveDraft"><i class="fas fa-save"></i> Save Draft</button>
-                            <button type="button" class="btn btn-primary" id="btnBottomPublish"><i class="fas fa-paper-plane"></i> {{ $isEdit ? 'Update Product' : 'Publish Product' }}</button>
+                            <button type="button" class="btn btn-primary" id="btnBottomPublish"><i class="fas fa-paper-plane"></i> {{ $isEdit ? 'Update Service' : 'Publish Service' }}</button>
                         </div>
                     </div>
                 </div>
@@ -743,7 +749,7 @@
                 if (stepNum < 4) {
                     topActionBtn.innerHTML = '<span>Next Page</span> <i class="fas fa-arrow-right"></i>';
                 } else {
-                    topActionBtn.innerHTML = '<i class="fas fa-paper-plane"></i> <span>' + (isEditMode ? 'Update Product / Service' : 'Publish Product / Service') + '</span>';
+                    topActionBtn.innerHTML = '<i class="fas fa-paper-plane"></i> <span>' + (isEditMode ? 'Update Service' : 'Publish Service') + '</span>';
                 }
             }
 
@@ -803,6 +809,38 @@
             document.getElementById('offering_type').addEventListener('change', function () {
                 document.getElementById('offering_class').value = (this.value === 'Professional Service') ? 'service' : 'product';
             });
+
+            // Organization -> Dependent Warehouse / Origin Address Filter
+            const ownerClientSelect = document.getElementById('owner_client_id');
+            const addressSelect = document.getElementById('address_id');
+            const allAddressOptions = Array.from(addressSelect.querySelectorAll('option[data-client-id]')).map(function (opt) {
+                return opt.cloneNode(true);
+            });
+
+            function syncAddressesForOwner(clientId, preserveCurrent) {
+                const currentVal = preserveCurrent ? addressSelect.value : '';
+                addressSelect.innerHTML = '<option value="">Select Address (Optional for Digital)</option>';
+                const matching = allAddressOptions.filter(function (opt) {
+                    return String(opt.getAttribute('data-client-id')) === String(clientId);
+                });
+                matching.forEach(function (opt) {
+                    const cloned = opt.cloneNode(true);
+                    if (currentVal && String(cloned.value) === String(currentVal)) {
+                        cloned.selected = true;
+                    }
+                    addressSelect.appendChild(cloned);
+                });
+                if (matching.length > 0 && (!preserveCurrent || !currentVal)) {
+                    addressSelect.value = matching[0].value;
+                }
+            }
+
+            if (ownerClientSelect) {
+                ownerClientSelect.addEventListener('change', function () {
+                    syncAddressesForOwner(this.value, false);
+                });
+                syncAddressesForOwner(ownerClientSelect.value, true);
+            }
 
             function bindChoiceCards(containerId, hiddenId, onChange) {
                 const container = document.getElementById(containerId);

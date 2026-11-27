@@ -233,6 +233,7 @@ Route::group(['middleware' => 'auth'], function () {
                 // #############       	START JEROCRM PRODUCT / SERVICES WIZARD
                 Route::get('crm/products-services/check-sku', [ServiceCompanyCrmOfferingController::class, 'checkSku'])->name('crm.offerings.checkSku');
                 Route::get('crm/products-services/check-ready/{id}', [ServiceCompanyCrmOfferingController::class, 'checkReady'])->name('crm.offerings.checkReady');
+                Route::get('crm/products-services/client-addresses/{clientId}', [ServiceCompanyCrmOfferingController::class, 'clientAddresses'])->name('crm.offerings.clientAddresses');
                 Route::get('crm/products-services/active-catalog', [ServiceCompanyCrmOfferingController::class, 'activeCatalog'])->name('crm.offerings.activeCatalog');
                 Route::post('crm/products-services/update/{id}', [ServiceCompanyCrmOfferingController::class, 'update'])->name('crm.offerings.postUpdate');
                 Route::resource('crm/products-services', ServiceCompanyCrmOfferingController::class)->names('crm.offerings');

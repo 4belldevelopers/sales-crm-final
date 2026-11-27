@@ -53,10 +53,10 @@ class CrmOfferingTest extends TestCase
 
         // 1. Render 4-step wizard (both crm.offerings.create and jobs.create)
         $viewRes = $this->actingAs($userA)->get(route('service_company.crm.offerings.create'));
-        $viewRes->assertStatus(200)->assertSee('Add Product / Service')->assertSee('Product / Service Name')->assertSee('Product / Service SKU / Code');
+        $viewRes->assertStatus(200)->assertSee('Add Service')->assertSee('Service Name')->assertSee('Service Code / SKU');
 
         $jobsCreateRes = $this->actingAs($userA)->get(route('service_company.jobs.create'));
-        $jobsCreateRes->assertStatus(200)->assertSee('Add Product / Service')->assertSee('Product / Service Name')->assertDontSee('Add Internal Jobs');
+        $jobsCreateRes->assertStatus(200)->assertSee('Add Service')->assertSee('Service Name')->assertDontSee('Add Internal Jobs');
 
         // 2. Create Product with Fixed Price (auto-locks frequency to One-Time) + idempotency key
         $opId = Str::uuid()->toString();

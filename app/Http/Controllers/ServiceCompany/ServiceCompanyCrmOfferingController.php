@@ -60,10 +60,13 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
         $this->tenantTimezone = GeneralMethod::defaultTimeZone($companyId ?: null) ?: config('app.timezone', 'UTC');
         $this->tenantTimezoneAbbr = Carbon::now($this->tenantTimezone)->format('T');
         $this->clients = Client::where('company_id', $companyId)->orderBy('name')->get(['id', 'name', 'self_company']);
-        $this->clientAddresses = DB::table('client_location')
-            ->where('company_id', $companyId)
-            ->orderBy('id')
-            ->get(['id', 'client_id', 'city', 'address', 'postcode']);
+        $clientIds = $this->clients->pluck('id')->all();
+        $this->clientAddresses = ! empty($clientIds)
+            ? DB::table('client_location')
+                ->whereIn('client_id', $clientIds)
+                ->orderBy('id')
+                ->get(['id', 'client_id', 'city', 'address', 'postcode'])
+            : collect();
         $this->industries = IndustryTaxonomyService::getGlobalManifest();
         $this->teamRoster = app(RelationshipManagerService::class)->getTeamRoster($companyId);
         $this->offering = null;
@@ -129,10 +132,13 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
         $this->tenantTimezone = GeneralMethod::defaultTimeZone($companyId) ?: config('app.timezone', 'UTC');
         $this->tenantTimezoneAbbr = Carbon::now($this->tenantTimezone)->format('T');
         $this->clients = Client::where('company_id', $companyId)->orderBy('name')->get(['id', 'name', 'self_company']);
-        $this->clientAddresses = DB::table('client_location')
-            ->where('company_id', $companyId)
-            ->orderBy('id')
-            ->get(['id', 'client_id', 'city', 'address', 'postcode']);
+        $clientIds = $this->clients->pluck('id')->all();
+        $this->clientAddresses = ! empty($clientIds)
+            ? DB::table('client_location')
+                ->whereIn('client_id', $clientIds)
+                ->orderBy('id')
+                ->get(['id', 'client_id', 'city', 'address', 'postcode'])
+            : collect();
         $this->industries = IndustryTaxonomyService::getGlobalManifest();
         $this->teamRoster = app(RelationshipManagerService::class)->getTeamRoster($companyId);
         $this->offering = $offering;
@@ -190,6 +196,25 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
         $exists = CrmOffering::where('company_id', $companyId)->where('id', (int) $id)->exists();
 
         return response()->json(['ready' => $exists]);
+    }
+
+    /**
+     * AJAX: Return warehouse/origin addresses for a selected organization/client.
+     */
+    public function clientAddresses($clientId): JsonResponse
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $ownsClient = Client::where('company_id', $companyId)->where('id', (int) $clientId)->exists();
+        if (! $ownsClient) {
+            return response()->json(['status' => 'success', 'data' => []]);
+        }
+
+        $addresses = DB::table('client_location')
+            ->where('client_id', (int) $clientId)
+            ->orderBy('id')
+            ->get(['id', 'client_id', 'address', 'city', 'postcode']);
+
+        return response()->json(['status' => 'success', 'data' => $addresses]);
     }
 
     /**
