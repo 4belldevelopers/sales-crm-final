@@ -3048,12 +3048,12 @@
 		  $resume_url				=	'';
 		  $photo  					=	url('public/avatar.png');	
 		  if($page_event == 'ADD'){
-			 $pagetitle			=	'Add Candidate';
+			 $pagetitle			=	'Add Lead';
 			 $resume_url			=	'';	
 		  }else if($page_event == 'EDIT'){
         $phone_code = ($application->phone_code) ? $application->phone_code : $phone_code;
         $second_phone_code = ($application->second_phone_code) ? $application->second_phone_code : $second_phone_code;
-        $pagetitle	=	'Edit Candidate';   
+        $pagetitle	=	'Edit Lead';   
         //  dd($application);   
 			  if(!empty($application->resume)){
 				$url				=	 $application->resume;
@@ -3217,11 +3217,11 @@
         </a>
         @if($page_event == 'EDIT')
           <button type="button" name="update" id="update-form" value="update" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder aptk-hdr-btn-solid candidate-submit-action talent-topbar-primary">
-            <i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i><span>Update Candidate</span>
+            <i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i><span>Update Lead</span>
           </button>
         @else
           <button type="button" name="save" id="save-form" value="save" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder aptk-hdr-btn-solid candidate-submit-action talent-topbar-primary">
-            <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i><span>Submit Candidate</span>
+            <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i><span>Submit Lead</span>
           </button>
         @endif
       </div>
@@ -3293,7 +3293,7 @@
                     <div class="fsh resume-card-header candidate-card-header">
                         <div class="candidate-card-title">
                           <span class="resume-card-icon candidate-card-icon"><i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i></span>
-                          <span><strong>Upload Resume <span class="rq">*</span></strong><small>Upload a PDF or Word resume to parse candidate details.</small></span>
+                          <span><strong>Upload Document <span class="rq">*</span></strong><small>Upload a PDF or Word document to parse lead details.</small></span>
                         </div>
                     </div>
 
@@ -3310,7 +3310,7 @@
                                 </svg>
                             </div>
 
-                            <div class="ut">Drag & Drop Resume Here</div>
+                            <div class="ut">Drag &amp; Drop Document Here</div>
 
                             <div class="us">or</div>
 
@@ -3338,7 +3338,7 @@
                                 <div class="up-stats" id="upStats">0% &middot; 0 KB / 0 KB</div>
                                 <div class="up-banner" id="upBanner" style="display:none">
                                     <svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>
-                                    <span id="upBannerText">Upload complete! Your resume has been uploaded successfully.</span>
+                                    <span id="upBannerText">Upload complete! Your document has been uploaded successfully.</span>
                                 </div>
                             </div>
 
@@ -3454,7 +3454,7 @@
                   <div class="fsh resume-card-header summary-card-header candidate-card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div class="candidate-card-title summary-title-wrap">
                       <span class="summary-card-icon candidate-card-icon"><i class="fa-solid fa-align-left" aria-hidden="true"></i></span>
-                      <span><strong>Career Summary <span class="rq">*</span></strong><small>Highlight the candidate's experience, strengths, and suitability.</small></span>
+                      <span><strong>Lead Summary <span class="rq">*</span></strong><small>Highlight the lead's background, needs, and suitability.</small></span>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                       <span id="cs_style_badge" class="badge badge-light-primary fw-semibold fs-8 d-none" style="border: 1px solid rgba(0,158,247,0.3); padding: 4px 8px;">Style 1/5: Technical Focus</span>
@@ -3464,14 +3464,14 @@
                     </div>
                   </div>
                   <div class="fsc summary-card-body candidate-card-body">
-                    <textarea placeholder="Enter career summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
+                    <textarea placeholder="Enter lead summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
                     <div class="cc">0 / 100</div>
                     <div class="tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10" />
                         <line x1="12" y1="16" x2="12" y2="12" />
                         <line x1="12" y1="8" x2="12.01" y2="8" />
-                      </svg><span>Tip: A good summary helps the client
-                        understand the candidate quickly.</span></div>
+                      </svg><span>Tip: A good summary helps the team
+                        understand the lead quickly.</span></div>
                   </div>
                 </div>
             </div>
@@ -3517,22 +3517,22 @@
               <div class="fsh candidate-card-header bd-hero">
                 <div class="candidate-card-title bd-hero-title">
                   <span class="candidate-card-icon bd-hero-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
-                  <span><strong>Candidate Profile</strong><small>Basic information to identify and contact this candidate.</small></span>
+                  <span><strong>Lead Profile</strong><small>Basic information to identify and contact this lead.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body bd-body">
                 <div class="candidate-profile-grid">
                   <div class="fg fv-row">
-                    <label for="full_name">Full Name <span class="rq">*</span></label>
-                    <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-user" aria-hidden="true"></i><input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" maxlength="191" autocomplete="name" autocapitalize="words" spellcheck="false" aria-required="true" /><button type="button" class="candidate-field-clear" title="Clear name" tabindex="-1" style="display: none;">&times;</button></div>
+                    <label for="full_name">Lead Name <span class="rq">*</span></label>
+                    <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-user" aria-hidden="true"></i><input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter lead name" maxlength="191" autocomplete="name" autocapitalize="words" spellcheck="false" aria-required="true" /><button type="button" class="candidate-field-clear" title="Clear name" tabindex="-1" style="display: none;">&times;</button></div>
                   </div>
                   <div class="fg fv-row">
-                    <label for="email">Primary Email <span class="rq">*</span></label>
-                    <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" class="form-control form-control-solid" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" aria-required="true" /><button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button></div>
+                    <label for="email">Lead Email <span class="rq">*</span></label>
+                    <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" class="form-control form-control-solid" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter lead email address" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" aria-required="true" /><button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button></div>
                     <div id="email-typo-hint" class="candidate-email-typo-hint" style="display: none;"></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Primary Contact Number <span class="rq">*</span></label>
+                    <label>Lead Contact Number <span class="rq">*</span></label>
                     <x-jero-phone-input
                         id="phone"
                         name="phone"
@@ -3543,7 +3543,7 @@
                         :defaultIso="@$country_code"
                         label=""
                         :required="true"
-                        placeholder="Enter primary number" />
+                        placeholder="Enter lead contact number" />
                   </div>
                   <div class="fg fv-row">
                     <label>Nationality</label>
@@ -3697,7 +3697,7 @@
                     <div id="jero-location-disambiguation" class="jero-disambiguation-bar" style="display:none !important; border:none !important;"></div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Highest Qualification <span class="rq">*</span></label>
+                    <label>Education / Background <span class="rq">*</span></label>
                     <div class="candidate-field-control bd-control bd-control--select">
                       <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
                       <select name="qualification" id="qualification">
@@ -3867,7 +3867,7 @@
               <div class="fsh candidate-card-header pd-hero">
                 <div class="candidate-card-title pd-hero-title">
                   <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span><strong>Professional Profile</strong><small>Define the candidate's current professional role and employment type.</small></span>
+                  <span><strong>Professional Profile</strong><small>Define the lead's current professional role and engagement type.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body pd-body">
@@ -3901,7 +3901,7 @@
               <div class="fsh candidate-card-header pd-experience-hero">
                 <div class="candidate-card-title pd-experience-hero-title">
                   <span class="candidate-card-icon pd-experience-hero-icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
-                  <span><strong>Experience Details</strong><small>Capture total and relevant experience for this job application.</small></span>
+                  <span><strong>Background &amp; Tenure</strong><small>Capture total and relevant background for this lead.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body pd-experience-body">
@@ -3978,7 +3978,7 @@
                     </div>
                   </div>
                   <div class="candidate-experience-panel candidate-experience-panel--relevant">
-                    <div class="candidate-panel-title"><span><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><span><strong>Relevant Experience <em>*</em></strong><small>Experience relevant to this job or required skills.</small></span></div>
+                    <div class="candidate-panel-title"><span><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><span><strong>Relevant Experience <em>*</em></strong><small>Experience relevant to this service or requirement.</small></span></div>
                     <div class="ei">
                       <label class="candidate-experience-field"><span>Years</span><select id="rel_exp_year" name="rel_exp_year">
                         <option value="">Years</option>
@@ -4054,14 +4054,14 @@
               <div class="fsh candidate-card-header se-hero">
                 <div class="candidate-card-title se-title">
                   <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
-                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
+                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the lead's key interests, skills, and specializations.</small></span>
                 </div>
                 <div class="candidate-skill-match is-empty" id="candidateSkillMatch" aria-live="polite">
                   <span class="candidate-skill-match-ring" id="candidateSkillMatchRing" style="--candidate-skill-match: 0%">
                     <strong id="candidateSkillMatchPercentage">--</strong>
                   </span>
                   <span class="candidate-skill-match-copy">
-                    <strong>Job Skills Match</strong>
+                    <strong>Service Skills Match</strong>
                     <small id="candidateSkillMatchDetail">No job skills defined</small>
                   </span>
                 </div>
@@ -4202,27 +4202,27 @@
               <div class="fsh candidate-card-header aw-hero">
                 <div class="candidate-card-title aw-hero-title">
                   <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
-                  <span><strong>Notice Period &amp; Joining Details</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
+                  <span><strong>Timeline &amp; Onboarding Readiness</strong><small>Capture onboarding timeline, availability, and reason for inquiry.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body aw-body">
                 <div class="candidate-notice-status-block fv-row">
-                  <label>Notice Period <span class="candidate-optional-label">(Optional)</span></label>
-                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
+                  <label>Onboarding Timeline <span class="candidate-optional-label">(Optional)</span></label>
+                  <div class="candidate-notice-options" role="radiogroup" aria-label="Onboarding Timeline Selection">
                     <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
                       <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
+                      <span class="candidate-notice-option-copy"><strong>Immediate Start</strong><small>Can start within 0-15 days</small></span>
                     </button>
                     <button type="button" class="candidate-notice-option {{ $snp_mode === 1 ? 'is-selected' : '' }}" data-notice-period-value="1" role="radio" aria-checked="{{ $snp_mode === 1 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
                       <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period (SNP)</strong><small>Currently working, serving notice</small></span>
+                      <span class="candidate-notice-option-copy"><strong>In Transition</strong><small>Currently in active contract, transitioning</small></span>
                     </button>
                     <button type="button" class="candidate-notice-option {{ $snp_mode === 0 ? 'is-selected' : '' }}" data-notice-period-value="0" role="radio" aria-checked="{{ $snp_mode === 0 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
                       <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
+                      <span class="candidate-notice-option-copy"><strong>Select Timeline</strong><small>Choose a specific onboarding timeline</small></span>
                     </button>
                   </div>
                   <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
@@ -4269,7 +4269,7 @@
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
                   <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
+                  <span><strong>Preferred Delivery Mode</strong><small>Select the lead's preferred service delivery mode.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
@@ -4291,7 +4291,7 @@
               <div class="fsh candidate-card-header br-hero">
                 <div class="candidate-card-title br-hero-title">
                   <span class="candidate-card-icon br-hero-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
-                  <span><strong>Salary Details</strong><small>Capture current and expected salary. Related values continue to calculate automatically.</small></span>
+                  <span><strong>Budget &amp; Pricing</strong><small>Capture current spend and target budget. Related values continue to calculate automatically.</small></span>
                 </div>
                 @php
                     $companyId = $company_id ?? (auth()->check() ? auth()->user()->company_id : null);
@@ -4385,7 +4385,7 @@
                   <section class="candidate-salary-panel candidate-salary-panel--current">
                     <div class="candidate-salary-panel-head">
                       <span><i class="fa-solid fa-coins" aria-hidden="true"></i></span>
-                      <div><strong>Current Salary</strong><small>What the candidate currently earns</small></div>
+                      <div><strong>Current Spend / Budget</strong><small>What the lead currently spends</small></div>
 
                     </div>
                     <div class="candidate-salary-tabs" role="tablist" aria-label="Salary frequency">
@@ -4422,48 +4422,48 @@
                           @endphp
                         </select>
                       </div>
-                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted payrateannual"></span></div>
+                      <div class="fg fv-row"><label>Current Budget (Annual) <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted payrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted payratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Current Budget (Monthly) <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                      <div class="fg fv-row"><label>Current Budget (Hourly) <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
-                    <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateCurrentSalaryHint">Enter your current {{ $candidateSalaryPeriod }} salary.</span></div>
+                    <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateCurrentSalaryHint">Enter current {{ $candidateSalaryPeriod }} budget.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
                       <span>Auto Calculated</span>
-                      <div><strong id="candidate-current-auto-label-one">Monthly Salary</strong><b id="candidate-current-monthly-auto">{{ @$application->ctc_monthly ?: 0 }}</b></div>
-                      <div><strong id="candidate-current-auto-label-two">Hourly Salary</strong><b id="candidate-current-hourly-auto">{{ @$application->ctc_hourly ?: 0 }}</b></div>
+                      <div><strong id="candidate-current-auto-label-one">Monthly Budget</strong><b id="candidate-current-monthly-auto">{{ @$application->ctc_monthly ?: 0 }}</b></div>
+                      <div><strong id="candidate-current-auto-label-two">Hourly Budget</strong><b id="candidate-current-hourly-auto">{{ @$application->ctc_hourly ?: 0 }}</b></div>
                     </div>
                   </section>
 
                   <section class="candidate-salary-panel candidate-salary-panel--expected">
-                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span><div><strong>Expected Salary</strong><small>What the candidate expects to earn</small></div></div>
-                    <div class="candidate-salary-tabs candidate-salary-tabs--synced" role="group" aria-label="Expected salary frequency, synchronized with Current Salary">
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span><div><strong>Target Budget</strong><small>What the lead targets to invest</small></div></div>
+                    <div class="candidate-salary-tabs candidate-salary-tabs--synced" role="group" aria-label="Target budget frequency, synchronized with Current Budget">
                       <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="annual" data-salary-mode="0">Annual</button>
                       <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="monthly" data-salary-mode="1">Monthly</button>
                       <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="annual">
-                      <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted billrateannual"></span></div>
+                      <div class="fg fv-row"><label>Target Budget (Annual) <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted billrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted billratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Target Budget (Monthly) <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted billratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted expectedctc"></span></div>
+                      <div class="fg fv-row"><label>Target Budget (Hourly) <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted expectedctc"></span></div>
                     </div>
-                    <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateExpectedSalaryHint">Enter your expected {{ $candidateSalaryPeriod }} salary.</span></div>
+                    <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateExpectedSalaryHint">Enter target {{ $candidateSalaryPeriod }} budget.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
                       <span>Auto Calculated</span>
-                      <div><strong id="candidate-expected-auto-label-one">Monthly Salary</strong><b id="candidate-expected-monthly-auto">{{ @$application->ectc_monthly ?: 0 }}</b></div>
-                      <div><strong id="candidate-expected-auto-label-two">Hourly Salary</strong><b id="candidate-expected-hourly-auto">{{ @$application->ectc_hourly ?: 0 }}</b></div>
+                      <div><strong id="candidate-expected-auto-label-one">Monthly Budget</strong><b id="candidate-expected-monthly-auto">{{ @$application->ectc_monthly ?: 0 }}</b></div>
+                      <div><strong id="candidate-expected-auto-label-two">Hourly Budget</strong><b id="candidate-expected-hourly-auto">{{ @$application->ectc_hourly ?: 0 }}</b></div>
                     </div>
                   </section>
 
                   <aside class="candidate-salary-panel candidate-salary-summary">
-                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-calculator" aria-hidden="true"></i></span><div><strong>Salary Summary</strong><small>Calculated from the entered values</small></div></div>
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-calculator" aria-hidden="true"></i></span><div><strong>Budget Summary</strong><small>Calculated from the entered values</small></div></div>
                     <div class="candidate-salary-summary-list">
                       <div><span id="candidateSalaryCurrentLabel">Current Salary (Annual)</span><strong id="candidateSalaryCurrentSummary">0</strong></div>
                       <div><span id="candidateSalaryExpectedLabel">Expected Salary (Annual)</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
@@ -4494,7 +4494,7 @@
                       </div>
                     </div>
                     <div class="candidate-offer-field">
-                      <strong>Any Offer from other organization</strong>
+                      <strong>Any Competing Proposal / Quote</strong>
                       <div class="rg">
                         <div class="ri"><input type="radio" name="oh" id="ohy" value="yes" {{ @$application->oh == 'yes' ? 'checked' : '' }} /><label for="ohy">Yes</label></div>
                         <div class="ri"><input type="radio" name="oh" id="ohn" value="no" {{ (@$application->wm == 'no' || empty(@$application->oh)) ? 'checked' : '' }} /><label for="ohn">No</label></div>
@@ -4504,7 +4504,7 @@
                 </div>
 
                 <div class="candidate-salary-comments">
-                  <div class="candidate-salary-comments-head"><span><i class="fa-regular fa-comment-dots" aria-hidden="true"></i></span><div><strong>Comments <small>(Optional)</small></strong><small>Add salary expectations or internal compensation notes.</small></div></div>
+                  <div class="candidate-salary-comments-head"><span><i class="fa-regular fa-comment-dots" aria-hidden="true"></i></span><div><strong>Comments <small>(Optional)</small></strong><small>Add budget expectations or internal pricing notes.</small></div></div>
                   <textarea name="comment" id="comment" placeholder="Enter comments about salary expectations or any other details..." rows="4">{{ @$application->comment }}</textarea>
                   <div class="cc" id="salaryCommentCounter">0 / 500</div>
                 </div>
@@ -4522,7 +4522,7 @@
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
                   <span class="candidate-card-icon candidate-card-icon--questions"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></span>
-                  <span><strong>Screening Questions</strong><small>Complete the job-specific information required for this submission.</small></span>
+                  <span><strong>Qualification Questions</strong><small>Complete the service-specific information required for this lead.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
@@ -4585,7 +4585,7 @@
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
                   <span class="candidate-card-icon candidate-card-icon--interview"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
-                  <span><strong>Availability for Next 3 Days <span class="rq">*</span></strong><small>Provide three interview windows and the preferred interview mode.</small></span>
+                  <span><strong>Meeting Availability (Next 3 Days) <span class="rq">*</span></strong><small>Provide three meeting windows and the preferred meeting mode.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
@@ -4634,7 +4634,7 @@
               <div class="fsh candidate-card-header addl-hero">
                 <div class="candidate-card-title addl-hero-title">
                   <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
-                  <span><strong>Professional Links</strong><small>Add online profiles that help clients evaluate this candidate.</small></span>
+                  <span><strong>Company &amp; Profile Links</strong><small>Add online profiles that help evaluate this lead.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body addl-body">
@@ -5089,7 +5089,7 @@
                 <div class="candidate-card-title">
                   <span class="candidate-card-icon candidate-card-icon--reason"><i class="fa-solid fa-route" aria-hidden="true"></i></span>
                   <div>
-                    <strong>Reason for Job Change</strong>
+                    <strong>Reason for Inquiry / Switch</strong>
                     <small>Specify candidate's transition driver or pick from standard recruitment scenarios.</small>
                   </div>
                 </div>
@@ -5583,7 +5583,7 @@
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
                   <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-solid fa-note-sticky" aria-hidden="true"></i></span>
-                  <span><strong>Recruiter Comments</strong><small>Add internal context and evaluation notes for the hiring team; this is not shared with the candidate.</small></span>
+                  <span><strong>Sales / Account Notes</strong><small>Add internal context and qualification notes for the team; this is not shared with the lead.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
@@ -5693,7 +5693,7 @@
                       @if(count($catFit) > 0)
                       <div class="tpl-category-section">
                         <div class="tpl-category-heading tpl-cat--amber">
-                          <span>Candidate Fit &amp; Experience</span>
+                          <span>Lead Fit &amp; Experience</span>
                         </div>
                         @foreach($catFit as $item)
                         <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0" onclick="window.selectRecruiterTemplate(this, event);">
@@ -5743,7 +5743,7 @@
 
                 <div class="fg fv-row recruiter-editor-field">
                   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                    <label class="mb-0 fw-semibold text-gray-800 fs-7">Recruiter Comments <span class="rq" style="color: #f1416c;">*</span></label>
+                    <label class="mb-0 fw-semibold text-gray-800 fs-7">Sales / Account Notes <span class="rq" style="color: #f1416c;">*</span></label>
                     <div class="d-flex align-items-center gap-2">
                       <span id="rn_style_badge" class="badge badge-light-primary fw-semibold fs-8 d-none" style="border: 1px solid rgba(0,158,247,0.3); padding: 4px 8px;">Angle 1/5: Strong Fit</span>
                       <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8 d-inline-flex align-items-center gap-1" id="btn_ai_rewrite_recruiter_note" style="font-size: 12px; font-weight: 600; border-radius: 6px;" title="Cycle AI rewrite angles for recruiter note">
@@ -5754,7 +5754,7 @@
                       </button>
                     </div>
                   </div>
-                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add recruiter comments about this candidate (strictly up to 100 words)...">{{ @$application->recruiter_note }}</textarea>
+                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add comments about this lead (strictly up to 100 words)...">{{ @$application->recruiter_note }}</textarea>
                   <div class="d-flex align-items-center justify-content-between mt-2">
                     <div class="recruiter-private-note"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i><span>Internal only - Visible to organization hiring & placement team</span></div>
                     <div class="rm-comments-counter" id="rm_comments_counter">0 / 100 words</div>
@@ -6509,7 +6509,7 @@
 
         <!-- Description -->
         <p class="rf-modal-desc" id="rfModalDesc" style="font-size:13.5px;color:#64748b;text-align:center;line-height:1.45;margin:0 auto 22px;max-width:360px;">
-            <span id="rfMissingCountText">3 required fields</span> need your attention before you can submit this candidate.
+            <span id="rfMissingCountText">3 required fields</span> need your attention before you can submit this lead.
         </p>
 
         <!-- Section Heading -->
@@ -6780,7 +6780,7 @@ $(document).ready(function () {
                     $('#upDetailParserStatus').html(
                         '<span style="color: #f59e0b; font-weight: 500;">Manual Entry</span>'
                     );
-                    toastr.info('Resume parsing unavailable. Please enter candidate details manually.');
+                    toastr.info('Document parsing unavailable. Please enter lead details manually.');
                 }
             });
         }
@@ -9819,11 +9819,11 @@ var KTAddCandidate = function () {
             var $btn = isEdit ? $('#update-form') : $('#save-form');
             if (!$btn.length) { $btn = $('#save-form, #update-form').first(); }
             var resetBtnHtml = isEdit
-                ? '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>'
-                : '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>';
+                ? '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Lead</span>'
+                : '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Lead</span>';
             var savingBtnHtml = isEdit
-                ? '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating Candidate...'
-                : '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving Candidate...';
+                ? '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating Lead...'
+                : '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving Lead...';
             $btn.prop('disabled', true).addClass('disabled');
             $btn.html(savingBtnHtml);
             if (submitButton) {
@@ -10022,12 +10022,12 @@ var KTAddCandidate = function () {
                     }
 
                     Swal.fire({
-                        title: "Candidate Saved!",
+                        title: "Lead Saved!",
                         html: '<div class="d-flex flex-column align-items-center py-2">' +
                               '  <div class="spinner-border text-primary mb-3" role="status" style="width: 2.2rem; height: 2.2rem;">' +
                               '    <span class="visually-hidden">Syncing...</span>' +
                               '  </div>' +
-                              '  <div class="fs-5 fw-bold text-gray-800 mb-1">Connecting candidate to live tracker...</div>' +
+                              '  <div class="fs-5 fw-bold text-gray-800 mb-1">Connecting lead to live tracker...</div>' +
                               '  <div class="fs-7 text-muted mb-2">Instant Elasticsearch synchronization in progress</div>' +
                               '  <div class="progress w-100 mb-2" style="height: 6px; max-width: 280px;">' +
                               '    <div id="candidate-sync-progress" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 10%"></div>' +
@@ -10073,8 +10073,8 @@ var KTAddCandidate = function () {
                             btn.innerText = "Go to Tracker Now";
                         }
                         Swal.update({
-                            title: "Candidate Saved!",
-                            html: '<div class="fs-6 fw-semibold text-gray-700 py-2"><i class="fa-solid fa-clock-rotate-left text-warning fs-3 me-2"></i>Candidate saved! Search index is updating in the background.</div>',
+                            title: "Lead Saved!",
+                            html: '<div class="fs-6 fw-semibold text-gray-700 py-2"><i class="fa-solid fa-clock-rotate-left text-warning fs-3 me-2"></i>Lead saved! Search index is updating in the background.</div>',
                             icon: "info",
                             showConfirmButton: true
                         });
@@ -10095,8 +10095,8 @@ var KTAddCandidate = function () {
                                     cleanupTimers();
                                     clearInterval(countdownInterval);
                                     Swal.update({
-                                        title: "Candidate Ready!",
-                                        html: '<div class="fs-6 fw-bold text-success py-2"><i class="fa-solid fa-circle-check text-success fs-2 me-2"></i>Candidate indexed & verified live in listing!</div>',
+                                        title: "Lead Ready!",
+                                        html: '<div class="fs-6 fw-bold text-success py-2"><i class="fa-solid fa-circle-check text-success fs-2 me-2"></i>Lead indexed & verified live in listing!</div>',
                                         icon: "success",
                                         showConfirmButton: false
                                     });
@@ -10177,7 +10177,7 @@ var KTAddCandidate = function () {
                     if (xhr.status === 502 || xhr.status === 503 || xhr.status === 504) {
                         Swal.fire({
                             title: "Server Reconnecting",
-                            text: "The server was momentarily restarting. Please click " + (isEdit ? "Update Candidate" : "Submit Candidate") + " again.",
+                            text: "The server was momentarily restarting. Please click " + (isEdit ? "Update Lead" : "Submit Lead") + " again.",
                             icon: "warning",
                             confirmButtonText: "Ok, got it!",
                             customClass: { confirmButton: "btn btn-primary" }
@@ -10212,8 +10212,8 @@ var KTAddCandidate = function () {
             }
 
             var resetBtnHtml = isEdit
-                ? '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>'
-                : '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>';
+                ? '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Lead</span>'
+                : '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Lead</span>';
 
             // 0. If resume upload is currently in progress, wait for it to complete smoothly
             if (window._resumeUploadState === 'uploading' || (window.ResumePresign && typeof window.ResumePresign.isUploading === 'function' && window.ResumePresign.isUploading())) {
