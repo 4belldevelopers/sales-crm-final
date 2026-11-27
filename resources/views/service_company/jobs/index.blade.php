@@ -1383,7 +1383,7 @@
               </div>
               <div>
                 <div class="cd-jobs-header-title-row">
-                  <h1 class="cd-jobs-header-title">Jobs Tracker</h1>
+                  <h1 class="cd-jobs-header-title">Product / Services Tracker</h1>
                   <span class="cd-jobs-verified-badge" title="Verified ATS Module">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -1392,7 +1392,7 @@
                   </span>
                   <span class="cd-jobs-header-count-pill" id="all_jobs_count">{{ $tabactive['allTabCount'] ?? $allRequisitionTotal }}</span>
                 </div>
-                <div class="cd-jobs-header-sub">Manage job requisitions, client mandates, hiring pipelines and recruitment performance.</div>
+                <div class="cd-jobs-header-sub">Manage products, services, pricing, inventory and sales performance.</div>
               </div>
             </div>
             <div class="cd-jobs-header-right">
@@ -1402,7 +1402,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"/>
                     <line x1="5" y1="12" x2="19" y2="12"/>
                   </svg>
-                  <span>Add Job</span>
+                  <span>Add Product / Service</span>
                 </button>
               @endif
               <button type="button" id="jobSearchBtn" style="display: none;" aria-hidden="true"></button>
@@ -1429,14 +1429,14 @@
                       <span id="span_jobsAllRequestBadge">{{ $jobRequestsTotal }} {{ $jobRequestsTotal === 1 ? 'req' : 'reqs' }}</span>
                     </span>
                   </div>
-                  <span class="cd-kpi-label">Total Jobs</span>
+                  <span class="cd-kpi-label">Total Products / Services</span>
                 </div>
               </div>
               <div class="cd-kpi-sub sub-blue">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                 </svg>
-                <span id="span_kpi_all_sub">{{ $hiringJobsTotal > 0 ? $hiringJobsTotal . ' actively hiring ' . ($hiringJobsTotal === 1 ? 'role' : 'roles') : '0 actively hiring roles' }}</span>
+                <span id="span_kpi_all_sub">{{ $hiringJobsTotal > 0 ? $hiringJobsTotal . ' active ' . ($hiringJobsTotal === 1 ? 'offering' : 'offerings') : '0 active offerings' }}</span>
               </div>
             </a>
 
@@ -1453,14 +1453,14 @@
                   <div class="cd-kpi-num-row">
                     <span class="cd-kpi-num" id="top_card_client_requisition_count">{{ $directJobsTotal }}</span>
                   </div>
-                  <span class="cd-kpi-label">Direct Client Jobs</span>
+                  <span class="cd-kpi-label">Direct Client Offerings</span>
                 </div>
               </div>
               <div class="cd-kpi-sub sub-green">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                <span id="span_kpi_direct_sub">{{ $directJobsPercent }}% of total jobs</span>
+                <span id="span_kpi_direct_sub">{{ $directJobsPercent }}% of total offerings</span>
               </div>
             </a>
 
@@ -1477,14 +1477,14 @@
                   <div class="cd-kpi-num-row">
                     <span class="cd-kpi-num" id="top_card_custom_requisition_count">{{ $internalClientJobsTotal }}</span>
                   </div>
-                  <span class="cd-kpi-label">Internal Client Jobs</span>
+                  <span class="cd-kpi-label">Internal Client Offerings</span>
                 </div>
               </div>
               <div class="cd-kpi-sub sub-blue sub-internal">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="m18 15-6-6-6 6"/>
                 </svg>
-                <span id="span_kpi_internal_sub">{{ $internalClientJobsTotal > 0 ? $internalJobsPercent . '% of total · client mandates' : 'No internal client jobs' }}</span>
+                <span id="span_kpi_internal_sub">{{ $internalClientJobsTotal > 0 ? $internalJobsPercent . '% of total · client offerings' : 'No internal client offerings' }}</span>
               </div>
             </a>
 
@@ -1500,7 +1500,7 @@
                   <div class="cd-kpi-num-row">
                     <span class="cd-kpi-num" id="top_card_my_org_count">{{ $myOrgJobsTotal }}</span>
                   </div>
-                  <span class="cd-kpi-label">My Organization Jobs</span>
+                  <span class="cd-kpi-label">My Organization</span>
                 </div>
               </div>
               <div class="cd-kpi-sub sub-cyan sub-my-org">
@@ -1508,7 +1508,7 @@
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                   <circle cx="9" cy="7" r="4"/>
                 </svg>
-                <span id="span_kpi_my_org_sub">{{ $myOrgJobsTotal > 0 ? $myOrgJobsPercent . '% of total · in-house roles' : 'No in-house roles yet' }}</span>
+                <span id="span_kpi_my_org_sub">{{ $myOrgJobsTotal > 0 ? $myOrgJobsPercent . '% of total · in-house offerings' : 'No in-house offerings yet' }}</span>
               </div>
             </a>
 
@@ -1526,7 +1526,7 @@
                   <div class="cd-kpi-num-row">
                     <span class="cd-kpi-num" id="top_card_job_request_count">{{ $jobRequestsTotal }}</span>
                   </div>
-                  <span class="cd-kpi-label">Job Requests</span>
+                  <span class="cd-kpi-label">Product / Service Requests</span>
                 </div>
               </div>
               <div class="cd-kpi-sub sub-purple">
@@ -1546,7 +1546,7 @@
           <div class="cd-jobs-search-filter-card">
             <div class="cd-jobs-search-subcard">
               <i class="fas fa-search"></i>
-              <input type="text" class="inputJobSearch" id="inputJobSearch" name="inputJobSearch" placeholder="Search jobs by title, skills, client, ID..." autocomplete="off">
+              <input type="text" class="inputJobSearch" id="inputJobSearch" name="inputJobSearch" placeholder="Search products & services by name, SKU, category, ID..." autocomplete="off">
               <button type="button" class="cd-jobs-search-clear" id="btnJobSearchClear" style="display: none;" title="Clear search">✕</button>
             </div>
 
@@ -1601,7 +1601,7 @@
                 <span class="cd-jobs-tab-badge" id="filterCountAll">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
               </button>
               <button type="button" class="cd-jobs-tab-btn jh-tab" data-status="active" onclick="filterJobsByStatus('active'); return false;">
-                <span>Hiring</span>
+                <span>Active</span>
                 <span class="cd-jobs-tab-badge badge-hiring" id="filterCountHiring">{{ $tabactive['hiringCount'] ?? 0 }}</span>
               </button>
               <button type="button" class="cd-jobs-tab-btn jh-tab" data-status="hold" onclick="filterJobsByStatus('hold'); return false;">
@@ -2247,10 +2247,10 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         var internalPct = total > 0 ? Math.round((internal / total) * 100) : 0;
         var myOrgPct = total > 0 ? Math.round((myOrg / total) * 100) : 0;
 
-        $('#span_kpi_all_sub').text(hiring > 0 ? (hiring + ' actively hiring ' + (hiring === 1 ? 'role' : 'roles')) : '0 actively hiring roles');
-        $('#span_kpi_direct_sub').text(directPct + '% of total jobs');
-        $('#span_kpi_internal_sub').text(internal > 0 ? (internalPct + '% of total · client mandates') : 'No internal client jobs');
-        $('#span_kpi_my_org_sub').text(myOrg > 0 ? (myOrgPct + '% of total · in-house roles') : 'No in-house roles yet');
+        $('#span_kpi_all_sub').text(hiring > 0 ? (hiring + ' active ' + (hiring === 1 ? 'offering' : 'offerings')) : '0 active offerings');
+        $('#span_kpi_direct_sub').text(directPct + '% of total offerings');
+        $('#span_kpi_internal_sub').text(internal > 0 ? (internalPct + '% of total · client offerings') : 'No internal client offerings');
+        $('#span_kpi_my_org_sub').text(myOrg > 0 ? (myOrgPct + '% of total · in-house offerings') : 'No in-house offerings yet');
         $('#span_kpi_request_sub').text(jobReq > 0 ? (jobReq + ' pending ' + (jobReq === 1 ? 'invitation' : 'invitations')) : "You're all caught up");
 
         if (jobReq > 0) {
@@ -3344,7 +3344,7 @@ $(document).on('click', '.client-hm-listing', function ()
             var detailsHtml = '';
             detailsHtml += '    <div class="cd-job-subcard cd-subcard-details js-open-job-drawer" data-row-id="' + job.id + '" data-direct="' + directClientAttr + '" title="Click to view job details">';
             detailsHtml += '      <div class="cd-subcard-header">';
-            detailsHtml += '        <span class="cd-subcard-label">Job Details</span>';
+            detailsHtml += '        <span class="cd-subcard-label">Product / Service Details</span>';
             detailsHtml += '        <div class="cd-header-badges">';
             if (opts.isJobRequest) {
                 detailsHtml += '          <span class="cd-badge-client-type type-direct"><i class="fas fa-shield-alt me-1"></i>Direct Client</span>';
@@ -3377,7 +3377,7 @@ $(document).on('click', '.client-hm-listing', function ()
             var compLocHtml = '';
             compLocHtml += '    <div class="cd-job-subcard cd-subcard-comp-loc js-open-job-drawer" data-row-id="' + job.id + '" data-direct="' + directClientAttr + '" title="Click to view job details">';
             compLocHtml += '      <div class="cd-subcard-header">';
-            compLocHtml += '        <span class="cd-subcard-label">Compensation &amp; Exp</span>';
+            compLocHtml += '        <span class="cd-subcard-label">Pricing &amp; Terms</span>';
             compLocHtml += '      </div>';
             compLocHtml += '      <div class="cd-subcard-body">';
             compLocHtml += '        <div class="cd-val-salary"><strong>' + salaryText + '</strong></div>';
