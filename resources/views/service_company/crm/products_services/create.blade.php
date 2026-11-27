@@ -96,6 +96,7 @@
         #jrwrap .ij-choice-title { font-size: 12.5px; font-weight: 600; color: #10143b; line-height: 1.25; }
         #jrwrap .ij-choice-sub { font-size: 11px; color: #687795; line-height: 1.25; margin-top: 2px; }
 
+<<<<<<< HEAD
         /* Popular Hubs Pill Row & City Search Autocomplete (1:1 Screenshot Match) */
         #jrwrap .ij-hubs-bar {
             display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px;
@@ -145,6 +146,20 @@
             font-size: 11px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
         }
         #jrwrap .ij-city-chip button:hover { background: #94a3b8; }
+=======
+        /* Popular Hubs Pill Row (Screenshot 2) */
+        #jrwrap .ij-hubs-bar {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px;
+        }
+        #jrwrap .ij-hub-pill {
+            padding: 4px 11px; border-radius: 999px; border: 1px solid #dce2ed; background: #fff;
+            font-size: 11.5px; font-weight: 500; color: #10143b; cursor: pointer;
+        }
+        #jrwrap .ij-hub-pill:hover, #jrwrap .ij-hub-pill.is-selected {
+            border-color: #2563eb; background: #eff6ff; color: #2563eb;
+        }
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
         #jrwrap .chips-box {
             border: 1px solid #dce2ed; border-radius: 8px; padding: 7px 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 40px; background: #fff;
         }
@@ -168,6 +183,7 @@
         #jrwrap .btn-primary { background: #9a6500; border-color: #9a6500; color: #fff; }
         #jrwrap .btn-primary:hover { background: #7a5000; }
 
+<<<<<<< HEAD
         #jrwrap .r4-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
         #jrwrap .r4-col { display: flex; flex-direction: column; gap: 16px; }
         #jrwrap .r4-edit-btn {
@@ -277,10 +293,14 @@
             font-size: 12px; color: #1e293b; cursor: pointer; transition: border-color 0.15s, background-color 0.15s;
         }
         #jrwrap .ij-rec-pill:hover { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+=======
+        #jrwrap .r4-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
         #jrwrap .rv-row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
         #jrwrap .rv-label { color: #687795; }
         #jrwrap .rv-val { font-weight: 500; color: #10143b; text-align: right; }
 
+<<<<<<< HEAD
         /* Service Team 2-Column Picker & Cards (1:1 Hiring Team Match) */
         #jrwrap .ij-team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
         #jrwrap .ij-team-search-wrap { position: relative; }
@@ -400,13 +420,19 @@
             border-color: #a7f3d0; background: #ffffff; color: #059669;
         }
 
+=======
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
         @media (max-width: 1199px) {
             #jrwrap .ij-choice-grid-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             #jrwrap .ij-choice-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             #jrwrap .r4-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 768px) {
+<<<<<<< HEAD
             #jrwrap .form-grid, #jrwrap .form-grid-3, #jrwrap .ij-choice-grid-3, #jrwrap .ij-choice-grid-4, #jrwrap .ij-choice-grid-5, #jrwrap .r4-grid, #jrwrap .step2-split-grid, #jrwrap .step3-split-grid, #jrwrap .ij-team-grid { grid-template-columns: 1fr; }
+=======
+            #jrwrap .form-grid, #jrwrap .form-grid-3, #jrwrap .ij-choice-grid-3, #jrwrap .ij-choice-grid-4, #jrwrap .ij-choice-grid-5, #jrwrap .r4-grid { grid-template-columns: 1fr; }
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
         }
     </style>
 @endpush
@@ -425,8 +451,13 @@
             <div class="ij-header">
                 <div class="ij-heading">
                     <div>
+<<<<<<< HEAD
                         <h1>{{ $isEdit ? 'Edit Service' : 'Add Service' }}</h1>
                         <p>Enter service details and publish</p>
+=======
+                        <h1>{{ $isEdit ? 'Edit Product / Service' : 'Add Product / Service' }}</h1>
+                        <p>Enter product / service details and publish</p>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                     </div>
                 </div>
 
@@ -437,7 +468,11 @@
                     </div>
                     <div class="step-v2 pending" data-step="2" onclick="crmGoToStep(2)">
                         <div class="step-v2-icon">2</div>
+<<<<<<< HEAD
                         <div class="step-v2-info"><div class="step-v2-label">Service Description</div></div>
+=======
+                        <div class="step-v2-info"><div class="step-v2-label">Product / Service Description</div></div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                     </div>
                     <div class="step-v2 pending" data-step="3" onclick="crmGoToStep(3)">
                         <div class="step-v2-icon">3</div>
@@ -472,13 +507,18 @@
                                 <div class="ij-card-head-icon"><i class="fas fa-box-open"></i></div>
                                 <div>
                                     <div class="ij-card-head-title">Basic Information</div>
+<<<<<<< HEAD
                                     <div class="ij-card-head-sub">Enter the basic details for this service.</div>
+=======
+                                    <div class="ij-card-head-sub">Enter the basic details for this product / service.</div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
                         <div class="ij-card-inner">
                             <div class="form-grid">
                                 <div class="form-group-cus" data-field="offering_class">
+<<<<<<< HEAD
                                     <label class="form-label required" for="offering_class">Select Offering (Service / Product)</label>
                                     <select class="form-select" id="offering_class" name="offering_class" required>
                                         <option value="service" {{ ($offering->offering_class ?? 'service') === 'service' ? 'selected' : '' }}>Service</option>
@@ -491,10 +531,25 @@
                                     <label class="form-label" for="product_url">Service URL</label>
                                     <input type="url" class="form-input" id="product_url" name="product_url" maxlength="500" value="{{ $offering->product_url ?? '' }}" placeholder="https://example.com/service">
                                     <span class="form-hint">Optional public landing page or service brochure URL.</span>
+=======
+                                    <label class="form-label required" for="offering_class">Select Offering (Product / Service)</label>
+                                    <select class="form-select" id="offering_class" name="offering_class" required>
+                                        <option value="product" {{ ($offering->offering_class ?? 'product') === 'product' ? 'selected' : '' }}>Product</option>
+                                        <option value="service" {{ ($offering->offering_class ?? 'product') === 'service' ? 'selected' : '' }}>Service</option>
+                                    </select>
+                                    <span class="form-hint">*Choose whether you are adding a Product or a Service.</span>
+                                </div>
+
+                                <div class="form-group-cus" data-field="product_url">
+                                    <label class="form-label" for="product_url">Product / Service URL</label>
+                                    <input type="url" class="form-input" id="product_url" name="product_url" maxlength="500" value="{{ $offering->product_url ?? '' }}" placeholder="https://example.com/product-or-service">
+                                    <span class="form-hint">Optional public landing page or product brochure URL.</span>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                     <span class="form-error">Please enter a valid URL (e.g. https://...).</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="name">
+<<<<<<< HEAD
                                     <label class="form-label required" for="offering_name">Service Name</label>
                                     <input type="text" class="form-input" id="offering_name" name="name" maxlength="255" value="{{ $offering->name ?? '' }}" placeholder="Enter service name" required>
                                     <span class="form-hint">*Enter the full name of this service.</span>
@@ -518,6 +573,31 @@
                                             <option value="AI & Automation">AI &amp; Automation</option>
                                             <option value="Consulting & Advisory">Consulting &amp; Advisory</option>
                                             <option value="Managed Services">Managed Services</option>
+=======
+                                    <label class="form-label required" for="offering_name">Product / Service Name</label>
+                                    <input type="text" class="form-input" id="offering_name" name="name" maxlength="255" value="{{ $offering->name ?? '' }}" placeholder="Enter product or service name" required>
+                                    <span class="form-hint">*Enter the full name of this product / service.</span>
+                                    <span class="form-error">Product / Service Name is required.</span>
+                                </div>
+
+                                <div class="form-group-cus" data-field="sku">
+                                    <label class="form-label required" for="sku">Product / Service SKU / Code</label>
+                                    <input type="text" class="form-input" id="sku" name="sku" value="{{ $offering->sku ?? '' }}" placeholder="Enter SKU / code (e.g. PRD-001)" style="text-transform: uppercase;">
+                                    <span class="form-hint">*Unique code within your company catalog.</span>
+                                    <span class="form-error" id="skuError">SKU already exists in your company catalog.</span>
+                                </div>
+
+                                <div class="form-group-cus" data-field="crm_category">
+                                    <label class="form-label required" for="crm_category">Product / Service Category</label>
+                                    <select class="form-select" id="crm_category" name="crm_category" required>
+                                        <option value="">Select Category</option>
+                                        <optgroup label="CRM Categories">
+                                            <option value="IT & Cloud">IT &amp; Cloud</option>
+                                            <option value="Software / SaaS">Software / SaaS</option>
+                                            <option value="AI & Automation">AI &amp; Automation</option>
+                                            <option value="Hardware & Equipment">Hardware &amp; Equipment</option>
+                                            <option value="Consulting & Advisory">Consulting &amp; Advisory</option>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                         </optgroup>
                                         @if(!empty($industries))
                                             <optgroup label="Industries">
@@ -530,6 +610,7 @@
                                         @endif
                                     </select>
                                     <input type="hidden" name="industry_id" id="industry_id" value="">
+<<<<<<< HEAD
                                     <span class="form-hint">*Please select the category for this service.</span>
                                     <span class="form-error">Service Category is required.</span>
                                 </div>
@@ -547,6 +628,22 @@
                                         <option value="Physical Product">Physical Product</option>
                                     </select>
                                     <span class="form-hint">Select the service or product delivery type.</span>
+=======
+                                    <span class="form-hint">*Please select the category for this product.</span>
+                                    <span class="form-error">Product Category is required.</span>
+                                </div>
+
+                                <div class="form-group-cus" data-field="offering_type">
+                                    <label class="form-label required" for="offering_type">Product / Service Type</label>
+                                    <select class="form-select" id="offering_type" name="offering_type">
+                                        <option value="Physical Product">Physical Product</option>
+                                        <option value="Digital Product">Digital Product</option>
+                                        <option value="Software / SaaS">Software / SaaS</option>
+                                        <option value="Subscription">Subscription</option>
+                                        <option value="Professional Service">Service</option>
+                                    </select>
+                                    <span class="form-hint">Select whether this is a Physical, Digital, or Service offering.</span>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
 
                                 <div class="form-group-cus" data-field="owner_client_id">
@@ -566,6 +663,7 @@
                                     <select class="form-select" id="address_id" name="address_id">
                                         <option value="">Select Address (Optional for Digital)</option>
                                         @foreach(($clientAddresses ?? collect()) as $addr)
+<<<<<<< HEAD
                                             <option value="{{ $addr->id }}"
                                                     data-client-id="{{ $addr->client_id }}"
                                                     data-city="{{ $addr->city }}"
@@ -575,25 +673,43 @@
                                         @endforeach
                                     </select>
                                     <span class="form-hint">Filtered automatically by the selected Organization / Brand Owner.</span>
+=======
+                                            <option value="{{ $addr->id }}">
+                                                {{ trim(($addr->address ?? '') . ($addr->city ? ', ' . $addr->city : ''), ', ') }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <span class="form-hint">Select the dispatch or office address for this product.</span>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
                     </div>
 
+<<<<<<< HEAD
                     {{-- Card 2: Service Capacity & Status --}}
+=======
+                    {{-- Card 2: Product Inventory & Status (Matches Screenshot 1 Card 2) --}}
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                     <div class="card">
                         <div class="ij-card-head">
                             <div class="ij-card-head-left">
                                 <div class="ij-card-head-icon"><i class="fas fa-cubes"></i></div>
                                 <div>
+<<<<<<< HEAD
                                     <div class="ij-card-head-title">Service Capacity &amp; Status</div>
                                     <div class="ij-card-head-sub">Specify service capacity, billing unit, and catalog status for this service.</div>
+=======
+                                    <div class="ij-card-head-title">Inventory &amp; Status</div>
+                                    <div class="ij-card-head-sub">Specify stock capacity, unit, and catalog status for this product.</div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
                         <div class="ij-card-inner">
                             <div class="form-grid-3">
                                 <div class="form-group-cus" data-field="unit">
+<<<<<<< HEAD
                                     <label class="form-label" for="unit">Service Billing Unit</label>
                                     <select class="form-select" id="unit" name="unit">
                                         <option value="project">Project / Engagement</option>
@@ -608,17 +724,41 @@
 
                                 <div class="form-group-cus" data-field="available_capacity">
                                     <label class="form-label required" for="available_capacity">Service Capacity / Active Slots</label>
+=======
+                                    <label class="form-label" for="unit">Unit of Measurement</label>
+                                    <select class="form-select" id="unit" name="unit">
+                                        <option value="piece">Piece</option>
+                                        <option value="box">Box</option>
+                                        <option value="pack">Pack</option>
+                                        <option value="kg">Kg</option>
+                                        <option value="litre">Litre</option>
+                                        <option value="license">License / Seat</option>
+                                    </select>
+                                    <span class="form-hint">Unit used on quotations &amp; orders.</span>
+                                </div>
+
+                                <div class="form-group-cus" data-field="available_capacity">
+                                    <label class="form-label required" for="available_capacity">Available Quantity / Stock</label>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                     <div class="d-flex align-items-center gap-2">
                                         <input type="number" min="0" class="form-input" id="available_capacity" name="available_capacity" value="100">
                                         <label class="d-flex align-items-center gap-1 mb-0" style="white-space:nowrap; font-size:12px; cursor:pointer;">
                                             <input type="checkbox" id="is_unlimited_capacity" name="is_unlimited_capacity" value="1"> Unlimited
                                         </label>
                                     </div>
+<<<<<<< HEAD
                                     <span class="form-hint">Concurrent client capacity (or Unlimited for ongoing services).</span>
                                 </div>
 
                                 <div class="form-group-cus" data-field="status">
                                     <label class="form-label required" for="offering_status">Service Status</label>
+=======
+                                    <span class="form-hint">Available stock units (or Unlimited for Digital).</span>
+                                </div>
+
+                                <div class="form-group-cus" data-field="status">
+                                    <label class="form-label required" for="offering_status">Product / Service Status</label>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                     <select class="form-select" id="offering_status" name="status">
                                         <option value="active" selected>Active</option>
                                         <option value="draft">Draft</option>
@@ -626,20 +766,33 @@
                                         <option value="temporarily_unavailable">Temporarily Unavailable</option>
                                         <option value="discontinued">Discontinued</option>
                                     </select>
+<<<<<<< HEAD
                                     <span class="form-hint">Inactive services cannot be used in new proposals or deals.</span>
+=======
+                                    <span class="form-hint">Inactive products cannot be used in new sales.</span>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
                     </div>
 
+<<<<<<< HEAD
                     {{-- Card 3: Service Pricing --}}
+=======
+                    {{-- Card 3: Pricing (Matches Screenshot 2 Compensation Card) --}}
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                     <div class="card">
                         <div class="ij-card-head">
                             <div class="ij-card-head-left">
                                 <div class="ij-card-head-icon"><i class="fas fa-rupee-sign"></i></div>
                                 <div>
+<<<<<<< HEAD
                                     <div class="ij-card-head-title">Service Pricing</div>
                                     <div class="ij-card-head-sub">Define the pricing and billing details for this service.</div>
+=======
+                                    <div class="ij-card-head-title">Pricing</div>
+                                    <div class="ij-card-head-sub">Define the pricing details for this product.</div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
@@ -655,13 +808,18 @@
                         <div class="ij-card-inner">
                             <div class="form-grid-3">
                                 <div class="form-group-cus pricing-input-row" data-field="min_price">
+<<<<<<< HEAD
                                     <label class="form-label required" for="min_price">Base / Minimum Price</label>
+=======
+                                    <label class="form-label required" for="min_price">Selling / Base Price</label>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                     <div class="ij-price-group">
                                         <select class="ij-curr-select" id="currency_code" name="currency_code">
                                             @foreach($currencyList as $cCode)
                                                 <option value="{{ $cCode }}" {{ strtoupper((string)$cCode) === strtoupper((string)$defaultCurrency) ? 'selected' : '' }}>{{ $cCode }}</option>
                                             @endforeach
                                         </select>
+<<<<<<< HEAD
                                         <input type="number" step="0.01" min="0" class="ij-price-input" id="min_price" name="min_price" placeholder="Enter base service price">
                                     </div>
                                     <span class="form-hint">*Starting or standard price offered for this service.</span>
@@ -675,12 +833,28 @@
                                         <input type="number" step="0.01" min="0" class="ij-price-input" id="max_price" name="max_price" placeholder="Enter max package price">
                                     </div>
                                     <span class="form-hint">Optional upper price range for tiered services.</span>
+=======
+                                        <input type="number" step="0.01" min="0" class="ij-price-input" id="min_price" name="min_price" placeholder="Enter selling price">
+                                    </div>
+                                    <span class="form-hint">*Selling price offered for this product.</span>
+                                    <span class="form-error">Selling Price is required.</span>
+                                </div>
+
+                                <div class="form-group-cus pricing-input-row" data-field="max_price">
+                                    <label class="form-label" for="max_price">MRP / Maximum Price</label>
+                                    <div class="ij-price-group">
+                                        <span class="ij-curr-select" id="maxCurrMirror" style="display:flex;align-items:center;">{{ $defaultCurrency }}</span>
+                                        <input type="number" step="0.01" min="0" class="ij-price-input" id="max_price" name="max_price" placeholder="Enter MRP / max price">
+                                    </div>
+                                    <span class="form-hint">Optional MRP or upper price range.</span>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
 
                                 <div class="form-group-cus pricing-input-row">
                                     <label class="form-label required" for="pricing_frequency">Billing Cycle</label>
                                     <select class="form-select" id="pricing_frequency" name="pricing_frequency">
                                         <option value="One-Time">One-Time</option>
+<<<<<<< HEAD
                                         <option value="Hourly">Hourly</option>
                                         <option value="Daily">Daily</option>
                                         <option value="Weekly">Weekly</option>
@@ -690,25 +864,43 @@
                                         <option value="Per Milestone">Per Milestone</option>
                                     </select>
                                     <span class="form-hint">Billing frequency for this service.</span>
+=======
+                                        <option value="Monthly">Monthly</option>
+                                        <option value="Annual">Annual</option>
+                                        <option value="Hourly">Hourly</option>
+                                        <option value="Per Unit">Per Unit</option>
+                                    </select>
+                                    <span class="form-hint">Billing frequency for this product.</span>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
                     </div>
 
+<<<<<<< HEAD
                     {{-- Card 4: Service Delivery Coverage --}}
+=======
+                    {{-- Card 4: Delivery Location or Coverage (Matches Screenshot 2 Card 2) --}}
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                     <div class="card">
                         <div class="ij-card-head">
                             <div class="ij-card-head-left">
                                 <div class="ij-card-head-icon"><i class="fas fa-map-marker-alt"></i></div>
                                 <div>
+<<<<<<< HEAD
                                     <div class="ij-card-head-title">Service Delivery Coverage</div>
                                     <div class="ij-card-head-sub">Select up to 15 regions, cities, or remote zones where this service is delivered.</div>
+=======
+                                    <div class="ij-card-head-title">Delivery Location or Coverage</div>
+                                    <div class="ij-card-head-sub">Select up to 15 regions or cities where this product is available.</div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
                         <div class="ij-card-inner">
                             <div class="ij-hubs-bar" id="popularHubsPills">
                                 <span style="font-size:12px; font-weight:500; color:#475569;">Popular Hubs:</span>
+<<<<<<< HEAD
                                 @foreach([
                                     ['label' => 'Bengaluru', 'canonical' => 'Bengaluru (Karnataka, India)'],
                                     ['label' => 'Mumbai', 'canonical' => 'Mumbai (Maharashtra, India)'],
@@ -733,6 +925,19 @@
                                 <button type="button" id="btnClearLocations" style="background:none;border:none;color:#9a6500;font-weight:600;cursor:pointer;">Clear All</button>
                             </div>
                             <div class="ij-selected-chips" id="locationsBox"></div>
+=======
+                                @foreach(['Global / Worldwide', 'Pan-India', 'Digital / Remote', 'Bengaluru', 'Mumbai', 'Delhi NCR', 'Hyderabad', 'Pune', 'London', 'New York', 'Singapore'] as $hub)
+                                    <button type="button" class="ij-hub-pill" data-val="{{ $hub }}">+ {{ $hub }}</button>
+                                @endforeach
+                            </div>
+                            <div class="chips-box" id="locationsBox">
+                                <input type="text" class="chip-input-bare" id="locationInput" placeholder="Search or add delivery cities/regions (e.g. Bengaluru, Mumbai, London, Global)...">
+                            </div>
+                            <div class="d-flex justify-content-between mt-2" style="font-size:12px;">
+                                <span id="selectedLocationsCount" style="color:#475569;">Selected Locations (0/15)</span>
+                                <button type="button" id="btnClearLocations" style="background:none;border:none;color:#9a6500;font-weight:500;cursor:pointer;">Clear All</button>
+                            </div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                             <input type="hidden" name="locations" id="locations_json" value="[]">
                         </div>
                     </div>
@@ -744,7 +949,11 @@
                                 <div class="ij-card-head-icon"><i class="fas fa-tags"></i></div>
                                 <div>
                                     <div class="ij-card-head-title">Pricing Model <span style="color:#ef4444;">*</span></div>
+<<<<<<< HEAD
                                     <div class="ij-card-head-sub">Select the commercial pricing structure for this service.</div>
+=======
+                                    <div class="ij-card-head-sub">Select the commercial pricing structure for this product.</div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
@@ -754,7 +963,11 @@
                                 <button type="button" class="ij-choice-card is-selected" data-val="Fixed Price">
                                     <span class="ij-radio-dot"></span>
                                     <span class="ij-choice-ico"><i class="fas fa-tag"></i></span>
+<<<<<<< HEAD
                                     <div><div class="ij-choice-title">Fixed Price</div><div class="ij-choice-sub">Fixed-scope engagement fee</div></div>
+=======
+                                    <div><div class="ij-choice-title">Fixed Price</div><div class="ij-choice-sub">One-time product purchase</div></div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </button>
                                 <button type="button" class="ij-choice-card" data-val="Subscription">
                                     <span class="ij-radio-dot"></span>
@@ -782,7 +995,11 @@
                                 <div class="ij-card-head-icon"><i class="fas fa-globe"></i></div>
                                 <div>
                                     <div class="ij-card-head-title">Delivery Mode</div>
+<<<<<<< HEAD
                                     <div class="ij-card-head-sub">Choose whether this service is delivered Remote, Hybrid, or On-site.</div>
+=======
+                                    <div class="ij-card-head-sub">Choose whether this product is Digital/Cloud, Hybrid, or Physical Shipping.</div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
@@ -792,30 +1009,51 @@
                                 <button type="button" class="ij-choice-card is-selected" data-val="Remote">
                                     <span class="ij-radio-dot"></span>
                                     <span class="ij-choice-ico"><i class="fas fa-cloud"></i></span>
+<<<<<<< HEAD
                                     <div><div class="ij-choice-title">Remote / Cloud</div><div class="ij-choice-sub">Delivered online or remotely</div></div>
+=======
+                                    <div><div class="ij-choice-title">Digital / Remote</div><div class="ij-choice-sub">Delivered online or cloud-based</div></div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </button>
                                 <button type="button" class="ij-choice-card" data-val="Hybrid">
                                     <span class="ij-radio-dot"></span>
                                     <span class="ij-choice-ico"><i class="fas fa-layer-group"></i></span>
+<<<<<<< HEAD
                                     <div><div class="ij-choice-title">Hybrid</div><div class="ij-choice-sub">On-site + Remote delivery</div></div>
                                 </button>
                                 <button type="button" class="ij-choice-card" data-val="On-site">
                                     <span class="ij-radio-dot"></span>
                                     <span class="ij-choice-ico"><i class="fas fa-building"></i></span>
                                     <div><div class="ij-choice-title">On-site</div><div class="ij-choice-sub">Delivered at client location</div></div>
+=======
+                                    <div><div class="ij-choice-title">Hybrid</div><div class="ij-choice-sub">Physical + Digital fulfillment</div></div>
+                                </button>
+                                <button type="button" class="ij-choice-card" data-val="On-site">
+                                    <span class="ij-radio-dot"></span>
+                                    <span class="ij-choice-ico"><i class="fas fa-truck"></i></span>
+                                    <div><div class="ij-choice-title">Physical / On-site</div><div class="ij-choice-sub">Dispatched from warehouse</div></div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </button>
                             </div>
                         </div>
                     </div>
 
+<<<<<<< HEAD
                     {{-- Card 7: Service Availability --}}
+=======
+                    {{-- Card 7: Service Availability (Matches Screenshot 3 Work Shift) --}}
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                     <div class="card">
                         <div class="ij-card-head">
                             <div class="ij-card-head-left">
                                 <div class="ij-card-head-icon"><i class="fas fa-clock"></i></div>
                                 <div>
                                     <div class="ij-card-head-title">Support &amp; Availability</div>
+<<<<<<< HEAD
                                     <div class="ij-card-head-sub">Specify the operational support window for this service.</div>
+=======
+                                    <div class="ij-card-head-sub">Specify the operational support window for this product.</div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
@@ -838,20 +1076,30 @@
                         </div>
                     </div>
 
+<<<<<<< HEAD
                     {{-- Card 8: Service Specifications, SLA & Media --}}
+=======
+                    {{-- Card 8: Warranty, Brochure & Validity --}}
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                     <div class="card">
                         <div class="ij-card-head">
                             <div class="ij-card-head-left">
                                 <div class="ij-card-head-icon"><i class="fas fa-shield-alt"></i></div>
                                 <div>
+<<<<<<< HEAD
                                     <div class="ij-card-head-title">Service Specifications &amp; Media</div>
                                     <div class="ij-card-head-sub">Specify service duration, implementation timeline, SLA, brochure, and validity period.</div>
+=======
+                                    <div class="ij-card-head-title">Specifications &amp; Media</div>
+                                    <div class="ij-card-head-sub">Optional warranty, product image/brochure, and validity period.</div>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                 </div>
                             </div>
                         </div>
                         <div class="ij-card-inner">
                             <div class="form-grid-3">
                                 <div class="form-group-cus">
+<<<<<<< HEAD
                                     <label class="form-label" for="service_duration">Service Duration</label>
                                     <input type="text" class="form-input" id="service_duration" name="service_duration" value="{{ $offering->service_duration ?? '' }}" placeholder="e.g. 6 Months / Ongoing">
                                     <span class="form-hint">Standard engagement or contract duration.</span>
@@ -872,6 +1120,13 @@
                                 </div>
                                 <div class="form-group-cus">
                                     <label class="form-label" for="brochure">Service Brochure / Media</label>
+=======
+                                    <label class="form-label" for="warranty">Warranty Period</label>
+                                    <input type="text" class="form-input" id="warranty" name="warranty" placeholder="e.g. 12 Months Standard">
+                                </div>
+                                <div class="form-group-cus">
+                                    <label class="form-label" for="brochure">Product Image / Brochure</label>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                                     <input type="file" class="form-input" id="brochure" name="brochure" accept=".png,.jpg,.jpeg,.webp,.pdf" style="padding-top:6px;">
                                 </div>
                                 <div class="form-group-cus">
@@ -887,6 +1142,7 @@
                         </div>
                     </div>
 
+<<<<<<< HEAD
                     {{-- Card 9: Service Team (Matches Hiring Team 2-Column Layout) --}}
                     <div class="card">
                         <div class="ij-card-head">
@@ -938,12 +1194,15 @@
                         </div>
                     </div>
 
+=======
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                     <div class="form-footer">
                         <span></span>
                         <button type="button" class="btn btn-primary" onclick="crmGoToStep(2)">Continue <i class="fas fa-arrow-right"></i></button>
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 {{-- ================= STEP 2: SERVICE DESCRIPTION & FEATURES ================= --}}
                 <div class="step-content" id="step2">
                     <div class="step2-split-grid">
@@ -1020,6 +1279,48 @@
                                 </div>
                                 <input type="hidden" name="feature_tags" id="feature_tags_json" value="[]">
                             </div>
+=======
+                {{-- ================= STEP 2: PRODUCT DESCRIPTION ================= --}}
+                <div class="step-content" id="step2">
+                    <div class="card">
+                        <div class="ij-card-head">
+                            <div class="ij-card-head-left">
+                                <div class="ij-card-head-icon"><i class="fas fa-align-left"></i></div>
+                                <div>
+                                    <div class="ij-card-head-title">Product / Service Description <span style="color:#ef4444;">*</span></div>
+                                    <div class="ij-card-head-sub">Describe product / service features, specifications, and customer benefits.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ij-card-inner">
+                            <div class="editor-toolbar">
+                                <button type="button" class="toolbar-btn" data-cmd="bold"><i class="fas fa-bold"></i></button>
+                                <button type="button" class="toolbar-btn" data-cmd="italic"><i class="fas fa-italic"></i></button>
+                                <button type="button" class="toolbar-btn" data-cmd="underline"><i class="fas fa-underline"></i></button>
+                                <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
+                                <button type="button" class="toolbar-btn" data-cmd="insertOrderedList"><i class="fas fa-list-ol"></i></button>
+                            </div>
+                            <div class="rich-editor" id="crmDescriptionEditor" contenteditable="true" data-placeholder="Enter detailed product description, specifications, and value proposition..."></div>
+                            <textarea name="description" id="crm_description" class="d-none"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="ij-card-head">
+                            <div class="ij-card-head-left">
+                                <div class="ij-card-head-icon"><i class="fas fa-tags"></i></div>
+                                <div>
+                                    <div class="ij-card-head-title">Product Features &amp; Tags</div>
+                                    <div class="ij-card-head-sub">Add tags to help sales reps filter products in Quotations &amp; Deals.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ij-card-inner">
+                            <div class="chips-box" id="featureTagsBox">
+                                <input type="text" class="chip-input-bare" id="featureTagInput" placeholder="Type feature/tag and press Enter...">
+                            </div>
+                            <input type="hidden" name="feature_tags" id="feature_tags_json" value="[]">
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                         </div>
                     </div>
 
@@ -1029,6 +1330,7 @@
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 {{-- ================= STEP 3: CUSTOMER QUALIFICATION QUESTIONS ================= --}}
                 <div class="step-content" id="step3">
                     <div class="step3-split-grid">
@@ -1116,6 +1418,33 @@
                                     @endforeach
                                 </div>
                             </div>
+=======
+                {{-- ================= STEP 3: QUALIFICATION QUESTIONS ================= --}}
+                <div class="step-content" id="step3">
+                    <div class="card">
+                        <div class="ij-card-head">
+                            <div class="ij-card-head-left">
+                                <div class="ij-card-head-icon"><i class="fas fa-question-circle"></i></div>
+                                <div>
+                                    <div class="ij-card-head-title">Customer Qualification Questions</div>
+                                    <div class="ij-card-head-sub">Add pre-sales discovery questions for quotes and proposals.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ij-card-inner">
+                            <div id="questionsContainer" class="mb-3"></div>
+                            <div class="d-flex gap-2">
+                                <input type="text" class="form-input" id="customQuestionInput" placeholder="Add a customer qualification question...">
+                                <select class="form-select" id="customQuestionType" style="max-width: 180px;">
+                                    <option value="short">Short Answer</option>
+                                    <option value="paragraph">Paragraph</option>
+                                    <option value="yesno">Yes / No</option>
+                                    <option value="number">Number</option>
+                                </select>
+                                <button type="button" class="btn btn-secondary" id="btnAddQuestion"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <input type="hidden" name="qualification_questions" id="qualification_questions_json" value="[]">
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                         </div>
                     </div>
 
@@ -1125,6 +1454,7 @@
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 {{-- ================= STEP 4: REVIEW & PUBLISH (3-Column 7-Card Layout) ================= --}}
                 <div class="step-content" id="step4">
                     <div class="r4-grid mb-4">
@@ -1308,6 +1638,41 @@
                                         <li><span class="rv-notes-dot"></span><span>Linked deals, quotations &amp; orders are preserved</span></li>
                                     </ul>
                                 </div>
+=======
+                {{-- ================= STEP 4: REVIEW & PUBLISH ================= --}}
+                <div class="step-content" id="step4">
+                    <div class="r4-grid mb-4">
+                        <div class="card mb-0">
+                            <div class="ij-card-head"><div class="ij-card-head-title">1. Basic Information</div></div>
+                            <div class="ij-card-inner">
+                                <div class="rv-row"><span class="rv-label">Product Name</span><span class="rv-val" id="rvName">-</span></div>
+                                <div class="rv-row"><span class="rv-label">SKU / Code</span><span class="rv-val" id="rvSku">-</span></div>
+                                <div class="rv-row"><span class="rv-label">Category</span><span class="rv-val" id="rvCategory">-</span></div>
+                                <div class="rv-row"><span class="rv-label">Status</span><span class="rv-val" id="rvStatus">-</span></div>
+                            </div>
+                        </div>
+                        <div class="card mb-0">
+                            <div class="ij-card-head"><div class="ij-card-head-title">2. Pricing &amp; Delivery</div></div>
+                            <div class="ij-card-inner">
+                                <div class="rv-row"><span class="rv-label">Selling Price</span><span class="rv-val" id="rvPricing">-</span></div>
+                                <div class="rv-row"><span class="rv-label">Pricing Model</span><span class="rv-val" id="rvModel">-</span></div>
+                                <div class="rv-row"><span class="rv-label">Delivery Mode</span><span class="rv-val" id="rvDelivery">-</span></div>
+                                <div class="rv-row"><span class="rv-label">Availability</span><span class="rv-val" id="rvAvailability">-</span></div>
+                            </div>
+                        </div>
+                        <div class="card mb-0">
+                            <div class="ij-card-head"><div class="ij-card-head-title">3. Catalog Visibility</div></div>
+                            <div class="ij-card-inner">
+                                <label class="d-flex align-items-center gap-2 mb-2" style="font-size:12px; cursor:pointer;">
+                                    <input type="checkbox" name="visibility_internal_crm" value="1" checked> Internal Sales Team (CRM)
+                                </label>
+                                <label class="d-flex align-items-center gap-2 mb-2" style="font-size:12px; cursor:pointer;">
+                                    <input type="checkbox" name="visibility_client_portal" value="1" checked> Client Proposals &amp; Quotes
+                                </label>
+                                <label class="d-flex align-items-center gap-2 mb-0" style="font-size:12px; cursor:pointer;">
+                                    <input type="checkbox" name="visibility_public_catalog" value="1"> Public Product Catalog
+                                </label>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                             </div>
                         </div>
                     </div>
@@ -1316,13 +1681,18 @@
                         <button type="button" class="btn btn-secondary" onclick="crmGoToStep(3)"><i class="fas fa-arrow-left"></i> Back</button>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-secondary" id="btnBottomSaveDraft"><i class="fas fa-save"></i> Save Draft</button>
+<<<<<<< HEAD
                             <button type="button" class="btn btn-primary" id="btnBottomPublish"><i class="fas fa-paper-plane"></i> {{ $isEdit ? 'Update Service' : 'Publish Service' }}</button>
+=======
+                            <button type="button" class="btn btn-primary" id="btnBottomPublish"><i class="fas fa-paper-plane"></i> {{ $isEdit ? 'Update Product' : 'Publish Product' }}</button>
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                         </div>
                     </div>
                 </div>
             </form>
         </div>
     </div>
+<<<<<<< HEAD
 
     {{-- Sliding Right Drawers: Account Owner & Service Delivery Team (1:1 Drawer Match) --}}
     <div class="ij-drawer-backdrop" id="crmDrawerBackdrop"></div>
@@ -1396,6 +1766,8 @@
             <div id="crmTeamDrawerList"></div>
         </div>
     </div>
+=======
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
 @endsection
 
 @push('footer-script')
@@ -1403,8 +1775,12 @@
         (function () {
             'use strict';
 
+<<<<<<< HEAD
             const EDIT_JOB_ID = @json((int) ($editJobId ?? 0));
             const SUBMIT_URL = @json($isEdit ? (($editJobId ?? 0) > 0 ? route('service_company.crm.offerings.updateJob', $editJobId) : route('service_company.crm.offerings.postUpdate', $offering->id)) : route('service_company.crm.offerings.store'));
+=======
+            const SUBMIT_URL = @json($isEdit ? route('service_company.crm.offerings.postUpdate', $offering->id) : route('service_company.crm.offerings.store'));
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
             const CHECK_SKU_URL = @json(route('service_company.crm.offerings.checkSku'));
             const EDIT_ID = @json($isEdit ? (int) $offering->id : 0);
             const CSRF_TOKEN = @json(csrf_token());
@@ -1417,7 +1793,11 @@
                 if (stepNum < 4) {
                     topActionBtn.innerHTML = '<span>Next Page</span> <i class="fas fa-arrow-right"></i>';
                 } else {
+<<<<<<< HEAD
                     topActionBtn.innerHTML = '<i class="fas fa-paper-plane"></i> <span>' + (isEditMode ? 'Update Service' : 'Publish Service') + '</span>';
+=======
+                    topActionBtn.innerHTML = '<i class="fas fa-paper-plane"></i> <span>' + (isEditMode ? 'Update Product / Service' : 'Publish Product / Service') + '</span>';
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                 }
             }
 
@@ -1478,6 +1858,7 @@
                 document.getElementById('offering_class').value = (this.value === 'Professional Service') ? 'service' : 'product';
             });
 
+<<<<<<< HEAD
             // Organization -> Dependent Warehouse / Origin Address Filter
             const ownerClientSelect = document.getElementById('owner_client_id');
             const addressSelect = document.getElementById('address_id');
@@ -1510,6 +1891,8 @@
                 syncAddressesForOwner(ownerClientSelect.value, true);
             }
 
+=======
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
             function bindChoiceCards(containerId, hiddenId, onChange) {
                 const container = document.getElementById(containerId);
                 const hidden = document.getElementById(hiddenId);
@@ -1545,11 +1928,16 @@
                 document.querySelectorAll('.pricing-input-row').forEach(function (el) { el.style.display = isConf ? 'none' : 'flex'; });
             });
 
+<<<<<<< HEAD
             // Locations / Popular Hubs + Live City Autocomplete (1:1 Screenshot Match)
+=======
+            // Locations / Hubs
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
             const locations = [];
             const locBox = document.getElementById('locationsBox');
             const locInput = document.getElementById('locationInput');
             const locHidden = document.getElementById('locations_json');
+<<<<<<< HEAD
             const cityDropdown = document.getElementById('citySearchDropdown');
             const cityClearBtn = document.getElementById('btnCitySearchClear');
             const CITY_SEARCH_URL = @json(url('/city-job-suggestions'));
@@ -1694,10 +2082,39 @@
             document.getElementById('btnClearLocations').addEventListener('click', function () { locations.length = 0; renderLocations(); });
 
             // Tags / Features (1:1 Screenshot Match: 0/10 added + Clear All + Recommended Pills)
+=======
+            function renderLocations() {
+                locBox.querySelectorAll('.chip-item').forEach(function (c) { c.remove(); });
+                locations.forEach(function (v, i) {
+                    const chip = document.createElement('span');
+                    chip.className = 'chip-item';
+                    chip.innerHTML = '<span></span><button type="button">&times;</button>';
+                    chip.querySelector('span').textContent = v;
+                    chip.querySelector('button').addEventListener('click', function () { locations.splice(i, 1); renderLocations(); });
+                    locBox.insertBefore(chip, locInput);
+                });
+                locHidden.value = JSON.stringify(locations);
+                document.getElementById('selectedLocationsCount').textContent = 'Selected Locations (' + locations.length + '/15)';
+            }
+            function addLocation(val) {
+                const v = val.trim();
+                if (v && locations.length < 15 && locations.indexOf(v) === -1) { locations.push(v); renderLocations(); }
+            }
+            locInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addLocation(locInput.value.replace(/,/g, '')); locInput.value = ''; }
+            });
+            document.querySelectorAll('#popularHubsPills .ij-hub-pill').forEach(function (btn) {
+                btn.addEventListener('click', function () { addLocation(btn.getAttribute('data-val')); });
+            });
+            document.getElementById('btnClearLocations').addEventListener('click', function () { locations.length = 0; renderLocations(); });
+
+            // Tags
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
             const tags = [];
             const tagBox = document.getElementById('featureTagsBox');
             const tagInput = document.getElementById('featureTagInput');
             const tagHidden = document.getElementById('feature_tags_json');
+<<<<<<< HEAD
             const tagCountBadge = document.getElementById('featureTagsCountBadge');
             const clearTagsBtn = document.getElementById('btnClearFeatureTags');
 
@@ -1842,6 +2259,60 @@
                     if (!questions.some(function (q) { return q.question === item.question; })) questions.push(item);
                 });
                 renderQuestions();
+=======
+            function renderTags() {
+                tagBox.querySelectorAll('.chip-item').forEach(function (c) { c.remove(); });
+                tags.forEach(function (v, i) {
+                    const chip = document.createElement('span');
+                    chip.className = 'chip-item';
+                    chip.innerHTML = '<span></span><button type="button">&times;</button>';
+                    chip.querySelector('span').textContent = v;
+                    chip.querySelector('button').addEventListener('click', function () { tags.splice(i, 1); renderTags(); });
+                    tagBox.insertBefore(chip, tagInput);
+                });
+                tagHidden.value = JSON.stringify(tags);
+            }
+            tagInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    const v = tagInput.value.replace(/,/g, '').trim();
+                    if (v && tags.indexOf(v) === -1) { tags.push(v); renderTags(); }
+                    tagInput.value = '';
+                }
+            });
+
+            // Rich Text Editor
+            const descEditor = document.getElementById('crmDescriptionEditor');
+            const descHidden = document.getElementById('crm_description');
+            document.querySelectorAll('#step2 .toolbar-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () { document.execCommand(btn.getAttribute('data-cmd'), false, null); descEditor.focus(); });
+            });
+
+            // Questions
+            const questions = [];
+            const qContainer = document.getElementById('questionsContainer');
+            const qHidden = document.getElementById('qualification_questions_json');
+            function renderQuestions() {
+                qContainer.innerHTML = '';
+                questions.forEach(function (q, idx) {
+                    const row = document.createElement('div');
+                    row.className = 'd-flex align-items-center justify-content-between p-2 mb-2 border rounded';
+                    row.innerHTML = '<div><strong>' + (idx + 1) + '.</strong> <span class="q-txt"></span> <small class="text-muted">(' + q.answer_type + ')</small></div>' +
+                        '<button type="button" class="btn btn-secondary" style="padding:4px 10px;">&times;</button>';
+                    row.querySelector('.q-txt').textContent = q.question;
+                    row.querySelector('button').addEventListener('click', function () { questions.splice(idx, 1); renderQuestions(); });
+                    qContainer.appendChild(row);
+                });
+                qHidden.value = JSON.stringify(questions);
+            }
+            document.getElementById('btnAddQuestion').addEventListener('click', function () {
+                const inp = document.getElementById('customQuestionInput');
+                if (inp.value.trim()) {
+                    questions.push({ question: inp.value.trim(), answer_type: document.getElementById('customQuestionType').value });
+                    inp.value = '';
+                    renderQuestions();
+                }
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
             });
 
             // SKU Uniqueness Check
@@ -1858,6 +2329,7 @@
                     });
             });
 
+<<<<<<< HEAD
             // Service Team Engine (Account Owner + Service Delivery Team, Client-First Roster)
             const OWNER_CONTACTS = @json($clientContacts ?? []);
             const DELIVERY_ROSTER = @json($teamRoster ?? []);
@@ -2380,10 +2852,14 @@
             function populateReview() {
                 const ownerSel = document.getElementById('owner_client_id');
                 document.getElementById('rvOwner').textContent = (ownerSel && ownerSel.selectedIndex >= 0) ? ownerSel.options[ownerSel.selectedIndex].textContent.trim() : '-';
+=======
+            function populateReview() {
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                 document.getElementById('rvName').textContent = document.getElementById('offering_name').value || '-';
                 document.getElementById('rvSku').textContent = skuInput.value || '-';
                 document.getElementById('rvCategory').textContent = document.getElementById('crm_category').value || '-';
                 document.getElementById('rvStatus').textContent = document.getElementById('offering_status').value;
+<<<<<<< HEAD
 
                 const isConf = document.getElementById('pricing_visibility').value === 'confidential';
                 const minP = document.getElementById('min_price').value || '0';
@@ -2430,6 +2906,13 @@
 
                 const valSel = document.getElementById('validity_days');
                 document.getElementById('rvValidityNote').textContent = 'Catalog validity: ' + ((valSel && valSel.selectedIndex >= 0) ? valSel.options[valSel.selectedIndex].textContent : 'Ongoing');
+=======
+                const isConf = document.getElementById('pricing_visibility').value === 'confidential';
+                document.getElementById('rvPricing').textContent = isConf ? 'Price on Request' : (document.getElementById('currency_code').value + ' ' + (document.getElementById('min_price').value || '0'));
+                document.getElementById('rvModel').textContent = document.getElementById('pricing_model').value + ' (' + freqSelect.value + ')';
+                document.getElementById('rvDelivery').textContent = document.getElementById('delivery_model').value;
+                document.getElementById('rvAvailability').textContent = document.getElementById('service_availability').value;
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
             }
 
             function submitOffering(isDraft) {
@@ -2449,7 +2932,13 @@
                     if (res.ok && data.status === 'success') {
                         if (typeof toastr !== 'undefined') toastr.success(data.message);
                         else alert(data.message);
+<<<<<<< HEAD
                         window.location.href = data.redirect_url || @json(route('service_company.jobs.index'));
+=======
+                        if (!EDIT_ID && data.offering && data.offering.id) {
+                            window.location.href = @json(url('service_company/crm/products-services')) + '/' + data.offering.id + '/edit';
+                        }
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
                     } else {
                         if (data.errors) {
                             let firstFieldEl = null;

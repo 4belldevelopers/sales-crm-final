@@ -10,10 +10,15 @@ use App\Models\CrmOfferingLocation;
 use App\Models\CrmOfferingQuestion;
 use App\Models\CrmOfferingTag;
 use App\Models\CrmOfferingTeam;
+<<<<<<< HEAD
 use App\Models\Job;
 use App\Services\CurrencyService;
 use App\Services\IndustryTaxonomyService;
 use App\Services\JobService;
+=======
+use App\Services\CurrencyService;
+use App\Services\IndustryTaxonomyService;
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
 use App\Services\RelationshipManagerService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -62,6 +67,7 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
         $this->tenantTimezone = GeneralMethod::defaultTimeZone($companyId ?: null) ?: config('app.timezone', 'UTC');
         $this->tenantTimezoneAbbr = Carbon::now($this->tenantTimezone)->format('T');
         $this->clients = Client::where('company_id', $companyId)->orderBy('name')->get(['id', 'name', 'self_company']);
+<<<<<<< HEAD
         $clientIds = $this->clients->pluck('id')->all();
         $this->clientAddresses = ! empty($clientIds)
             ? DB::table('client_location')
@@ -79,6 +85,14 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
             : collect();
         $this->assignedOwners = collect();
         $this->assignedTeam = collect();
+=======
+        $this->clientAddresses = DB::table('client_location')
+            ->where('company_id', $companyId)
+            ->orderBy('id')
+            ->get(['id', 'client_id', 'city', 'address', 'postcode']);
+        $this->industries = IndustryTaxonomyService::getGlobalManifest();
+        $this->teamRoster = app(RelationshipManagerService::class)->getTeamRoster($companyId);
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
         $this->offering = null;
         $this->page_event = 'ADD';
 
@@ -117,6 +131,7 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
             return $offering;
         });
 
+<<<<<<< HEAD
         // Also persist into `jobs` + Elasticsearch so the saved service appears in the Services Tracker list
         $createdJobId = null;
         try {
@@ -137,6 +152,13 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
                 : 'Service published successfully.',
             'job_id' => $createdJobId,
             'redirect_url' => route('service_company.jobs.index'),
+=======
+        return response()->json([
+            'status' => 'success',
+            'message' => $offering->status === 'draft'
+                ? 'Offering saved as Draft successfully.'
+                : 'Product / Service published successfully.',
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
             'offering' => $offering->load(['locations', 'tags', 'questions', 'team']),
         ], 201);
     }
@@ -157,6 +179,7 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
         $this->tenantTimezone = GeneralMethod::defaultTimeZone($companyId) ?: config('app.timezone', 'UTC');
         $this->tenantTimezoneAbbr = Carbon::now($this->tenantTimezone)->format('T');
         $this->clients = Client::where('company_id', $companyId)->orderBy('name')->get(['id', 'name', 'self_company']);
+<<<<<<< HEAD
         $clientIds = $this->clients->pluck('id')->all();
         $this->clientAddresses = ! empty($clientIds)
             ? DB::table('client_location')
@@ -351,12 +374,22 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
             ]);
         $this->offering = $offering;
         $this->editJobId = $job->id;
+=======
+        $this->clientAddresses = DB::table('client_location')
+            ->where('company_id', $companyId)
+            ->orderBy('id')
+            ->get(['id', 'client_id', 'city', 'address', 'postcode']);
+        $this->industries = IndustryTaxonomyService::getGlobalManifest();
+        $this->teamRoster = app(RelationshipManagerService::class)->getTeamRoster($companyId);
+        $this->offering = $offering;
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
         $this->page_event = 'EDIT';
 
         return view('service_company.crm.products_services.create', $this->data);
     }
 
     /**
+<<<<<<< HEAD
      * Update an existing record in `jobs` + Elasticsearch + linked `crm_offerings`.
      */
     public function updateJob(StoreCrmOfferingRequest $request, $id): JsonResponse
@@ -396,6 +429,8 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
     }
 
     /**
+=======
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
      * Update an existing CRM Offering.
      */
     public function update(StoreCrmOfferingRequest $request, $id): JsonResponse
@@ -447,6 +482,7 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
     }
 
     /**
+<<<<<<< HEAD
      * AJAX: Return warehouse/origin addresses for a selected organization/client.
      */
     public function clientAddresses($clientId): JsonResponse
@@ -466,6 +502,8 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
     }
 
     /**
+=======
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
      * Active catalog feed for Deals, Quotations, Sales Orders, and Invoices.
      */
     public function activeCatalog(Request $request): JsonResponse
@@ -664,6 +702,7 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
             }
         }
     }
+<<<<<<< HEAD
 
     /**
      * Map a CRM Service/Offering into JobService::createJob() payload so it appears in the Services Tracker list.
@@ -803,4 +842,6 @@ class ServiceCompanyCrmOfferingController extends ServiceCompanyBaseController
             'validity_days' => $request->input('validity_days'),
         ];
     }
+=======
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
 }

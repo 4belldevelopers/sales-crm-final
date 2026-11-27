@@ -53,10 +53,17 @@ class CrmOfferingTest extends TestCase
 
         // 1. Render 4-step wizard (both crm.offerings.create and jobs.create)
         $viewRes = $this->actingAs($userA)->get(route('service_company.crm.offerings.create'));
+<<<<<<< HEAD
         $viewRes->assertStatus(200)->assertSee('Add Service')->assertSee('Service Name')->assertSee('Service Code / SKU');
 
         $jobsCreateRes = $this->actingAs($userA)->get(route('service_company.jobs.create'));
         $jobsCreateRes->assertStatus(200)->assertSee('Add Service')->assertSee('Service Name')->assertDontSee('Add Internal Jobs');
+=======
+        $viewRes->assertStatus(200)->assertSee('Add Product / Service')->assertSee('Product / Service Name')->assertSee('Product / Service SKU / Code');
+
+        $jobsCreateRes = $this->actingAs($userA)->get(route('service_company.jobs.create'));
+        $jobsCreateRes->assertStatus(200)->assertSee('Add Product / Service')->assertSee('Product / Service Name')->assertDontSee('Add Internal Jobs');
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
 
         // 2. Create Product with Fixed Price (auto-locks frequency to One-Time) + idempotency key
         $opId = Str::uuid()->toString();
@@ -89,6 +96,7 @@ class CrmOfferingTest extends TestCase
             ->assertJsonPath('offering.product_url', 'https://jero.works/crm-enterprise')
             ->assertJsonPath('offering.sku', 'JERO-ENT-01');
 
+<<<<<<< HEAD
         $this->assertDatabaseHas('jobs', [
             'company_id' => $companyA,
             'title' => 'JeroCRM Enterprise',
@@ -122,6 +130,8 @@ class CrmOfferingTest extends TestCase
             ]);
         }
 
+=======
+>>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
         $offeringId = (int) $res->json('offering.id');
 
         // 3. Idempotent replay with same operation_id returns same record
