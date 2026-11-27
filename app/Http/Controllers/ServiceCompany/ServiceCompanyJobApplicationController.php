@@ -4675,6 +4675,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             $this->currencyConverter = GeneralMethod::currencyConverter();
+        $this->crmClients = \App\Models\Client::where('company_id', (int) (auth()->user()->company_id ?? 0))
+            ->orderBy('name')
+            ->get(['id', 'name', 'self_company']);
 
             // Synchronize Elasticsearch skills experience immediately
             try {
@@ -6919,7 +6922,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     public function edit($id)
     {
         // dd("kdf");
-        $this->pageTitle = __('Edit Candidate');
+        $this->pageTitle = __('Edit Lead');
         abort_if(Gate::denies('edit_job_applications'), 403);
         $id = GeneralMethod::value_decrypt($id);
         $company_id = '';
@@ -6943,7 +6946,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->exists();
 
         if (! $canEditCandidate) {
-            return redirect()->back()->with('candidate_edit_denied', "You are not authorized to edit this candidate's profile. Only the assigned Captain or the submitting user can edit it");
+            return redirect()->back()->with('candidate_edit_denied', "You are not authorized to edit this lead's profile. Only the assigned Lead or the submitting user can edit it");
         }
 
         $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
@@ -7193,6 +7196,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
         $this->default_loc = GeneralMethod::allCitiesSelected([@$this->application->city_id]);
         $this->currencyConverter = GeneralMethod::currencyConverter();
+        $this->crmClients = \App\Models\Client::where('company_id', (int) (auth()->user()->company_id ?? 0))
+            ->orderBy('name')
+            ->get(['id', 'name', 'self_company']);
         $this->recruiterNoteTemplates = DB::table('recruiter_note_master')
             ->where('status', 1)
             ->where(function ($q) {
@@ -14664,6 +14670,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             $this->currencyConverter = GeneralMethod::currencyConverter();
+        $this->crmClients = \App\Models\Client::where('company_id', (int) (auth()->user()->company_id ?? 0))
+            ->orderBy('name')
+            ->get(['id', 'name', 'self_company']);
             $submittedByEmail = auth()->user()->email;
 
             // Synchronize Elasticsearch skills experience immediately
