@@ -1453,13 +1453,13 @@ $end_date   =	date('d-M-Y', $date);
                             @if($jobfindhide)
                                 <a href="{{ $url }}" class="">
                                     <button class="action-btn">
-                                        <i class="fas fa-eye"></i>View Candidates
+                                        <i class="fas fa-eye"></i>View Leads
                                     </button>
                                 </a>
                                 @if(empty($isReadOnly))
                                 <a href="{{ $urladd }}" class="job-drawer-add-candidate" data-job-status="{{ @$job->status }}">
                                     <button class="action-btn">
-                                        <i class="fas fa-user-plus"></i>Add Candidate
+                                        <i class="fas fa-user-plus"></i>Add Lead
                                     </button>
                                 </a>
                                 <script>
@@ -1581,7 +1581,7 @@ $end_date   =	date('d-M-Y', $date);
                                         <span class="personnel-avatar-inline" style="background: #cdcaca; padding: 7px 0px 0px 11px;"><i class="far fa-user"></i>
                                         </span>
                                         <div class="personnel-info-inline">
-                                            <span class="personnel-role-inline">Hiring Manager</span>
+                                            <span class="personnel-role-inline">Account Owner</span>
                                             <span class="personnel-name-inline">{{ $hiringManager }}</span>
                                             <span class="personnel-dept-inline">{{ $hiringManagerdesignation }}</span>
                                         </div>
@@ -1611,7 +1611,7 @@ $end_date   =	date('d-M-Y', $date);
                                         <span class="personnel-avatar-inline" style="background: #cdcaca; padding: 7px 0px 0px 11px;"><i class="far fa-user"></i>
                                         </span>
                                         <div class="personnel-info-inline">
-                                            <span class="personnel-role-inline">Assigned Recruiter</span>
+                                            <span class="personnel-role-inline">Service Lead</span>
                                             <span class="personnel-name-inline">{{ $hrManager }}</span>
                                             <span class="personnel-dept-inline">{{ $hrManagerdesignation }}</span>
                                         </div>
@@ -1638,7 +1638,7 @@ $end_date   =	date('d-M-Y', $date);
                                     @if ($viewmore && ($job->comId ?? $job->company_id ?? null)==auth()->user()->company_id)
                                     <a href="<?php echo route('service_company.jobs.edit', GeneralMethod::value_encrypt($job->id)); ?>" class="">
                                         <button class="job-action-btn edit" style="width: 100%;">
-                                            <i class="fas fa-pencil-alt"></i>Edit Job
+                                            <i class="fas fa-pencil-alt"></i>Edit Service
                                         </button>
                                     </a>
                                     @endif
@@ -1646,7 +1646,7 @@ $end_date   =	date('d-M-Y', $date);
                             @endif
                             @if($agencyView)
                             <button class="job-action-btn" onclick="showSharePopup()">
-                                <i class="fas fa-share-alt"></i>Share Job
+                                <i class="fas fa-share-alt"></i>Share Service
                             </button>
                             <a href="{{ url('job-details/' .(@$job->id) . '/'.auth()->user()->company_id) }}" class="" target="_blank">
                                 <button class="job-action-btn" style="width: 100%;">
@@ -1656,7 +1656,7 @@ $end_date   =	date('d-M-Y', $date);
                             @endif
                             @if(empty($hideMarketSections))
                             <button class="job-action-btn" onclick="downloadJobPDF()">
-                                <i class="fas fa-download"></i>Download Job
+                                <i class="fas fa-download"></i>Download Service
                             </button>
                             @endif
                             {{-- <button class="job-action-btn" onclick="showAllActions()">
@@ -1733,11 +1733,11 @@ $end_date   =	date('d-M-Y', $date);
 
                 <div class="tabs-section fade-in-up delay-2">
                     <div class="tabs-nav">
-                        <button class="tab-btn active" onclick="switchTab(this, 'overview')">Job Overview</button>
+                        <button class="tab-btn active" onclick="switchTab(this, 'overview')">Service Overview</button>
                         @if(@$jobfindhide!=false)
                             @if($benchshowtab) 
                                 @if(@$tabshow) 
-                                    <button class="tab-btn" onclick="switchTab(this, 'interviews')">Interviews</button>
+                                    <button class="tab-btn" onclick="switchTab(this, 'interviews')">Meetings</button>
                                 @endif 
                                 @if(@$tabshow)
                                     <button class="tab-btn" onclick="switchTab(this, 'team')">Team</button>
@@ -1752,10 +1752,10 @@ $end_date   =	date('d-M-Y', $date);
                                 @if(($job->comId ?? $job->company_id ?? null)==auth()->user()->company_id)
                                         <button class="tab-btn" onclick="switchTab(this, 'agency_t_c')">Agency T&C</button>
                                 @endif
-                                        <button class="tab-btn" onclick="switchTab(this, 'dashboard')">Job Dashboard</button>
+                                        <button class="tab-btn" onclick="switchTab(this, 'dashboard')">Service Dashboard</button>
                             @endif 
                             @if($benchshowtab)
-                                        <button class="tab-btn" onclick="switchTab(this, 'questions')">Interview Questions</button>
+                                        <button class="tab-btn" onclick="switchTab(this, 'questions')">Qualification Questions</button>
                             @else
                                 @if($benchshowtabComman)
                                     @if(!$benchshowtabclose)
@@ -1779,28 +1779,26 @@ $end_date   =	date('d-M-Y', $date);
                                             {{-- <button class="info-card-edit" onclick="showEditPopup('Basic Details')">Edit</button> --}}
                                         </div>
                                     </div>
-                                    <div class="info-row"><span class="info-label">Job ID</span><span class="info-value">{{ @$job->id }}</span></div>
+                                    <div class="info-row"><span class="info-label">Service ID</span><span class="info-value">{{ @$job->id }}@if(!empty($job->sku)) <span class="text-muted" style="font-size:11px;">({{ $job->sku }})</span>@endif</span></div>
                                     <div class="info-row"><span class="info-label">Due Date</span><span class="info-value">{{ date('d M, Y', strtotime(@$job->end_date)) }} <i class="far fa-calendar" style="margin-left:4px;cursor:pointer;" onclick="showDatePicker()"></i></span></div>
-                                    <div class="info-row"><span class="info-label">Job Department</span><span class="info-value">{{ @$job->cat_name }}</span></div>
-                                    <div class="info-row"><span class="info-label">Qualifications</span><span class="info-value">{{ @$qualification->name }}</span></div>
-                                    <div class="info-row"><span class="info-label">Position Type</span><span class="info-value">{{ ucwords($employment_type) }}</span></div>
+                                    <div class="info-row"><span class="info-label">Service Category</span><span class="info-value">{{ @$job->cat_name }}</span></div>
+                                    <div class="info-row"><span class="info-label">Offering</span><span class="info-value">{{ ucfirst(@$job->offering_class ?: 'service') }}</span></div>
+                                    <div class="info-row"><span class="info-label">Service Type</span><span class="info-value">{{ @$job->offering_type ?: 'Professional Service' }}</span></div>
+                                    @if(!empty($job->product_url))
+                                        <div class="info-row"><span class="info-label">Service URL</span><span class="info-value"><a href="{{ $job->product_url }}" target="_blank" rel="noopener noreferrer" style="color:#009ef7;word-break:break-all;">{{ $job->product_url }}</a></span></div>
+                                    @endif
                                 </div>
 
                                 <div class="info-card" id="card-exp">
                                     <div class="info-card-header">
-                                        <span class="info-card-title">Experience & Openings</span>
+                                        <span class="info-card-title">Service Scope &amp; Delivery</span>
                                         <div class="info-card-actions">
                                             <button type="button" class="copy-btn tooltip" data-tooltip="Copy all" onclick="copyCardText('card-exp')"><i class="far fa-copy"></i></button>
-                                            {{-- <button class="info-card-edit" onclick="showEditPopup('Experience & Openings')">Edit</button> --}}
                                         </div>
                                     </div>
-                                    <div class="info-row"><span class="info-label">Min Experience</span><span class="info-value">
-                                    {{ @$job->min_exp }} Year</span></div>
-                                    <div class="info-row"><span class="info-label">Max Experience</span><span class="info-value">{{@$job->max_exp}} Years</span></div>
-                                    <div class="info-row"><span class="info-label">Gender</span><span class="info-value">{{@$job->required_columns ?? 'Rather Not Say'}}</span></div>
-                                    <div class="info-row"><span class="info-label">No. of Openings</span><span class="info-value">
-                                    {{ @$job->total_positions }}</span></div>
-                                    <div class="info-row align-items-start"><span class="info-label" style="margin-top: 3px;">Job Location</span><span class="info-value">
+                                    <div class="info-row"><span class="info-label">Billing Unit</span><span class="info-value">{{ ucwords(str_replace('_', ' ', @$job->unit ?: 'Project / Engagement')) }}</span></div>
+                                    <div class="info-row"><span class="info-label">Service Capacity</span><span class="info-value">{{ !empty($job->is_unlimited_capacity) ? 'Unlimited' : (@$job->total_positions ?: 1) }}</span></div>
+                                    <div class="info-row align-items-start"><span class="info-label" style="margin-top: 3px;">Delivery Coverage</span><span class="info-value">
                                         @php
                                             $displayCities = !empty($jobCities) && is_array($jobCities) ? $jobCities : (!empty($jobCitySel) && is_array($jobCitySel) ? $jobCitySel : []);
                                             if (empty($displayCities) && !empty($jobCitySelected) && !in_array(strtolower(trim($jobCitySelected)), ['remote', 'n/a'])) {
@@ -1821,20 +1819,20 @@ $end_date   =	date('d-M-Y', $date);
                                                     <i class="fas fa-map-marker-alt text-primary" style="font-size: 9.5px;"></i>{{ trim($jobCitySelected) }}
                                                 </span>
                                             @else
-                                                <span class="text-muted" style="color: #a1a5b7;">Location not specified</span>
+                                                <span class="text-muted" style="color: #a1a5b7;">Coverage not specified</span>
                                             @endif
                                         @endif
                                     </span></div>
-                                    <div class="info-row"><span class="info-label">Work Mode</span><span class="info-value">{{@$work_type}}</span></div>
-                                    <div class="info-row"><span class="info-label">Work Shift</span><span class="info-value">{{ @$job->work_shifts }}</span></div>
+                                    <div class="info-row"><span class="info-label">Delivery Mode</span><span class="info-value">{{@$work_type}}</span></div>
+                                    <div class="info-row"><span class="info-label">Service Duration</span><span class="info-value">{{ @$job->service_duration ?: 'Not specified' }}</span></div>
+                                    <div class="info-row"><span class="info-label">Implementation</span><span class="info-value">{{ @$job->implementation_timeline ?: 'Not specified' }}</span></div>
                                 </div>
 
                                 <div class="info-card" id="card-comp">
                                     <div class="info-card-header">
-                                        <span class="info-card-title">Compensation & Shift</span>
+                                        <span class="info-card-title">Pricing &amp; SLA</span>
                                         <div class="info-card-actions">
                                             <button type="button" class="copy-btn tooltip" data-tooltip="Copy all" onclick="copyCardText('card-comp')"><i class="far fa-copy"></i></button>
-                                            {{-- <button class="info-card-edit" onclick="showEditPopup('Compensation & Shift')">Edit</button> --}}
                                         </div>
                                     </div>
                                     @php
@@ -1842,35 +1840,35 @@ $end_date   =	date('d-M-Y', $date);
                                         $isSalConfidential = ($vis === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
                                             || ((empty($job->min_salary) || (float)$job->min_salary === 0.0) && (empty($job->max_salary) || (float)$job->max_salary === 0.0) && (@$job->salary_visibility === 'confidential'));
                                     @endphp
-                                    <div class="info-row"><span class="info-label">Min Salary</span><span class="info-value">
+                                    <div class="info-row"><span class="info-label">Base / Min Price</span><span class="info-value">
                                         @if($isSalConfidential)
                                             <span style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span>
                                         @else
                                             {!! $currency[@$job->min_salary_currency] ?? $currency[\App\Services\CurrencyService::resolveCurrencyCode(@$job->min_salary_currency)] ?? '$' !!} {{ @$min_salary }} /{{ @$min_sal_mode }}
                                         @endif
                                     </span></div>
-                                    <div class="info-row"><span class="info-label">Max Salary</span><span class="info-value">
+                                    <div class="info-row"><span class="info-label">Max / Package Price</span><span class="info-value">
                                         @if($isSalConfidential)
                                             <span style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span>
                                         @else
                                             {!! $currency[@$job->min_salary_currency] ?? $currency[\App\Services\CurrencyService::resolveCurrencyCode(@$job->min_salary_currency)] ?? '$' !!} {{@$max_salary}} /{{@$max_sal_mode}}
                                         @endif
                                     </span></div>
-                                    <div class="info-row"><span class="info-label">Pay Type</span><span class="info-value">
-                                    {{ $drawerPayType }}</span></div>
+                                    <div class="info-row"><span class="info-label">Pricing Model</span><span class="info-value">{{ @$job->pricing_model ?: 'Fixed Price' }}</span></div>
+                                    <div class="info-row"><span class="info-label">Billing Cycle</span><span class="info-value">{{ $drawerPayType }}</span></div>
                                     <div class="info-row"><span class="info-label">Currency</span><span class="info-value">{{ \App\Services\CurrencyService::resolveCurrencyCode(@$job->min_salary_currency) }}</span></div>
-                                    <div class="info-row"><span class="info-label">Salary Visibility</span><span class="info-value">
+                                    <div class="info-row"><span class="info-label">Pricing Visibility</span><span class="info-value">
                                         @if($vis === 'confidential')
                                             <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;">
                                                 🔒 Fully Confidential
                                             </span>
                                         @elseif($vis === 'ats_only')
                                             <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#FEF3C7;color:#D97706;border:1px solid #FDE68A;">
-                                                🔒 ATS Only
+                                                🔒 Internal Only
                                             </span>
                                         @elseif($vis === 'ats_agencies')
                                             <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#DBEAFE;color:#2563EB;border:1px solid #BFDBFE;">
-                                                👥 ATS + Agencies
+                                                👥 Internal + Agencies
                                             </span>
                                         @else
                                             <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#D1FAE5;color:#059669;border:1px solid #A7F3D0;">
@@ -1878,22 +1876,23 @@ $end_date   =	date('d-M-Y', $date);
                                             </span>
                                         @endif
                                     </span></div>
-                                    <div class="info-row"><span class="info-label">Assigned Recruiter</span><span class="info-value">{{ @$hrManager ?: 'Not assigned' }}</span></div>
-                                    <div class="info-row"><span class="info-label">Hiring Manager</span><span class="info-value">{{ @$hiringManager ?: 'Not assigned' }}</span></div>
+                                    <div class="info-row"><span class="info-label">Support &amp; SLA</span><span class="info-value">{{ @$job->service_availability ?: (@$job->work_shifts ?: 'Business Hours') }}@if(!empty($job->sla_details)) ({{ $job->sla_details }})@endif</span></div>
+                                    <div class="info-row"><span class="info-label">Service Lead</span><span class="info-value">{{ @$hrManager ?: 'Not assigned' }}</span></div>
+                                    <div class="info-row"><span class="info-label">Account Owner</span><span class="info-value">{{ @$hiringManager ?: 'Not assigned' }}</span></div>
                                 </div>
                             </div>
 
                             <div class="desc-grid">
                                 <div class="desc-card" id="card-desc">
                                     <div class="desc-card-header">
-                                        <h3>Job Description</h3>
+                                        <h3>Service Description</h3>
                                         <div class="info-card-actions">
                                             <button type="button" class="copy-btn tooltip" data-tooltip="Copy all" onclick="copyCardText('card-desc')"><i class="far fa-copy"></i></button>
-                                            {{-- <button class="info-card-edit" onclick="showEditPopup('Job Description')">Edit</button> --}}
+                                            {{-- <button class="info-card-edit" onclick="showEditPopup('Service Description')">Edit</button> --}}
                                         </div>
                                     </div>
                                     <div class="drawer-rich-text">
-                                        <?php echo @$job->job_description ?: '<span class="text-muted">No job description added.</span>'; ?>
+                                        <?php echo @$job->job_description ?: '<span class="text-muted">No service description added.</span>'; ?>
                                     </div>
                                     {{-- <button class="view-more" onclick="showFullDescription()">View More <i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px;"></i></button> --}}
                                 </div>
@@ -3126,7 +3125,7 @@ $end_date   =	date('d-M-Y', $date);
     <div class="popup-overlay" id="candidatePopup">
         <div class="popup-modal" style="max-width:520px;">
             <div class="popup-header">
-                <h3><i class="fas fa-user-plus" style="margin-right:8px;color:var(--primary);"></i>Add Candidate</h3>
+                <h3><i class="fas fa-user-plus" style="margin-right:8px;color:var(--primary);"></i>Add Lead</h3>
                 <button class="popup-close" onclick="closePopup('candidatePopup')"><i class="fas fa-times"></i></button>
             </div>
             <div class="popup-body">
@@ -3148,7 +3147,7 @@ $end_date   =	date('d-M-Y', $date);
             </div>
             <div class="popup-actions">
                 <button class="popup-btn" onclick="closePopup('candidatePopup')">Cancel</button>
-                <button class="popup-btn primary" onclick="addCandidate()">Add Candidate</button>
+                <button class="popup-btn primary" onclick="addCandidate()">Add Lead</button>
             </div>
         </div>
     </div>

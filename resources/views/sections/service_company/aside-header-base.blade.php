@@ -132,14 +132,14 @@ $productAllowCompany = GeneralMethod::companiesType();
                                 </svg>
                             </span>
                             <!--end::Svg Icon-->
-                        </span> <span class="menu-title">Product/Services Tracker</span><span class="menu-arrow"></span> </span>
+                        </span> <span class="menu-title">Services Tracker</span><span class="menu-arrow"></span> </span>
                     <div class="menu-sub menu-sub-accordion">
                         <!--begin::Bench list-->
                         @if (in_array('view_jobs', $userPermissions))
                             <div class="menu-item"> <a href="{{ route('service_company.jobs.index') }}"
                                     class="menu-link {{ (request()->is('service_company/jobs*') && request('kpi') != 'job_request') ? 'active' : '' }}">
                                     <span class="menu-icon"><span class="bullet bullet-dot"></span> </span> <span
-                                        class="menu-title">Product/Services</span> </a> </div>
+                                        class="menu-title">Services</span> </a> </div>
                         @endif
                         <!--end::Bench list-->
 
@@ -153,7 +153,7 @@ $productAllowCompany = GeneralMethod::companiesType();
                                         <!--begin::Svg Icon-->
                                         <span class="bullet bullet-dot"></span>
                                         <!--end::Svg Icon-->
-                                    </span> <span class="menu-title">Interview Tracker</span>
+                                    </span> <span class="menu-title">Meeting Tracker</span>
                                     @if ($lock_unlock == false)
                                         <i class="fa fa-lock"></i>
                                     @endif
@@ -210,7 +210,7 @@ $productAllowCompany = GeneralMethod::companiesType();
                                     </svg>
                                 </span>
                             </span>
-                            <span class="menu-title">Candidates</span>
+                            <span class="menu-title">Lead Tracker</span>
                             @if ($lock_unlock == false)
                                 <i class="fa fa-lock"></i>
                             @endif
@@ -237,26 +237,6 @@ $productAllowCompany = GeneralMethod::companiesType();
           </span> <span class="menu-title">Requisitions</span> </a> </div>
         <!--end::Requisitions-->
         @endif --}}
-
-                <!--begin::CRM Products-->
-                <div class="menu-item">
-                    <a href="{{ route('service_company.crm.offerings.create') }}"
-                        class="menu-link {{ request()->is('service_company/crm/products-services*') ? 'active' : '' }}">
-                        <span class="menu-icon">
-                            <span class="svg-icon svg-icon-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                        <rect x="0" y="0" width="24" height="24"/>
-                                        <path d="M4,7 L12,3 L20,7 L20,17 L12,21 L4,17 L4,7 Z" fill="#000000" opacity="0.3"/>
-                                        <path d="M12,11 L20,7 L12,3 L4,7 L12,11 Z" fill="#000000"/>
-                                    </g>
-                                </svg>
-                            </span>
-                        </span>
-                        <span class="menu-title">Product / Services</span>
-                    </a>
-                </div>
-                <!--end::CRM Products-->
 
                 @if (in_array('view_staffing_partners', $userPermissions))
                     <!--begin::Staffing Partners-->

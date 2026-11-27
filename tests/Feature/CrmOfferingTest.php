@@ -89,6 +89,39 @@ class CrmOfferingTest extends TestCase
             ->assertJsonPath('offering.product_url', 'https://jero.works/crm-enterprise')
             ->assertJsonPath('offering.sku', 'JERO-ENT-01');
 
+        $this->assertDatabaseHas('jobs', [
+            'company_id' => $companyA,
+            'title' => 'JeroCRM Enterprise',
+        ]);
+
+        $createdJobId = (int) $res->json('job_id');
+        if ($createdJobId > 0) {
+            $editView = $this->actingAs($userA)->get(route('service_company.jobs.edit', $createdJobId));
+            $editView->assertStatus(200)->assertSee('Edit Service')->assertSee('JeroCRM Enterprise');
+
+            $updateJobRes = $this->actingAs($userA)->postJson(route('service_company.crm.offerings.updateJob', $createdJobId), [
+                'offering_class' => 'service',
+                'offering_type' => 'Professional Service',
+                'name' => 'JeroCRM Enterprise Updated',
+                'sku' => 'JERO-ENT-01',
+                'crm_category' => 'Software / SaaS',
+                'available_capacity' => 60,
+                'status' => 'active',
+                'pricing_visibility' => 'public_catalog',
+                'min_price' => 599,
+                'currency_code' => 'USD',
+                'pricing_model' => 'Fixed Price',
+                'delivery_model' => 'Remote',
+                'service_availability' => '24 x 7',
+                'description' => '<p>Updated service</p>',
+            ]);
+            $updateJobRes->assertStatus(200)->assertJsonPath('status', 'success');
+            $this->assertDatabaseHas('jobs', [
+                'id' => $createdJobId,
+                'title' => 'JeroCRM Enterprise Updated',
+            ]);
+        }
+
         $offeringId = (int) $res->json('offering.id');
 
         // 3. Idempotent replay with same operation_id returns same record

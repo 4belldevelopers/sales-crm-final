@@ -22,6 +22,11 @@ class StoreCrmOfferingRequest extends FormRequest
     {
         $companyId = (int) (auth()->user()->company_id ?? 0);
         $offeringId = $this->route('id') ?? $this->route('offering');
+        if ($this->routeIs('service_company.crm.offerings.updateJob') && $offeringId) {
+            $offeringId = \App\Models\CrmOffering::where('company_id', $companyId)
+                ->where('job_id', (int) $offeringId)
+                ->value('id');
+        }
         $operationId = trim((string) $this->input('operation_id', ''));
         if (! $offeringId && $operationId !== '') {
             $offeringId = \App\Models\CrmOffering::where('company_id', $companyId)
