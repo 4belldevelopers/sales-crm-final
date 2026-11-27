@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * StoreCrmOfferingRequest — Validation for JeroCRM Product / Services Wizard.
+ * StoreCrmOfferingRequest â€” Validation for JeroCRM Product / Services Wizard.
  *
  * Intent: Enforces conditional Product vs Service rules, Confidential pricing bypass,
  *         Fixed Price -> One-Time frequency lock, capacity bounds, and company-scoped SKU uniqueness.
@@ -22,14 +22,11 @@ class StoreCrmOfferingRequest extends FormRequest
     {
         $companyId = (int) (auth()->user()->company_id ?? 0);
         $offeringId = $this->route('id') ?? $this->route('offering');
-<<<<<<< HEAD
         if ($this->routeIs('service_company.crm.offerings.updateJob') && $offeringId) {
             $offeringId = \App\Models\CrmOffering::where('company_id', $companyId)
                 ->where('job_id', (int) $offeringId)
                 ->value('id');
         }
-=======
->>>>>>> 65b69b922441b3d50bd5c3c027c97c0a57e42a9b
         $operationId = trim((string) $this->input('operation_id', ''));
         if (! $offeringId && $operationId !== '') {
             $offeringId = \App\Models\CrmOffering::where('company_id', $companyId)

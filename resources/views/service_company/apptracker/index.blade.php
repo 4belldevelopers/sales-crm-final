@@ -2571,7 +2571,7 @@
           <div class="sd-topbar-left">
             <span class="sd-topbar-ico"><i class="fa fa-random"></i></span>
             <div>
-              <div class="sd-topbar-title">Change Candidate Stage</div>
+              <div class="sd-topbar-title">Change Lead Stage</div>
               <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
             </div>
           </div>

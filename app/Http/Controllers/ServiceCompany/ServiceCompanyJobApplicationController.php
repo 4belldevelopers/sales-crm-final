@@ -3728,6 +3728,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
             return GeneralMethod::currencyConverter();
         });
+        $this->crmClients = \App\Models\Client::where('company_id', (int) (auth()->user()->company_id ?? 0))
+            ->orderBy('name')
+            ->get(['id', 'name', 'self_company']);
         $this->recruiterNoteTemplates = Cache::remember("recruiter_note_templates_{$company_id}", 3600, function () use ($company_id) {
             return DB::table('recruiter_note_master')
                 ->where('status', 1)
@@ -13648,6 +13651,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
             return GeneralMethod::currencyConverter();
         });
+        $this->crmClients = \App\Models\Client::where('company_id', (int) (auth()->user()->company_id ?? 0))
+            ->orderBy('name')
+            ->get(['id', 'name', 'self_company']);
         $this->salaryMode = GeneralMethod::salaryMode();
         $this->interview_mode = ReferenceDataCache::interviewModes();
         // $this->countries = Country::all();
