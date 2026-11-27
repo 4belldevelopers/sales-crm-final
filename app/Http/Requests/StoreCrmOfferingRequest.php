@@ -40,6 +40,7 @@ class StoreCrmOfferingRequest extends FormRequest
             'owner_client_id' => ['nullable', 'integer'],
             'address_id' => ['nullable', 'integer'],
             'name' => ['required', 'string', 'max:255'],
+            'product_url' => ['nullable', 'url', 'max:500'],
             'crm_category' => [$isDraft ? 'nullable' : 'required', 'string', 'max:150'],
             'industry_id' => ['nullable', 'integer'],
 
