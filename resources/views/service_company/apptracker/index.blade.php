@@ -2305,7 +2305,7 @@
         // mstatus_id route segment) — clicking a stage re-fetches this same page's data
         // via ajax (see fetchCandidates()/countder() below) and toggles the active look
         // client-side, it never triggers a full reload.
-        $hpKnownStages = ['Sourcing', 'Screening', 'Interview', 'Negotiation', 'Offered', 'Joined', 'Rejected', 'InReview'];
+        $hpKnownStages = ['InReview', 'Sourcing', 'Screening', 'Interview', 'Negotiation', 'Offered', 'Joined', 'Rejected', 'OnHold'];
         $hpActiveStage = (!empty(@$candStatusClass['Index']) && in_array(@$candStatusClass['Index'], $hpKnownStages))
             ? $candStatusClass['Index']
             : null;
@@ -2315,22 +2315,22 @@
         // (resources/views/sections/service_company/pipeline.blade.php) rather than
         // inventing new ones, so this card matches every other pipeline-stage display.
         $hpStages = [
-            ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Qualification', 'color' => '#0891b2', 'bg' => '#ecfeff',
+            ['key' => 'InReview', 'rel' => '8', 'label' => 'Lead', 'color' => '#eab308', 'bg' => '#fef9c3',
+                'icon' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0-8 0'],
+            ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Qualified', 'color' => '#0891b2', 'bg' => '#ecfeff',
                 'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
-            ['key' => 'Screening', 'rel' => '2', 'label' => 'Contact', 'color' => '#c000ff', 'bg' => '#f9e6ff',
-                'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
-            ['key' => 'Interview', 'rel' => '3', 'label' => 'Engagement', 'color' => '#2896ff', 'bg' => '#e8f4ff',
+            ['key' => 'Interview', 'rel' => '3', 'label' => 'Engagement', 'color' => '#009ef7', 'bg' => '#e8f4ff',
                 'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
-            ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation', 'color' => '#ff4098', 'bg' => '#ffe6f2',
+            ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation', 'color' => '#ec4899', 'bg' => '#ffe6f2',
                 'icon' => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
             ['key' => 'Offered', 'rel' => '5', 'label' => 'Closing', 'color' => '#f97316', 'bg' => '#fff7ed',
                 'icon' => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
-            ['key' => 'Joined', 'rel' => '6', 'label' => 'Won', 'color' => '#06c732', 'bg' => '#e3fbe9',
+            ['key' => 'Joined', 'rel' => '6', 'label' => 'Won', 'color' => '#10b981', 'bg' => '#e3fbe9',
                 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
         ];
-        $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Lost', 'color' => '#ff0202', 'bg' => '#ffe3e3',
+        $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Lost', 'color' => '#ef4444', 'bg' => '#ffe3e3',
             'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'];
-        $hpHold = ['key' => 'InReview', 'rel' => '8', 'label' => 'On Hold', 'color' => '#64748b', 'bg' => '#f1f5f9',
+        $hpHold = ['key' => 'OnHold', 'rel' => '10', 'label' => 'On Hold', 'color' => '#64748b', 'bg' => '#f1f5f9',
             'icon' => 'M10 9v6m4-6v6m7-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'];
     @endphp
 
@@ -2571,7 +2571,7 @@
           <div class="sd-topbar-left">
             <span class="sd-topbar-ico"><i class="fa fa-random"></i></span>
             <div>
-              <div class="sd-topbar-title">Change Candidate Stage</div>
+              <div class="sd-topbar-title">Change Lead Stage</div>
               <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
             </div>
           </div>
@@ -3158,6 +3158,7 @@
             var Joined = counts.Joined || 0;
             var Interview = counts.Interview || 0;
             var InReview = counts.InReview || 0;
+            var OnHold = counts.OnHold || 0;
 
             $('#bg_1').html(Sourcing);
             $('#bg_2').html(Screening);
@@ -3167,6 +3168,7 @@
             $('#bg_6').html(Joined);
             $('#bg_7').html(Rejected);
             $('#bg_8').html(InReview);
+            $('#bg_10').html(OnHold);
             $('#totalcnt').html(allCandidate);
         }
 
@@ -4020,48 +4022,54 @@
             if (mstatus_id == 1) {
                 $('.hp-circle[data-hp="1"]').addClass('active');
                 $('#tx_1').addClass('active');
-                $('.nav_status').html('Qualification');
-                $('.nav_status').css('background', '#efefef');
-                $('.nav_status').css('color', '#000000');
+                $('.nav_status').html('Qualified');
+                $('.nav_status').css('background', '#ecfeff');
+                $('.nav_status').css('color', '#0891b2');
             } else if (mstatus_id == 2) {
                 $('.hp-circle[data-hp="2"]').addClass('active');
                 $('#tx_2').addClass('active');
                 $('.nav_status').html('Contact');
-                $('.nav_status').css('background', '#fff9ed');
-                $('.nav_status').css('color', '#ffab00');
+                $('.nav_status').css('background', '#f9e6ff');
+                $('.nav_status').css('color', '#a855f7');
             } else if (mstatus_id == 3) {
                 $('.hp-circle[data-hp="3"]').addClass('active');
                 $('#tx_3').addClass('active');
                 $('.nav_status').html('Engagement');
-                $('.nav_status').css('background', '#f0f8ff');
-                $('.nav_status').css('color', '#2896ff');
+                $('.nav_status').css('background', '#e8f4ff');
+                $('.nav_status').css('color', '#009ef7');
             } else if (mstatus_id == 4) {
                 $('.hp-circle[data-hp="4"]').addClass('active');
                 $('#tx_4').addClass('active');
                 $('.nav_status').html('Negotiation');
                 $('.nav_status').css('background', '#ffe6f2');
-                $('.nav_status').css('color', '#ff4098');
+                $('.nav_status').css('color', '#ec4899');
             } else if (mstatus_id == 5) {
                 $('.hp-circle[data-hp="5"]').addClass('active');
                 $('#tx_5').addClass('active');
                 $('.nav_status').html('Closing');
-                $('.nav_status').css('background', '#d4ffde');
-                $('.nav_status').css('color', '#06c732');
+                $('.nav_status').css('background', '#fff7ed');
+                $('.nav_status').css('color', '#f97316');
             } else if (mstatus_id == 6) {
                 $('.hp-circle[data-hp="6"]').addClass('active');
                 $('#tx_6').addClass('active');
                 $('.nav_status').html('Won');
-                $('.nav_status').css('background', '#f7deff');
-                $('.nav_status').css('color', '#c000ff');
+                $('.nav_status').css('background', '#e3fbe9');
+                $('.nav_status').css('color', '#10b981');
             } else if (mstatus_id == 7) {
                 $('.hp-circle[data-hp="7"]').addClass('active');
                 $('#tx_7').addClass('active');
                 $('.nav_status').html('Lost');
-                $('.nav_status').css('background', '#ffe2e5');
-                $('.nav_status').css('color', '#ff0202');
+                $('.nav_status').css('background', '#ffe3e3');
+                $('.nav_status').css('color', '#ef4444');
             } else if (mstatus_id == 8) {
                 $('.hp-circle[data-hp="8"]').addClass('active');
                 $('#tx_8').addClass('active');
+                $('.nav_status').html('Lead');
+                $('.nav_status').css('background', '#fef9c3');
+                $('.nav_status').css('color', '#a16207');
+            } else if (mstatus_id == 10) {
+                $('.hp-circle[data-hp="10"]').addClass('active');
+                $('#tx_10').addClass('active');
                 $('.nav_status').html('On Hold');
                 $('.nav_status').css('background', '#f1f5f9');
                 $('.nav_status').css('color', '#475569');

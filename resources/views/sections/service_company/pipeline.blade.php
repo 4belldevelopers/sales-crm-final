@@ -1,21 +1,17 @@
 
             <div class="pipeline-legend">
-              <span class="legend-label">Pipeline Stages:</span>
+              <span class="legend-label">Lifecycle Pipeline:</span>
               <div class="legend-item">
                 <div class="legend-dot" style="background: #eab308"></div>
-                INW – In Review
+                LED – Lead
               </div>
               <div class="legend-item">
                 <div class="legend-dot" style="background: #0891b2"></div>
-                SOU – Sourcing
-              </div>
-              <div class="legend-item">
-                <div class="legend-dot" style="background: #a855f7"></div>
-                SCR – Screening
+                QUA – Qualified
               </div>
               <div class="legend-item">
                 <div class="legend-dot" style="background: #009ef7"></div>
-                EVA – Evaluation
+                ENG – Engagement
               </div>
               <div class="legend-item">
                 <div class="legend-dot" style="background: #ec4899"></div>
@@ -23,14 +19,18 @@
               </div>
               <div class="legend-item">
                 <div class="legend-dot" style="background: #f97316"></div>
-                OFF – Offer
+                CLO – Closing
               </div>
               <div class="legend-item">
                 <div class="legend-dot" style="background: #10b981"></div>
-                JOI – Joining
+                WON – Won
               </div>
               <div class="legend-item">
                 <div class="legend-dot" style="background: #ef4444"></div>
-                REJ – Rejected
+                LOS – Lost
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background: #64748b"></div>
+                HLD – On Hold
               </div>
             </div>

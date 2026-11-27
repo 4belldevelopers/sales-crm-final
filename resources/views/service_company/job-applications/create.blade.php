@@ -3874,8 +3874,8 @@
                 <div class="professional-profile-grid">
                   <div class="fg fv-row">
                     <label>Current Company <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" /></div>
-                    <small class="candidate-professional-help">e.g. TCS, Infosys, Amazon</small>
+                    <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Select or enter client / company" autocomplete="off" style="cursor:pointer;" /><button type="button" id="btnOpenClientCompanyDrawer" title="Browse Clients / Companies" style="background:none;border:none;color:#64748b;padding:0 6px;cursor:pointer;"><i class="fa-solid fa-chevron-right" style="font-size:11px;"></i></button></div>
+                    <small class="candidate-professional-help">Click to select from your clients &amp; organizations or type a company name.</small>
                   </div>
                   <div class="fg fv-row">
                     <label>Current Designation <span class="rq">*</span></label>
@@ -12879,5 +12879,173 @@ $(document).ready(function () {
     // Initial boot
     initWorkAuthorizationEngine();
 });
+</script>
+
+{{-- Sliding Right Drawer: Client / Company Picker --}}
+<style>
+    .cc-drawer-backdrop {
+        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.35); z-index: 1090;
+        opacity: 0; pointer-events: none; transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .cc-drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+    .cc-side-drawer {
+        position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 95vw); background: #ffffff;
+        z-index: 1095; box-shadow: -12px 0 36px rgba(15, 23, 42, 0.16);
+        display: flex; flex-direction: column;
+        transform: translateX(100%); transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .cc-side-drawer.is-open { transform: translateX(0); }
+    @media (prefers-reduced-motion: reduce) {
+        .cc-drawer-backdrop, .cc-side-drawer { transition: none; }
+    }
+    .cc-drawer-head {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px;
+        background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+    }
+    .cc-drawer-title { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: #10143b; }
+    .cc-drawer-close {
+        width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff;
+        color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .cc-drawer-close:hover { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+    .cc-drawer-search { padding: 14px 20px; border-bottom: 1px solid #e2e8f0; background: #ffffff; }
+    .cc-drawer-search-input {
+        width: 100%; height: 40px; padding: 0 12px 0 36px; border: 1.5px solid #3b82f6; border-radius: 8px;
+        font-size: 13px; color: #10143b; outline: none;
+    }
+    .cc-drawer-list { flex: 1; overflow-y: auto; padding: 12px 20px 24px; }
+    .cc-drawer-sec-lbl {
+        font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px;
+    }
+    .cc-drawer-row {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 10px;
+        border-bottom: 1px solid #f1f5f9; border-radius: 8px;
+    }
+    .cc-drawer-row.is-selected { background: #ecfdf5; }
+    .cc-avatar {
+        width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        color: #ffffff; font-size: 13px; font-weight: 700; flex-shrink: 0; text-transform: uppercase;
+    }
+    .cc-select-btn {
+        padding: 5px 14px; border-radius: 8px; border: 1px solid #bfdbfe; background: #ffffff;
+        color: #2563eb; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    .cc-select-btn:hover { background: #eff6ff; }
+    .cc-select-btn.is-selected { border-color: #a7f3d0; color: #059669; }
+</style>
+<div class="cc-drawer-backdrop" id="ccDrawerBackdrop"></div>
+<div class="cc-side-drawer" id="crmClientCompanyDrawer" aria-hidden="true">
+    <div class="cc-drawer-head">
+        <div class="cc-drawer-title">
+            <span style="width:32px;height:32px;border-radius:8px;background:#e0f2fe;color:#0284c7;display:inline-flex;align-items:center;justify-content:center;"><i class="fa-regular fa-building"></i></span>
+            <span>Select Client / Company</span>
+        </div>
+        <button type="button" class="cc-drawer-close" id="btnCloseClientCompanyDrawer" title="Close">&times;</button>
+    </div>
+    <div class="cc-drawer-search">
+        <div style="position:relative;">
+            <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;"></i>
+            <input type="text" class="cc-drawer-search-input" id="ccDrawerSearchInput" placeholder="Search clients or companies by name..." autocomplete="off">
+        </div>
+    </div>
+    <div class="cc-drawer-list">
+        <div class="cc-drawer-sec-lbl" id="ccDrawerCountLabel">CLIENTS &amp; ORGANIZATIONS (0)</div>
+        <div id="ccDrawerListBody"></div>
+    </div>
+</div>
+<script>
+(function () {
+    const CRM_CLIENTS = @json($crmClients ?? []);
+    const CC_PALETTE = ['#0066ff', '#059669', '#0284c7', '#7c3aed', '#dc2626', '#d97706'];
+    const backdrop = document.getElementById('ccDrawerBackdrop');
+    const drawer = document.getElementById('crmClientCompanyDrawer');
+    const searchInput = document.getElementById('ccDrawerSearchInput');
+    const listBody = document.getElementById('ccDrawerListBody');
+    const countLabel = document.getElementById('ccDrawerCountLabel');
+    const companyInput = document.getElementById('current_company');
+    const openBtn = document.getElementById('btnOpenClientCompanyDrawer');
+    const closeBtn = document.getElementById('btnCloseClientCompanyDrawer');
+
+    if (!drawer || !companyInput) return;
+
+    function initials(name) {
+        const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '?';
+        return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+    }
+
+    function selectCompany(name) {
+        companyInput.value = name;
+        companyInput.dispatchEvent(new Event('input', { bubbles: true }));
+        companyInput.dispatchEvent(new Event('change', { bubbles: true }));
+        closeDrawer();
+    }
+
+    function renderList() {
+        const q = (searchInput.value || '').trim();
+        const ql = q.toLowerCase();
+        const currentVal = (companyInput.value || '').trim().toLowerCase();
+        const filtered = ql
+            ? CRM_CLIENTS.filter(function (c) { return (c.name || '').toLowerCase().indexOf(ql) !== -1; })
+            : CRM_CLIENTS.slice();
+
+        countLabel.textContent = 'CLIENTS & ORGANIZATIONS (' + filtered.length + ')';
+        listBody.innerHTML = '';
+
+        if (q && !filtered.some(function (c) { return (c.name || '').toLowerCase() === ql; })) {
+            const customRow = document.createElement('div');
+            customRow.className = 'cc-drawer-row';
+            customRow.innerHTML =
+                '<div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">' +
+                    '<div class="cc-avatar" style="background:#64748b;"><i class="fa-solid fa-plus" style="font-size:12px;"></i></div>' +
+                    '<div style="min-width:0;"><div class="cc-nm" style="font-size:13px;font-weight:600;color:#10143b;"></div><div style="font-size:11.5px;color:#64748b;">Use custom company name</div></div>' +
+                '</div>' +
+                '<button type="button" class="cc-select-btn">+ Use</button>';
+            customRow.querySelector('.cc-nm').textContent = q;
+            customRow.querySelector('.cc-select-btn').addEventListener('click', function () { selectCompany(q); });
+            listBody.appendChild(customRow);
+        }
+
+        if (!filtered.length && !q) {
+            listBody.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8;font-size:13px;">No clients or companies found.</div>';
+            return;
+        }
+
+        filtered.forEach(function (c, idx) {
+            const isSel = currentVal && (c.name || '').toLowerCase() === currentVal;
+            const row = document.createElement('div');
+            row.className = 'cc-drawer-row' + (isSel ? ' is-selected' : '');
+            row.innerHTML =
+                '<div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">' +
+                    '<div class="cc-avatar" style="background:' + CC_PALETTE[idx % CC_PALETTE.length] + ';"></div>' +
+                    '<div style="min-width:0;"><div class="cc-nm" style="font-size:13px;font-weight:600;color:#10143b;"></div><div style="font-size:11.5px;color:#64748b;"></div></div>' +
+                '</div>' +
+                '<button type="button" class="cc-select-btn' + (isSel ? ' is-selected' : '') + '">' + (isSel ? '&#10003; Selected' : '+ Select') + '</button>';
+            row.querySelector('.cc-avatar').textContent = initials(c.name);
+            row.querySelector('.cc-nm').textContent = c.name || 'Client';
+            row.querySelector('.cc-nm').nextElementSibling.textContent = c.self_company ? 'My Organization' : 'Client / Company';
+            row.querySelector('.cc-select-btn').addEventListener('click', function () { selectCompany(c.name || ''); });
+            listBody.appendChild(row);
+        });
+    }
+
+    function openDrawer() {
+        renderList();
+        backdrop.classList.add('is-open');
+        drawer.classList.add('is-open');
+        setTimeout(function () { searchInput.focus(); }, 60);
+    }
+
+    function closeDrawer() {
+        backdrop.classList.remove('is-open');
+        drawer.classList.remove('is-open');
+    }
+
+    companyInput.addEventListener('click', openDrawer);
+    if (openBtn) openBtn.addEventListener('click', openDrawer);
+    closeBtn.addEventListener('click', closeDrawer);
+    backdrop.addEventListener('click', closeDrawer);
+    searchInput.addEventListener('input', renderList);
+})();
 </script>
 @endpush

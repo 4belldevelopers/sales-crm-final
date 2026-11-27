@@ -38,8 +38,9 @@
         4 => '#ec4899', // Negotiation
         5 => '#f97316', // Offered (standardized orange)
         6 => '#10b981', // Joined
-        7 => '#ef4444', // Rejected
-        9 => '#ef4444', // Rejected / Archived
+        7 => '#ef4444', // Lost
+        9 => '#ef4444', // Lost / Archived
+        10 => '#64748b', // On Hold
     ];
     $stageBadgeThemes = [
         8 => 'background:#fefce8;color:#854d0e;border-color:#fef08a;',
@@ -294,7 +295,18 @@
                 }
             }
             $subStageName = trim((string) $subStageName) !== '' ? $subStageName : '—';
-            $masterStageLabel = trim((string) (@$row->name ?? @$row->master_status_name ?? 'InReview'));
+            $crmStageNameMap = [
+                8 => 'Lead',
+                1 => 'Qualified',
+                3 => 'Engagement',
+                4 => 'Negotiation',
+                5 => 'Closing',
+                6 => 'Won',
+                7 => 'Lost',
+                9 => 'Lost',
+                10 => 'On Hold',
+            ];
+            $masterStageLabel = $crmStageNameMap[$masterStatusId] ?? trim((string) (@$row->name ?? @$row->master_status_name ?? 'Lead'));
             $printStageStr = ucwords($masterStageLabel) . ($subStageName !== '—' ? ' / ' . $subStageName : '');
         @endphp
 

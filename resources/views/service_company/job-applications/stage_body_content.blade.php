@@ -17,47 +17,69 @@
     $csdHasCurrentSub = ($csdCurrentSubName !== '' && strtoupper($csdCurrentSubName) !== 'N/A');
 
     $csdStageMeta = App\Helper\GeneralMethod::pipelineStageTokens();
+    $crmStageOverrides = [
+        'inreview'   => ['label' => 'Lead',          'order' => 1, 'step' => 'Step 1'],
+        'sourcing'   => ['label' => 'Qualified',     'order' => 2, 'step' => 'Step 2'],
+        'evaluation' => ['label' => 'Engagement',    'order' => 3, 'step' => 'Step 3'],
+        'negotation' => ['label' => 'Negotiation',   'order' => 4, 'step' => 'Step 4'],
+        'offer'      => ['label' => 'Closing',       'order' => 5, 'step' => 'Step 5'],
+        'joined'     => ['label' => 'Won',           'order' => 6, 'step' => 'Step 6'],
+        'rejected'   => ['label' => 'Lost',          'order' => 7, 'step' => 'Exit'],
+        'onhold'     => [
+            'label' => 'On Hold', 'order' => 8, 'step' => 'Hold',
+            'color' => '#475569', 'accent' => '#64748b', 'bg' => '#f1f5f9',
+            'icon' => 'M10 9v6m4-6v6m7-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+        ],
+    ];
+    foreach ($crmStageOverrides as $sKey => $sOv) {
+        $csdStageMeta[$sKey] = isset($csdStageMeta[$sKey]) ? array_merge($csdStageMeta[$sKey], $sOv) : $sOv;
+    }
 
     $csdQuickNotes = [
         'inreview'   => [
-            'Reviewing profile against updated role requirements.',
-            'Awaiting internal alignment before sourcing forward.',
-            'Verifying candidate compensation and notice period details.',
+            'Reviewing lead profile against updated service requirements.',
+            'Awaiting internal alignment before moving forward.',
+            'Verifying lead budget and onboarding timeline details.',
         ],
         'sourcing'   => [
-            'Profile validated and sourced into active pipeline.',
-            'Reached out to candidate; awaiting initial confirmation.',
-            'Submitted profile for hiring manager review.',
+            'Lead validated and moved into Qualification.',
+            'Initial qualification check completed; awaiting discovery call.',
+            'Assigned to account owner for qualification review.',
         ],
         'screening'  => [
-            'Screening call scheduled with candidate.',
-            'Cleared initial screening; core skills and availability confirmed.',
-            'Candidate aligned on role scope, location, and CTC range.',
+            'Discovery / contact call scheduled with lead.',
+            'Initial contact completed; core service requirements confirmed.',
+            'Lead aligned on service scope, delivery mode, and budget range.',
         ],
         'evaluation' => [
-            'Technical / panel interview scheduled.',
-            'Cleared evaluation round; awaiting panel scorecard.',
-            'Proceeding to next assessment / hiring manager round.',
+            'Service walkthrough / technical engagement scheduled.',
+            'Cleared engagement call; preparing tailored solution brief.',
+            'Proceeding to commercial proposal & scope alignment.',
         ],
         'negotation' => [
-            "Discussing candidate's revised compensation expectations.",
-            'Negotiating notice period buyout and target joining date.',
-            'Finalizing salary structure and offer terms.',
+            'Discussing revised pricing and SLA terms with lead.',
+            'Negotiating contract duration, milestones, and kickoff date.',
+            'Finalizing commercial terms and statement of work.',
         ],
         'offer'      => [
-            'Offer released; awaiting candidate formal acceptance.',
-            'Offer accepted; initiating pre-onboarding verification.',
-            'Following up with candidate on signed offer letter.',
+            'Proposal / quote sent; awaiting formal sign-off.',
+            'Closing terms agreed; initiating contract execution.',
+            'Following up with lead on signed agreement.',
         ],
         'joined'     => [
-            'Candidate joined as per scheduled onboarding date.',
-            'Day-1 joining formalities and onboarding completed.',
+            'Deal won; onboarding kickoff scheduled.',
+            'Contract signed and service delivery initiated.',
         ],
         'rejected'   => [
-            'Skills mismatch for core role requirements.',
-            'Candidate accepted a competing offer.',
-            'Compensation expectations exceed approved budget.',
-            'Candidate unresponsive after multiple follow-ups.',
+            'Service scope mismatch for lead requirements.',
+            'Lead selected an alternative provider.',
+            'Budget expectations outside approved pricing.',
+            'Lead unresponsive after multiple follow-ups.',
+        ],
+        'onhold'     => [
+            'Lead placed on hold pending budget or timeline approval.',
+            'Client requested follow-up next quarter.',
+            'Awaiting internal stakeholder sign-off before proceeding.',
         ],
     ];
 
@@ -837,7 +859,7 @@
                     <span class="csd-step-num">1</span>
                     <div>
                         <div class="csd-card-title">Choose New Stage</div>
-                        <div class="csd-card-sub">Select the target stage to move this candidate to</div>
+                        <div class="csd-card-sub">Select the target stage to move this lead to</div>
                     </div>
                 </div>
                 <div class="csd-card-head-right">
@@ -851,10 +873,16 @@
                 <div class="csd-stage-row">
                     @if(!empty($master_status))
                         @php
+                            $csdOrderedStatuses = collect($master_status)->reject(function ($m) {
+                                return strtolower((string) (@$m->text_name ?? '')) === 'screening';
+                            })->sortBy(function ($m) use ($csdStageMeta) {
+                                $k = strtolower((string) (@$m->text_name ?? ''));
+                                return $csdStageMeta[$k]['order'] ?? 99;
+                            })->values();
                             $csdKeysList = [];
-                            foreach ($master_status as $csdM) { $csdKeysList[] = strtolower((string) (@$csdM->text_name ?? '')); }
+                            foreach ($csdOrderedStatuses as $csdM) { $csdKeysList[] = strtolower((string) (@$csdM->text_name ?? '')); }
                         @endphp
-                        @foreach($master_status as $mstatus)
+                        @foreach($csdOrderedStatuses as $mstatus)
                             @php
                                 $csdKey = strtolower((string) (@$mstatus->text_name ?? ''));
                                 $csdMeta = $csdStageMeta[$csdKey] ?? [
@@ -956,7 +984,7 @@
                 </div>
                 <div class="csd-card-head-right">
                     <span class="csd-status-pill {{ $csdCurrentKey === 'inreview' ? 'is-req' : '' }}" id="csd_comment_req_badge">
-                        {{ $csdCurrentKey === 'inreview' ? 'Required for InReview' : 'Optional' }}
+                        {{ $csdCurrentKey === 'inreview' ? 'Required for Lead' : 'Optional' }}
                     </span>
                 </div>
             </div>
@@ -1088,10 +1116,10 @@
             if (curKey === 'inreview' && selKey === 'sourcing' && !hasValidSkillRating) {
                 $badge.addClass('is-warn').text('Skill Rating Required');
                 var unratedText = unratedSkills ? ' (' + unratedSkills + ')' : '';
-                $('#csd_sequence_hint_text').html('<strong>Skill Rating Required:</strong> Candidate does not have a valid skill rating' + unratedText + '. A candidate without a valid skill rating must NEVER be moved from InReview to Sourcing. Please edit the candidate to evaluate required skills.');
+                $('#csd_sequence_hint_text').html('<strong>Skill Rating Required:</strong> Lead does not have a valid skill rating' + unratedText + '. A lead without a valid skill rating must NEVER be moved from Lead to Qualified. Please edit the lead to evaluate required skills.');
                 $seqHint.css('display', 'flex');
             } else if (selKey === 'rejected') {
-                $badge.addClass('is-reject').text(curLabel + ' \u2192 Rejected');
+                $badge.addClass('is-reject').text(curLabel + ' \u2192 Lost');
             } else if (curKey === 'rejected') {
                 $badge.addClass('is-reopen').text('Reopening \u2192 ' + selLabel);
             } else {
@@ -1112,9 +1140,9 @@
             }
         }
 
-        // Comment requirement badge (InReview requires a comment on submit)
+        // Comment requirement badge (Lead / InReview requires a comment on submit)
         if (selKey === 'inreview') {
-            $('#csd_comment_req_badge').addClass('is-req').text('Required for InReview');
+            $('#csd_comment_req_badge').addClass('is-req').text('Required for Lead');
         } else {
             $('#csd_comment_req_badge').removeClass('is-req').text('Optional');
         }
