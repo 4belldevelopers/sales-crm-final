@@ -238,6 +238,26 @@ $productAllowCompany = GeneralMethod::companiesType();
         <!--end::Requisitions-->
         @endif --}}
 
+                <!--begin::CRM Products-->
+                <div class="menu-item">
+                    <a href="{{ route('service_company.crm.offerings.create') }}"
+                        class="menu-link {{ request()->is('service_company/crm/products-services*') ? 'active' : '' }}">
+                        <span class="menu-icon">
+                            <span class="svg-icon svg-icon-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                        <rect x="0" y="0" width="24" height="24"/>
+                                        <path d="M4,7 L12,3 L20,7 L20,17 L12,21 L4,17 L4,7 Z" fill="#000000" opacity="0.3"/>
+                                        <path d="M12,11 L20,7 L12,3 L4,7 L12,11 Z" fill="#000000"/>
+                                    </g>
+                                </svg>
+                            </span>
+                        </span>
+                        <span class="menu-title">Product / Services</span>
+                    </a>
+                </div>
+                <!--end::CRM Products-->
+
                 @if (in_array('view_staffing_partners', $userPermissions))
                     <!--begin::Staffing Partners-->
                     <div class="menu-item"> <a href="{{ route('service_company.consultancy.index') }}"

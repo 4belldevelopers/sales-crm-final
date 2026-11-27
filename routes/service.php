@@ -217,8 +217,9 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('jobs/resend_job_recommanded_request/{id?}', [ServiceCompanyJobsController::class, 'resend_job_recommanded_request'])->name('jobs.resend_job_recommanded_request');
                 Route::match(['get', 'post'], 'jobs/send_multiple_job_invitations', [ServiceCompanyJobsController::class, 'send_multiple_job_invitations'])->name('jobs.send_multiple_job_invitations');
                 Route::get('jobs/check-ready/{id}', [ServiceCompanyJobsController::class, 'checkReady'])->name('jobs.checkReady');
+                Route::get('jobs/create', [ServiceCompanyCrmOfferingController::class, 'create'])->name('jobs.create');
                 Route::middleware(['recruiter.throttle:60,1', 'resolve.taxonomy'])->group(function () {
-                    Route::resource('jobs', ServiceCompanyJobsController::class);
+                    Route::resource('jobs', ServiceCompanyJobsController::class)->except(['create']);
                 });
                 Route::post('jobs/updatestatus', [ServiceCompanyJobsController::class, 'updatestatus'])->name('jobs.updatestatus');
                 Route::post('jobs/hiring_manager/{id?}', [ServiceCompanyJobsController::class, 'hiring_manager'])->name('jobs.hiring_manager');

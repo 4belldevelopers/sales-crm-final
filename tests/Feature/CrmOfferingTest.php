@@ -51,9 +51,12 @@ class CrmOfferingTest extends TestCase
         [$companyA, $userA] = $this->makeUser('a_'.uniqid());
         [$companyB, $userB] = $this->makeUser('b_'.uniqid());
 
-        // 1. Render 4-step wizard
+        // 1. Render 4-step wizard (both crm.offerings.create and jobs.create)
         $viewRes = $this->actingAs($userA)->get(route('service_company.crm.offerings.create'));
-        $viewRes->assertStatus(200)->assertSee('Add Product / Service');
+        $viewRes->assertStatus(200)->assertSee('Add Product / Service')->assertSee('Product / Service Name')->assertSee('Product / Service SKU / Code');
+
+        $jobsCreateRes = $this->actingAs($userA)->get(route('service_company.jobs.create'));
+        $jobsCreateRes->assertStatus(200)->assertSee('Add Product / Service')->assertSee('Product / Service Name')->assertDontSee('Add Internal Jobs');
 
         // 2. Create Product with Fixed Price (auto-locks frequency to One-Time) + idempotency key
         $opId = Str::uuid()->toString();
@@ -62,6 +65,7 @@ class CrmOfferingTest extends TestCase
             'offering_class' => 'product',
             'offering_type' => 'Software / SaaS',
             'name' => 'JeroCRM Enterprise',
+            'product_url' => 'https://jero.works/crm-enterprise',
             'crm_category' => 'Software / SaaS',
             'available_capacity' => 50,
             'status' => 'active',
@@ -82,6 +86,7 @@ class CrmOfferingTest extends TestCase
 
         $res->assertStatus(201)
             ->assertJsonPath('offering.pricing_frequency', 'One-Time')
+            ->assertJsonPath('offering.product_url', 'https://jero.works/crm-enterprise')
             ->assertJsonPath('offering.sku', 'JERO-ENT-01');
 
         $offeringId = (int) $res->json('offering.id');
@@ -92,6 +97,7 @@ class CrmOfferingTest extends TestCase
             'offering_class' => 'product',
             'offering_type' => 'Software / SaaS',
             'name' => 'JeroCRM Enterprise',
+            'product_url' => 'https://jero.works/crm-enterprise',
             'crm_category' => 'Software / SaaS',
             'available_capacity' => 50,
             'status' => 'active',
