@@ -301,6 +301,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                         'Joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
                         'Rejected' => ['filter' => ['term' => ['job_master_status_id' => 7]]],
                         'InReview' => ['filter' => ['term' => ['job_master_status_id' => 8]]],
+                        'OnHold' => ['filter' => ['term' => ['job_master_status_id' => 10]]],
                     ],
                 ],
             ]);
@@ -315,10 +316,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'Joined' => (int) ($response['aggregations']['Joined']['doc_count'] ?? 0),
                 'Rejected' => (int) ($response['aggregations']['Rejected']['doc_count'] ?? 0),
                 'InReview' => (int) ($response['aggregations']['InReview']['doc_count'] ?? 0),
+                'OnHold' => (int) ($response['aggregations']['OnHold']['doc_count'] ?? 0),
             ];
         } catch (\Throwable) {
             return ['allCandidate' => 0, 'Sourcing' => 0, 'Screening' => 0, 'Interview' => 0,
-                'Negotiation' => 0, 'Offered' => 0, 'Joined' => 0, 'Rejected' => 0, 'InReview' => 0];
+                'Negotiation' => 0, 'Offered' => 0, 'Joined' => 0, 'Rejected' => 0, 'InReview' => 0, 'OnHold' => 0];
         }
     }
 

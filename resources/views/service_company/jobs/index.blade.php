@@ -1638,11 +1638,7 @@
                 </div>
                 <div class="legend-item">
                   <div class="legend-dot" style="background: #0891b2"></div>
-                  QUA – Qualification
-                </div>
-                <div class="legend-item">
-                  <div class="legend-dot" style="background: #a855f7"></div>
-                  CON – Contact
+                  QUA – Qualified
                 </div>
                 <div class="legend-item">
                   <div class="legend-dot" style="background: #009ef7"></div>
@@ -3593,14 +3589,13 @@ $(document).on('click', '.client-hm-listing', function ()
                     : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/all";
 
                 var stageLabels = [
-                    { id: 1, key: 's-sou', label: 'QUA', title: 'Qualification' },
-                    { id: 2, key: 's-scr', label: 'CON', title: 'Contact' },
+                    { id: 1, key: 's-sou', label: 'QUA', title: 'Qualified' },
                     { id: 3, key: 's-eva', label: 'ENG', title: 'Engagement' },
                     { id: 4, key: 's-neg', label: 'NEG', title: 'Negotiation' },
                     { id: 5, key: 's-off', label: 'CLO', title: 'Closing' },
                     { id: 6, key: 's-joi', label: 'WON', title: 'Won' },
                     { id: 7, key: 's-rej', label: 'LOS', title: 'Lost' },
-                    { id: 8, key: 's-hld', label: 'HLD', title: 'On Hold' }
+                    { id: 10, key: 's-hld', label: 'HLD', title: 'On Hold' }
                 ];
 
                 var pipelineTrackHtml = '<div class="cd-track-stage" title="LED - Lead"><span class="cd-track-label">LED</span><a href="' + allAppUrl + '" class="cd-track-badge s-inw text-decoration-none">' + (job.inreview_counter || 0) + '</a></div>';
@@ -3656,9 +3651,9 @@ $(document).on('click', '.client-hm-listing', function ()
                 html += '      <div class="cd-subcard-body">';
                 html += '        <div class="cd-pipeline-track">' + pipelineTrackHtml + '</div>';
                 html += '        <div class="cd-track-summary">';
-                html += '          <span>Applications: <strong>' + (job.application_counter || 0) + '</strong></span>';
+                html += '          <span>Leads: <strong>' + (job.application_counter || 0) + '</strong></span>';
                 html += '          <span class="cd-bullet">&bull;</span>';
-                html += '          <span>Interviews: <strong>' + (job.interview_counter || 0) + '</strong></span>';
+                html += '          <span>Meetings: <strong>' + (job.interview_counter || 0) + '</strong></span>';
                 html += '        </div>';
                 html += '      </div>';
                 html += '    </div>';

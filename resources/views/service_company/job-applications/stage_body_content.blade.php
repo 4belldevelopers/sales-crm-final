@@ -18,19 +18,21 @@
 
     $csdStageMeta = App\Helper\GeneralMethod::pipelineStageTokens();
     $crmStageOverrides = [
-        'sourcing'   => ['label' => 'Qualification', 'order' => 1, 'step' => 'Step 1'],
-        'screening'  => ['label' => 'Contact',       'order' => 2, 'step' => 'Step 2'],
+        'inreview'   => ['label' => 'Lead',          'order' => 1, 'step' => 'Step 1'],
+        'sourcing'   => ['label' => 'Qualified',     'order' => 2, 'step' => 'Step 2'],
         'evaluation' => ['label' => 'Engagement',    'order' => 3, 'step' => 'Step 3'],
         'negotation' => ['label' => 'Negotiation',   'order' => 4, 'step' => 'Step 4'],
         'offer'      => ['label' => 'Closing',       'order' => 5, 'step' => 'Step 5'],
         'joined'     => ['label' => 'Won',           'order' => 6, 'step' => 'Step 6'],
         'rejected'   => ['label' => 'Lost',          'order' => 7, 'step' => 'Exit'],
-        'inreview'   => ['label' => 'On Hold',       'order' => 8, 'step' => 'Hold'],
+        'onhold'     => [
+            'label' => 'On Hold', 'order' => 8, 'step' => 'Hold',
+            'color' => '#475569', 'accent' => '#64748b', 'bg' => '#f1f5f9',
+            'icon' => 'M10 9v6m4-6v6m7-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+        ],
     ];
     foreach ($crmStageOverrides as $sKey => $sOv) {
-        if (isset($csdStageMeta[$sKey])) {
-            $csdStageMeta[$sKey] = array_merge($csdStageMeta[$sKey], $sOv);
-        }
+        $csdStageMeta[$sKey] = isset($csdStageMeta[$sKey]) ? array_merge($csdStageMeta[$sKey], $sOv) : $sOv;
     }
 
     $csdQuickNotes = [
@@ -73,6 +75,11 @@
             'Lead selected an alternative provider.',
             'Budget expectations outside approved pricing.',
             'Lead unresponsive after multiple follow-ups.',
+        ],
+        'onhold'     => [
+            'Lead placed on hold pending budget or timeline approval.',
+            'Client requested follow-up next quarter.',
+            'Awaiting internal stakeholder sign-off before proceeding.',
         ],
     ];
 
@@ -866,7 +873,9 @@
                 <div class="csd-stage-row">
                     @if(!empty($master_status))
                         @php
-                            $csdOrderedStatuses = collect($master_status)->sortBy(function ($m) use ($csdStageMeta) {
+                            $csdOrderedStatuses = collect($master_status)->reject(function ($m) {
+                                return strtolower((string) (@$m->text_name ?? '')) === 'screening';
+                            })->sortBy(function ($m) use ($csdStageMeta) {
                                 $k = strtolower((string) (@$m->text_name ?? ''));
                                 return $csdStageMeta[$k]['order'] ?? 99;
                             })->values();
@@ -975,7 +984,7 @@
                 </div>
                 <div class="csd-card-head-right">
                     <span class="csd-status-pill {{ $csdCurrentKey === 'inreview' ? 'is-req' : '' }}" id="csd_comment_req_badge">
-                        {{ $csdCurrentKey === 'inreview' ? 'Required for On Hold' : 'Optional' }}
+                        {{ $csdCurrentKey === 'inreview' ? 'Required for Lead' : 'Optional' }}
                     </span>
                 </div>
             </div>
@@ -1107,7 +1116,7 @@
             if (curKey === 'inreview' && selKey === 'sourcing' && !hasValidSkillRating) {
                 $badge.addClass('is-warn').text('Skill Rating Required');
                 var unratedText = unratedSkills ? ' (' + unratedSkills + ')' : '';
-                $('#csd_sequence_hint_text').html('<strong>Skill Rating Required:</strong> Lead does not have a valid skill rating' + unratedText + '. A lead without a valid skill rating must NEVER be moved from On Hold to Qualification. Please edit the lead to evaluate required skills.');
+                $('#csd_sequence_hint_text').html('<strong>Skill Rating Required:</strong> Lead does not have a valid skill rating' + unratedText + '. A lead without a valid skill rating must NEVER be moved from Lead to Qualified. Please edit the lead to evaluate required skills.');
                 $seqHint.css('display', 'flex');
             } else if (selKey === 'rejected') {
                 $badge.addClass('is-reject').text(curLabel + ' \u2192 Lost');
@@ -1131,9 +1140,9 @@
             }
         }
 
-        // Comment requirement badge (On Hold requires a comment on submit)
+        // Comment requirement badge (Lead / InReview requires a comment on submit)
         if (selKey === 'inreview') {
-            $('#csd_comment_req_badge').addClass('is-req').text('Required for On Hold');
+            $('#csd_comment_req_badge').addClass('is-req').text('Required for Lead');
         } else {
             $('#csd_comment_req_badge').removeClass('is-req').text('Optional');
         }

@@ -1671,7 +1671,7 @@ $end_date   =	date('d-M-Y', $date);
                     <div class="pipeline-card">
                         <div class="pipeline-icon applied"><i class="far fa-thumbs-up"></i></div>
                         <div class="pipeline-info">
-                            <div class="pipeline-label">Applied</div>
+                            <div class="pipeline-label">Total Leads</div>
                             <div class="pipeline-value">
                                 {{ $applicationCounter }}
                                 {{-- <span class="pipeline-change up"><i class="fas fa-arrow-up" style="font-size:9px;"></i> 12%</span> --}}
@@ -1681,7 +1681,7 @@ $end_date   =	date('d-M-Y', $date);
                     <div class="pipeline-card">
                         <div class="pipeline-icon selected"><i class="far fa-check-circle"></i></div>
                         <div class="pipeline-info">
-                            <div class="pipeline-label">Sourcing</div>
+                            <div class="pipeline-label">Qualified</div>
                             <div class="pipeline-value">
                                {{$souCount}}
                                 {{-- <span class="pipeline-change up"><i class="fas fa-arrow-up" style="font-size:9px;"></i> 2%</span> --}}
@@ -1691,7 +1691,7 @@ $end_date   =	date('d-M-Y', $date);
                     <div class="pipeline-card">
                         <div class="pipeline-icon shortlisted"><i class="far fa-user"></i></div>
                         <div class="pipeline-info">
-                            <div class="pipeline-label">Evaluation</div>
+                            <div class="pipeline-label">Engagement</div>
                             <div class="pipeline-value">
                                 {{$evaCount }}
                                 {{-- <span class="pipeline-change up"><i class="fas fa-arrow-up" style="font-size:9px;"></i> 8%</span> --}}
@@ -1701,7 +1701,7 @@ $end_date   =	date('d-M-Y', $date);
                     <div class="pipeline-card">
                         <div class="pipeline-icon offer"><i class="fas fa-gift"></i></div>
                         <div class="pipeline-info">
-                            <div class="pipeline-label">Offer Released</div>
+                            <div class="pipeline-label">Closing</div>
                             <div class="pipeline-value">
                                 {{ $offerCount }}
                                 {{-- <span class="pipeline-change up"><i class="fas fa-arrow-up" style="font-size:9px;"></i> 1%</span> --}}
@@ -1711,7 +1711,7 @@ $end_date   =	date('d-M-Y', $date);
                     <div class="pipeline-card">
                         <div class="pipeline-icon joined"><i class="far fa-user-circle"></i></div>
                         <div class="pipeline-info">
-                            <div class="pipeline-label">Joined</div>
+                            <div class="pipeline-label">Won</div>
                             <div class="pipeline-value">
                                {{$joindCount}}
                                 {{-- <span class="pipeline-change up"><i class="fas fa-arrow-up" style="font-size:9px;"></i> 1%</span> --}}
@@ -1721,7 +1721,7 @@ $end_date   =	date('d-M-Y', $date);
                     <div class="pipeline-card">
                         <div class="pipeline-icon interviewed"><i class="far fa-file-alt"></i></div>
                         <div class="pipeline-info">
-                            <div class="pipeline-label">Interviewed</div>
+                            <div class="pipeline-label">Meetings</div>
                             <div class="pipeline-value">
                                 {{ $interview_counter }}
                                 {{-- <span class="pipeline-change up"><i class="fas fa-arrow-up" style="font-size:9px;"></i> 5%</span> --}}

@@ -388,8 +388,8 @@ END:VCALENDAR";
             'inreview' => [
                 'id'         => 8,
                 'key'        => 'inreview',
-                'label'      => 'InReview',
-                'short'      => 'INW',
+                'label'      => 'Lead',
+                'short'      => 'LED',
                 'order'      => 1,
                 'step'       => 'Step 1',
                 'color'      => '#854d0e', // Yellow-800 text for high-contrast readability
@@ -405,8 +405,8 @@ END:VCALENDAR";
             'sourcing' => [
                 'id'         => 1,
                 'key'        => 'sourcing',
-                'label'      => 'Sourcing',
-                'short'      => 'SOU',
+                'label'      => 'Qualified',
+                'short'      => 'QUA',
                 'order'      => 2,
                 'step'       => 'Step 2',
                 'color'      => '#0e7490', // Cyan-700
@@ -439,10 +439,10 @@ END:VCALENDAR";
             'evaluation' => [
                 'id'         => 3,
                 'key'        => 'evaluation',
-                'label'      => 'Evaluation',
-                'short'      => 'EVA',
-                'order'      => 4,
-                'step'       => 'Step 4',
+                'label'      => 'Engagement',
+                'short'      => 'ENG',
+                'order'      => 3,
+                'step'       => 'Step 3',
                 'color'      => '#1d4ed8', // Blue-700
                 'accent'     => '#2563eb', // Blue-600
                 'bg'         => '#eff6ff', // Blue-50
@@ -458,8 +458,8 @@ END:VCALENDAR";
                 'key'        => 'negotation',
                 'label'      => 'Negotiation',
                 'short'      => 'NEG',
-                'order'      => 5,
-                'step'       => 'Step 5',
+                'order'      => 4,
+                'step'       => 'Step 4',
                 'color'      => '#be185d', // Pink-700
                 'accent'     => '#db2777', // Pink-600
                 'bg'         => '#fdf2f8', // Pink-50
@@ -473,10 +473,10 @@ END:VCALENDAR";
             'offer' => [
                 'id'         => 5,
                 'key'        => 'offer',
-                'label'      => 'Offer',
-                'short'      => 'OFF',
-                'order'      => 6,
-                'step'       => 'Step 6',
+                'label'      => 'Closing',
+                'short'      => 'CLO',
+                'order'      => 5,
+                'step'       => 'Step 5',
                 'color'      => '#c2410c', // Orange-700
                 'accent'     => '#f97316', // Orange-500 bright professional orange (NOT maroon/reddish)
                 'bg'         => '#fff7ed', // Orange-50
@@ -490,10 +490,10 @@ END:VCALENDAR";
             'joined' => [
                 'id'         => 6,
                 'key'        => 'joined',
-                'label'      => 'Joined',
-                'short'      => 'JOI',
-                'order'      => 7,
-                'step'       => 'Step 7',
+                'label'      => 'Won',
+                'short'      => 'WON',
+                'order'      => 6,
+                'step'       => 'Step 6',
                 'color'      => '#15803d', // Green-700
                 'accent'     => '#16a34a', // Green-600
                 'bg'         => '#ecfdf5', // Green-50
@@ -507,9 +507,9 @@ END:VCALENDAR";
             'rejected' => [
                 'id'         => 7,
                 'key'        => 'rejected',
-                'label'      => 'Rejected',
-                'short'      => 'REJ',
-                'order'      => 8,
+                'label'      => 'Lost',
+                'short'      => 'LOS',
+                'order'      => 7,
                 'step'       => 'Exit',
                 'color'      => '#b91c1c', // Red-700
                 'accent'     => '#dc2626', // Red-600
@@ -520,6 +520,23 @@ END:VCALENDAR";
                 'btn_text'   => '#ffffff',
                 'badge_style'=> 'background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;',
                 'icon'       => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+            ],
+            'onhold' => [
+                'id'         => 10,
+                'key'        => 'onhold',
+                'label'      => 'On Hold',
+                'short'      => 'HLD',
+                'order'      => 8,
+                'step'       => 'Hold',
+                'color'      => '#475569',
+                'accent'     => '#64748b',
+                'bg'         => '#f1f5f9',
+                'bg_subtle'  => '#e2e8f0',
+                'border'     => '#cbd5e1',
+                'btn_bg'     => '#64748b',
+                'btn_text'   => '#ffffff',
+                'badge_style'=> 'background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;',
+                'icon'       => 'M10 9v6m4-6v6m7-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
             ],
         ];
 
@@ -534,6 +551,7 @@ END:VCALENDAR";
             6 => 'joined',
             7 => 'rejected',
             9 => 'rejected',
+            10 => 'onhold',
         ];
         $keyAliases = [
             'interview'  => 'evaluation',
