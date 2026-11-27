@@ -218,8 +218,9 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::match(['get', 'post'], 'jobs/send_multiple_job_invitations', [ServiceCompanyJobsController::class, 'send_multiple_job_invitations'])->name('jobs.send_multiple_job_invitations');
                 Route::get('jobs/check-ready/{id}', [ServiceCompanyJobsController::class, 'checkReady'])->name('jobs.checkReady');
                 Route::get('jobs/create', [ServiceCompanyCrmOfferingController::class, 'create'])->name('jobs.create');
+                Route::get('jobs/{job}/edit', [ServiceCompanyCrmOfferingController::class, 'editJob'])->name('jobs.edit');
                 Route::middleware(['recruiter.throttle:60,1', 'resolve.taxonomy'])->group(function () {
-                    Route::resource('jobs', ServiceCompanyJobsController::class)->except(['create']);
+                    Route::resource('jobs', ServiceCompanyJobsController::class)->except(['create', 'edit']);
                 });
                 Route::post('jobs/updatestatus', [ServiceCompanyJobsController::class, 'updatestatus'])->name('jobs.updatestatus');
                 Route::post('jobs/hiring_manager/{id?}', [ServiceCompanyJobsController::class, 'hiring_manager'])->name('jobs.hiring_manager');
@@ -233,8 +234,10 @@ Route::group(['middleware' => 'auth'], function () {
                 // #############       	START JEROCRM PRODUCT / SERVICES WIZARD
                 Route::get('crm/products-services/check-sku', [ServiceCompanyCrmOfferingController::class, 'checkSku'])->name('crm.offerings.checkSku');
                 Route::get('crm/products-services/check-ready/{id}', [ServiceCompanyCrmOfferingController::class, 'checkReady'])->name('crm.offerings.checkReady');
+                Route::get('crm/products-services/client-addresses/{clientId}', [ServiceCompanyCrmOfferingController::class, 'clientAddresses'])->name('crm.offerings.clientAddresses');
                 Route::get('crm/products-services/active-catalog', [ServiceCompanyCrmOfferingController::class, 'activeCatalog'])->name('crm.offerings.activeCatalog');
                 Route::post('crm/products-services/update/{id}', [ServiceCompanyCrmOfferingController::class, 'update'])->name('crm.offerings.postUpdate');
+                Route::post('crm/products-services/update-job/{id}', [ServiceCompanyCrmOfferingController::class, 'updateJob'])->name('crm.offerings.updateJob');
                 Route::resource('crm/products-services', ServiceCompanyCrmOfferingController::class)->names('crm.offerings');
                 // END
                 Route::get('products/check-sku', [ServiceCompanyProductController::class, 'checkSku'])->name('products.checkSku');

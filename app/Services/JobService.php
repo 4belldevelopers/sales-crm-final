@@ -158,6 +158,7 @@ class JobService
         $rawJobReq = trim((string) ($requestData['job_requirement'] ?? ''));
         $job->job_requirement = $rawJobReq !== '' ? $rawJobReq : $job->job_description;
         $job->section_visibility = ! empty($requestData['section_visibility']) ? $requestData['section_visibility'] : 'everywhere';
+        $this->applyServiceAttributes($job, $requestData);
 
         $isInternalOnly = isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1;
         $hasCareer = isset($requestData['carrier_website']) ? ((int) $requestData['carrier_website'] === 1) : (! empty($requestData['visibility_career']));
@@ -855,6 +856,7 @@ class JobService
         if (isset($requestData['salary_visibility'])) {
             $job->salary_visibility = \App\Services\SalaryVisibilityPolicy::normalize($requestData['salary_visibility']);
         }
+        $this->applyServiceAttributes($job, $requestData);
 
         $isInternalOnly = isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1;
         $hasCareer = isset($requestData['carrier_website']) ? ((int) $requestData['carrier_website'] === 1) : (! empty($requestData['visibility_career']));
@@ -909,6 +911,7 @@ class JobService
         $job->job_description = $requestData['detail_description'] ?? ($requestData['job_description'] ?? 'Job details as specified.');
         $job->job_requirement = ! empty($requestData['job_requirement']) ? $requestData['job_requirement'] : (! empty($requestData['detail_description']) ? $requestData['detail_description'] : 'As per job description');
         $job->section_visibility = ! empty($requestData['section_visibility']) ? $requestData['section_visibility'] : 'everywhere';
+        $this->applyServiceAttributes($job, $requestData);
 
         $currency = GeneralMethod::currency();
 
@@ -1588,6 +1591,29 @@ class JobService
             }
         } catch (\Throwable $fe) {
             Log::warning('[JobService@syncJobCities] fallback city insert warning: '.$fe->getMessage());
+        }
+    }
+
+    /**
+     * Persist Sales CRM Service attributes onto the `jobs` table when columns exist.
+     */
+    private function applyServiceAttributes(Job $job, array $requestData): void
+    {
+        $stringCols = [
+            'offering_class', 'offering_type', 'product_url', 'sku', 'unit',
+            'pricing_model', 'service_availability', 'service_duration',
+            'implementation_timeline', 'sla_details', 'warranty',
+            'brochure_path', 'validity_days',
+        ];
+
+        foreach ($stringCols as $col) {
+            if (array_key_exists($col, $requestData)) {
+                self::setJobAttrIfColumnExists($job, $col, $requestData[$col]);
+            }
+        }
+
+        if (array_key_exists('is_unlimited_capacity', $requestData)) {
+            self::setJobAttrIfColumnExists($job, 'is_unlimited_capacity', (bool) $requestData['is_unlimited_capacity']);
         }
     }
 }

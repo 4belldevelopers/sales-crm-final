@@ -607,7 +607,7 @@
         <div class="aptk-empty-icon">
             <i class="fas fa-users-slash"></i>
         </div>
-        <div class="aptk-empty-title">No Candidates Found</div>
-        <div class="aptk-empty-sub">No candidates currently match your selected pipeline stage or search criteria.</div>
+        <div class="aptk-empty-title">No Leads Found</div>
+        <div class="aptk-empty-sub">No leads currently match your selected pipeline stage or search criteria.</div>
     </div>
 @endif

@@ -5,8 +5,8 @@
     $apthCards = [
         [
             'tab_key' => 'pool',
-            'title' => 'Total Candidates In Job',
-            'sub' => 'Active job pipeline',
+            'title' => 'Total Leads In Service',
+            'sub' => 'Active service pipeline',
             'sub_icon' => 'M22 12h-4l-3 9L9 3l-3 9H2',
             'url' => $tabactive['pool_url'],
             'id' => $tabactive['pool_id'],
@@ -23,8 +23,8 @@
         ],
         [
             'tab_key' => 'similar',
-            'title' => 'Similar Candidates',
-            'sub' => 'Matched to job profile',
+            'title' => 'Similar Leads',
+            'sub' => 'Matched to service profile',
             'sub_icon' => 'm18 15-6-6-6 6',
             'url' => $tabactive['similar_url'],
             'id' => $tabactive['similar_id'],
@@ -104,7 +104,7 @@
         [
             'tab_key' => 'career',
             'title' => 'Career Page',
-            'sub' => 'Direct job applicants',
+            'sub' => 'Direct service inquiries',
             'sub_icon' => 'M20 6 9 17l-5-5',
             'url' => $tabactive['career_url'],
             'id' => $tabactive['career_id'],
